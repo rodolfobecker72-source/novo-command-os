@@ -16,6 +16,7 @@ const ORIGIN_POINTS: Record<LeadOriginType, { points: number; label: string }> =
   site: { points: 15, label: 'Site' },
   networking: { points: 15, label: 'Networking' },
   evento: { points: 12, label: 'Evento' },
+  organico: { points: 10, label: 'Orgânico' },
   instagram: { points: 8, label: 'Instagram' },
   meta_ads: { points: 8, label: 'Meta Ads' },
   google_ads: { points: 8, label: 'Google Ads' },

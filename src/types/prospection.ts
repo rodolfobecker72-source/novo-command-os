@@ -4,6 +4,7 @@ export type AcquisitionType = 'outbound' | 'inbound';
 
 export type LeadOriginType =
   | 'prospeccao_ativa'
+  | 'organico'
   | 'indicacao'
   | 'instagram'
   | 'meta_ads'
@@ -76,6 +77,7 @@ export interface ProspectionLead {
 
 export const LEAD_ORIGIN_LABELS: Record<LeadOriginType, string> = {
   prospeccao_ativa: 'Prospecção Ativa',
+  organico: 'Orgânico',
   indicacao: 'Indicação',
   instagram: 'Instagram',
   meta_ads: 'Meta Ads',
