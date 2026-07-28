@@ -39,7 +39,7 @@ export function Signup() {
       <img 
         src={commandLogo} 
         alt="Command CRM" 
-        className="h-14 w-auto"
+        className="h-14 w-auto dark:brightness-0 dark:invert"
       />
 
       <Card className="w-full max-w-md bg-card border-border">
