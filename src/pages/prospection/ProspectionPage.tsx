@@ -406,6 +406,11 @@ export function ProspectionPage() {
       toast.error('Nome da empresa é obrigatório');
       return;
     }
+    if (!formData.responsibleUserId) {
+      toast.error('Selecione o responsável pelo lead');
+      return;
+    }
+
     if (editingLead) {
       const { funnelStatus, ...rest } = formData;
       // Handle status transition (with meeting confirmation if applicable)
