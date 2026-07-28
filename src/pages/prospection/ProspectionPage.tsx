@@ -801,7 +801,7 @@ export function ProspectionPage() {
               collisionDetection={closestCenter}
               onDragEnd={handleKanbanDragEnd}
             >
-            <div ref={kanbanHeaderRef} className="sticky top-0 z-30 overflow-x-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 pt-2">
+            <div id="kanban-column-headers" ref={kanbanHeaderRef} className="sticky top-14 md:top-16 z-30 overflow-x-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 pt-2">
               <div className="flex gap-5">
                 {kanbanStatuses.map(status => {
                   const statusLeads = filteredLeads.filter(l => l.funnelStatus === status);
