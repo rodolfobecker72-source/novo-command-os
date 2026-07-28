@@ -7,7 +7,7 @@ export function AboutPage() {
       <Header title="Sobre" subtitle="Sobre o Command OS" />
       <div className="flex items-center justify-center p-8">
       <div className="max-w-xl text-center space-y-8">
-        <img src={commandLogo} alt="Command OS" className="h-20 w-auto mx-auto" />
+        <img src={commandLogo} alt="Command OS" className="h-20 w-auto mx-auto dark:brightness-0 dark:invert" />
 
         <div className="space-y-5 text-muted-foreground leading-relaxed">
           <p>

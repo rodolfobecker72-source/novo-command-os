@@ -34,7 +34,7 @@ export function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-sidebar-background flex flex-col items-center justify-center p-4 gap-8">
-      <img src={commandLogo} alt="Command CRM" className="h-14 w-auto" />
+      <img src={commandLogo} alt="Command CRM" className="h-14 w-auto dark:brightness-0 dark:invert" />
 
       <Card className="w-full max-w-md bg-card border-border">
         <CardHeader className="text-center space-y-1.5 pb-2">

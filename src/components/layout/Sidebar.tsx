@@ -143,7 +143,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <img src={commandLogo} alt="Command CRM" className="h-14 w-auto" />
+          <img src={commandLogo} alt="Command CRM" className="h-14 w-auto dark:brightness-0 dark:invert" />
         </div>
       </div>
 
