@@ -410,6 +410,7 @@ export function ProspectionPage() {
   const mapOriginToCRM = (origin: LeadOriginType): import('@/types/crm').LeadOrigin => {
     const map: Record<LeadOriginType, import('@/types/crm').LeadOrigin> = {
       prospeccao_ativa: 'prospeccao_ativa',
+      organico: 'organico',
       indicacao: 'indicacao',
       instagram: 'organico',
       meta_ads: 'trafego_pago',
