@@ -1148,16 +1148,17 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.from('budget_versions').update(dbUpdates).eq('id', versionId);
       if (error) throw error;
 
-      // If updating the approved version's price, also sync budgets.final_value so dashboards reflect it
+      // If updating the price of an approved budget, sync budgets.final_value so dashboards reflect it.
+      // Covers editing the approved version and editing any version of an already-approved budget.
       const budget = budgets.find(b => b.id === budgetId);
       const editedVersion = budget?.versions.find(v => v.id === versionId);
       let newFinalValue: number | undefined;
       if (
         budget &&
         editedVersion &&
-        budget.approvedVersion === editedVersion.version &&
         updates.fullPrice !== undefined &&
-        updates.fullPrice !== budget.finalValue
+        updates.fullPrice !== budget.finalValue &&
+        (budget.status === 'aprovada' || budget.approvedVersion === editedVersion.version)
       ) {
         newFinalValue = updates.fullPrice;
         const { error: bErr } = await supabase
