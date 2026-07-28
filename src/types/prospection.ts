@@ -4,6 +4,7 @@ export type AcquisitionType = 'outbound' | 'inbound';
 
 export type LeadOriginType =
   | 'prospeccao_ativa'
+  | 'organico'
   | 'indicacao'
   | 'instagram'
   | 'meta_ads'
