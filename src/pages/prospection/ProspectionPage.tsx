@@ -799,7 +799,17 @@ export function ProspectionPage() {
                                     <p className="text-xs text-muted-foreground truncate">{lead.contactName}</p>
                                   </div>
                                 </div>
-                                <TemperatureBadge temp={lead.temperature} />
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <TemperatureBadge temp={lead.temperature} />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-destructive"
+                                    onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="text-xs">{LEAD_ORIGIN_LABELS[lead.origin]}</Badge>
