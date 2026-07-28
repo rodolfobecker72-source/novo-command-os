@@ -49,6 +49,8 @@ const MONTHS = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
+const KANBAN_COLUMN_WIDTH_CLASS = 'w-[300px] md:w-[320px] lg:w-[340px] flex-none';
+
 function TemperatureBadge({ temp }: { temp: LeadTemperature }) {
   const styles: Record<LeadTemperature, string> = {
     frio: 'bg-muted text-muted-foreground',
@@ -122,7 +124,7 @@ function DroppableColumn({ status, children }: { status: LeadFunnelStatus; child
   return (
     <div
       ref={setNodeRef}
-      className={`min-w-[280px] flex-shrink-0 rounded-2xl p-1 transition-colors ${isOver ? 'bg-accent/10 ring-2 ring-accent/40' : ''}`}
+      className={`${KANBAN_COLUMN_WIDTH_CLASS} rounded-2xl p-1 transition-colors ${isOver ? 'bg-accent/10 ring-2 ring-accent/40' : ''}`}
     >
       {children}
     </div>
@@ -187,6 +189,7 @@ export function ProspectionPage() {
   const [funnelYear, setFunnelYear] = useState<string>(String(new Date().getFullYear()));
   const [view, setView] = useState<'table' | 'kanban'>('kanban');
   const kanbanScrollRef = useRef<HTMLDivElement>(null);
+  const kanbanHeaderRef = useRef<HTMLDivElement>(null);
   const proxyScrollRef = useRef<HTMLDivElement>(null);
   const [kanbanScrollWidth, setKanbanScrollWidth] = useState(0);
   const [showProxyScroll, setShowProxyScroll] = useState(false);
@@ -209,15 +212,34 @@ export function ProspectionPage() {
 
   useEffect(() => {
     const el = kanbanScrollRef.current;
+    const header = kanbanHeaderRef.current;
     const proxy = proxyScrollRef.current;
-    if (!el || !proxy) return;
+    if (!el) return;
     let syncing = false;
-    const onKanban = () => { if (syncing) return; syncing = true; proxy.scrollLeft = el.scrollLeft; syncing = false; };
-    const onProxy = () => { if (syncing) return; syncing = true; el.scrollLeft = proxy.scrollLeft; syncing = false; };
+
+    const syncScroll = (source: HTMLDivElement) => {
+      if (syncing) return;
+      syncing = true;
+      const left = source.scrollLeft;
+      if (source !== el) el.scrollLeft = left;
+      if (header && source !== header) header.scrollLeft = left;
+      if (proxy && source !== proxy) proxy.scrollLeft = left;
+      syncing = false;
+    };
+
+    const onKanban = () => syncScroll(el);
+    const onHeader = () => { if (header) syncScroll(header); };
+    const onProxy = () => { if (proxy) syncScroll(proxy); };
+
     el.addEventListener('scroll', onKanban);
-    proxy.addEventListener('scroll', onProxy);
-    return () => { el.removeEventListener('scroll', onKanban); proxy.removeEventListener('scroll', onProxy); };
-  }, [showProxyScroll]);
+    header?.addEventListener('scroll', onHeader);
+    proxy?.addEventListener('scroll', onProxy);
+    return () => {
+      el.removeEventListener('scroll', onKanban);
+      header?.removeEventListener('scroll', onHeader);
+      proxy?.removeEventListener('scroll', onProxy);
+    };
+  }, [showProxyScroll, view, activeTab]);
 
   const [search, setSearch] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>('all');
@@ -774,17 +796,28 @@ export function ProspectionPage() {
               collisionDetection={closestCenter}
               onDragEnd={handleKanbanDragEnd}
             >
+            <div ref={kanbanHeaderRef} className="sticky top-0 z-30 overflow-x-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 pt-2">
+              <div className="flex gap-5">
+                {kanbanStatuses.map(status => {
+                  const statusLeads = filteredLeads.filter(l => l.funnelStatus === status);
+                  return (
+                    <div key={status} className={`${KANBAN_COLUMN_WIDTH_CLASS} px-2 py-2 rounded-2xl border border-border/60 bg-background shadow-sm`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FunnelStatusBadge status={status} />
+                          <span className="text-xs font-medium text-muted-foreground shrink-0">{statusLeads.length}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <div ref={kanbanScrollRef} className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin">
               {kanbanStatuses.map(status => {
                 const statusLeads = filteredLeads.filter(l => l.funnelStatus === status);
                 return (
                   <DroppableColumn key={status} status={status}>
-                    <div className="sticky top-0 z-20 flex items-center justify-between mb-3 px-1 py-2 bg-background/95 backdrop-blur rounded-t-xl">
-                      <div className="flex items-center gap-2">
-                        <FunnelStatusBadge status={status} />
-                        <span className="text-xs font-medium text-muted-foreground">{statusLeads.length}</span>
-                      </div>
-                    </div>
                     <div className="space-y-3 min-h-[40px]">
                       {statusLeads.map(lead => (
                         <DraggableLeadCard key={lead.id} lead={lead}>
