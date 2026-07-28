@@ -779,7 +779,7 @@ export function ProspectionPage() {
                 const statusLeads = filteredLeads.filter(l => l.funnelStatus === status);
                 return (
                   <DroppableColumn key={status} status={status}>
-                    <div className="flex items-center justify-between mb-3 px-1">
+                    <div className="sticky top-0 z-20 flex items-center justify-between mb-3 px-1 py-2 bg-background/95 backdrop-blur rounded-t-xl">
                       <div className="flex items-center gap-2">
                         <FunnelStatusBadge status={status} />
                         <span className="text-xs font-medium text-muted-foreground">{statusLeads.length}</span>
