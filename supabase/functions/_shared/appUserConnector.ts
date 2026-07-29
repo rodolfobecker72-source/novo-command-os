@@ -1,9 +1,18 @@
 // Shared helper for Google Calendar App User Connector via Lovable connector gateway.
-// Auth headers: Bearer LOVABLE_API_KEY + X-Connection-Api-Key (client key) + X-App-User-Id (per user).
+// FLOW (connection-key):
+//   1. POST /api/v1/app-users/oauth2/authorize with client key
+//      -> returns { authorization_url, session_id }. Store session_id per user.
+//   2. User completes Google OAuth. Google redirects to the gateway callback.
+//      The gateway redirects to our return_url with `code` (and success=true).
+//   3. POST /api/v1/app-users/oauth2/exchange with { session_id, code }
+//      -> returns a per-user `connection_key` (lovack_*). Store per user.
+//   4. Provider API calls: X-Connection-Api-Key = <per-user connection_key>
+//      (NOT the shared client key). Bearer LOVABLE_API_KEY still required.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
 const GATEWAY_BASE = "https://connector-gateway.lovable.dev";
 export const CONNECTOR_ID = "google_calendar";
 
-// Scopes we ask each end user to grant. userinfo.email lets us identify the connected Google account.
 export const GOOGLE_CALENDAR_SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/userinfo.email",
@@ -22,7 +31,14 @@ export function getGatewayCreds() {
   };
 }
 
-// Start the OAuth authorize flow. Returns the URL to open in a popup.
+export function adminClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+}
+
+// STEP 1: Start authorize. Returns URL + session_id.
 export async function startAuthorize(opts: {
   appUserId: string;
   returnUrl: string;
@@ -40,9 +56,7 @@ export async function startAuthorize(opts: {
       connector_id: CONNECTOR_ID,
       app_user_id: opts.appUserId,
       return_url: opts.returnUrl,
-      credentials_configuration: {
-        scopes: opts.scopes ?? GOOGLE_CALENDAR_SCOPES,
-      },
+      credentials_configuration: { scopes: opts.scopes ?? GOOGLE_CALENDAR_SCOPES },
     }),
   });
   const text = await res.text();
@@ -50,26 +64,49 @@ export async function startAuthorize(opts: {
   return JSON.parse(text);
 }
 
-// Call a Google Calendar API path as the given app user.
-// path examples: "/calendar/v3/users/me/calendarList", "/calendar/v3/calendars/primary/events"
+// STEP 3: Exchange code for per-user connection_key.
+export async function exchangeCode(opts: {
+  sessionId: string;
+  code: string;
+}): Promise<{ connection_key: string; raw: any }> {
+  const { lovableKey, clientKey } = getGatewayCreds();
+  const res = await fetch(`${GATEWAY_BASE}/api/v1/app-users/oauth2/exchange`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Client-Api-Key": clientKey,
+    },
+    body: JSON.stringify({
+      connector_id: CONNECTOR_ID,
+      session_id: opts.sessionId,
+      code: opts.code,
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`exchange [${res.status}]: ${text}`);
+  const raw = JSON.parse(text);
+  const key = raw.connection_key ?? raw.connection_api_key ?? raw.api_key ?? raw.key;
+  if (!key) throw new Error(`exchange missing connection_key: ${text}`);
+  return { connection_key: key, raw };
+}
+
+// Provider API calls, using the stored per-user connection_key.
 export async function callAsUser(opts: {
-  appUserId: string;
+  connectionKey: string;
   path: string;
   method?: string;
   body?: unknown;
   query?: Record<string, string>;
 }): Promise<{ status: number; ok: boolean; data: any; text: string }> {
-  const { lovableKey, clientKey } = getGatewayCreds();
+  const { lovableKey } = getGatewayCreds();
   const url = new URL(`${GATEWAY_BASE}/${CONNECTOR_ID}${opts.path}`);
-  if (opts.query) {
-    for (const [k, v] of Object.entries(opts.query)) url.searchParams.set(k, v);
-  }
+  if (opts.query) for (const [k, v] of Object.entries(opts.query)) url.searchParams.set(k, v);
   const res = await fetch(url.toString(), {
     method: opts.method ?? "GET",
     headers: {
       Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": clientKey,
-      "X-App-User-Id": opts.appUserId,
+      "X-Connection-Api-Key": opts.connectionKey,
       ...(opts.body ? { "Content-Type": "application/json" } : {}),
     },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
@@ -80,52 +117,40 @@ export async function callAsUser(opts: {
   return { status: res.status, ok: res.ok, data, text };
 }
 
-// Returns { connected, email } for the given app user.
-export async function getConnectionStatus(appUserId: string): Promise<{ connected: boolean; email?: string }> {
-  // userinfo endpoint is available under the same connector gateway for Google
-  // (any Google API with granted scope goes through here). Try calendarList as
-  // a light call; if it works, then fetch userinfo for the email.
-  const list = await callAsUser({
-    appUserId,
+// Load a user's stored connection_key. Returns null if not connected yet.
+export async function getUserConnectionKey(userId: string): Promise<string | null> {
+  const admin = adminClient();
+  const { data } = await admin
+    .from("google_calendar_connections")
+    .select("connection_key")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.connection_key ?? null;
+}
+
+export async function getConnectionStatus(userId: string): Promise<{ connected: boolean; email?: string }> {
+  const admin = adminClient();
+  const { data: row } = await admin
+    .from("google_calendar_connections")
+    .select("connection_key, email")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!row?.connection_key) return { connected: false };
+
+  // Quick verify with a light Google call; if it 401s, treat as disconnected.
+  const probe = await callAsUser({
+    connectionKey: row.connection_key,
     path: "/calendar/v3/users/me/calendarList",
     query: { maxResults: "1" },
   });
-  if (list.status === 401) return { connected: false };
-  if (!list.ok) throw new Error(`status check failed [${list.status}]: ${list.text}`);
-
-  // Best-effort fetch of the connected Google email via userinfo (uses userinfo.email scope).
-  let email: string | undefined;
-  const info = await callAsUser({
-    appUserId,
-    // userinfo lives on a different host; the gateway proxies /oauth2/v2/userinfo too.
-    path: "/oauth2/v2/userinfo",
-  });
-  if (info.ok && info.data?.email) email = info.data.email;
-  return { connected: true, email };
-}
-
-// Best-effort disconnect: tells the gateway to drop the user's credential.
-export async function disconnectUser(appUserId: string): Promise<{ ok: boolean; status: number; text: string }> {
-  const { lovableKey, clientKey } = getGatewayCreds();
-  // Try the documented shape; if it doesn't exist yet, the caller can ignore the error.
-  const res = await fetch(
-    `${GATEWAY_BASE}/api/v1/app-users/connections?connector_id=${CONNECTOR_ID}&app_user_id=${encodeURIComponent(appUserId)}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Client-Api-Key": clientKey,
-      },
-    },
-  );
-  const text = await res.text();
-  return { ok: res.ok, status: res.status, text };
+  if (probe.status === 401) return { connected: false };
+  return { connected: probe.ok, email: row.email ?? undefined };
 }
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
 };
 
 export function jsonResponse(data: unknown, status = 200): Response {
