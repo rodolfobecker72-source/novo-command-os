@@ -1,7 +1,5 @@
-// Diagnostic: dumps raw gateway responses for the current user so we can see
-// why the connection is not being recognized after OAuth.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { callAsUser, getGatewayCreds, jsonResponse, corsHeaders, CONNECTOR_ID } from "../_shared/appUserConnector.ts";
+import { getGatewayCreds, jsonResponse, corsHeaders, CONNECTOR_ID, GOOGLE_CALENDAR_SCOPES } from "../_shared/appUserConnector.ts";
 
 const GATEWAY_BASE = "https://connector-gateway.lovable.dev";
 
@@ -17,41 +15,39 @@ Deno.serve(async (req) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return jsonResponse({ error: "unauthorized" }, 401);
     const appUserId = userData.user.id;
-
     const { lovableKey, clientKey } = getGatewayCreds();
-    const results: Record<string, unknown> = { appUserId, email: userData.user.email };
+    const results: Record<string, unknown> = { appUserId };
 
-    // 1) Ask the gateway to list connections for this app_user_id, if that endpoint exists.
-    const listUrl = new URL(`${GATEWAY_BASE}/api/v1/app-users/connections`);
-    listUrl.searchParams.set("connector_id", CONNECTOR_ID);
-    listUrl.searchParams.set("app_user_id", appUserId);
-    const listRes = await fetch(listUrl, {
+    // === Test authorize response format ===
+    const authRes = await fetch(`${GATEWAY_BASE}/api/v1/app-users/oauth2/authorize`, {
+      method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${lovableKey}`,
         "X-Client-Api-Key": clientKey,
       },
+      body: JSON.stringify({
+        connector_id: CONNECTOR_ID,
+        app_user_id: appUserId,
+        return_url: "https://herocommandcrm.lovable.app/auth/google-calendar-callback",
+        credentials_configuration: { scopes: GOOGLE_CALENDAR_SCOPES },
+      }),
     });
-    results.listConnections = { status: listRes.status, body: await listRes.text() };
+    results.authorize = { status: authRes.status, body: await authRes.text() };
 
-    // 2) Try calendarList via callAsUser (current implementation).
-    const cal = await callAsUser({
-      appUserId,
-      path: "/calendar/v3/users/me/calendarList",
-      query: { maxResults: "1" },
-    });
-    results.calendarList = { status: cal.status, body: cal.text };
-
-    // 3) Try same call but with Authorization only (no X-App-User-Id) — some flows key on Bearer alone.
-    const bareRes = await fetch(
-      `${GATEWAY_BASE}/${CONNECTOR_ID}/calendar/v3/users/me/calendarList?maxResults=1`,
-      {
-        headers: {
-          Authorization: `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": clientKey,
-        },
-      },
-    );
-    results.calendarListNoAppUser = { status: bareRes.status, body: await bareRes.text() };
+    // === Try various header combos for calendar list ===
+    const tries = [
+      { name: "bearer_client_appuser", headers: { Authorization: `Bearer ${lovableKey}`, "X-Client-Api-Key": clientKey, "X-App-User-Id": appUserId } },
+      { name: "bearer_conn_appuser", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": clientKey, "X-App-User-Id": appUserId } },
+      { name: "bearer_only", headers: { Authorization: `Bearer ${lovableKey}`, "X-App-User-Id": appUserId } },
+      { name: "clientkey_bearer_appuser_userid", headers: { Authorization: `Bearer ${lovableKey}`, "X-Client-Api-Key": clientKey, "X-User-Id": appUserId } },
+    ];
+    const perTry: Record<string, unknown> = {};
+    for (const t of tries) {
+      const r = await fetch(`${GATEWAY_BASE}/${CONNECTOR_ID}/calendar/v3/users/me/calendarList?maxResults=1`, { headers: t.headers });
+      perTry[t.name] = { status: r.status, body: (await r.text()).slice(0, 400) };
+    }
+    results.calendarTries = perTry;
 
     return jsonResponse(results);
   } catch (e) {
