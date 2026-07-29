@@ -110,10 +110,15 @@ Deno.serve(async (req) => {
     const results: Array<{ user_id: string; status: string; error?: string }> = [];
     for (const uid of assigneeIds) {
       const existing = existingByUser.get(uid);
+      const key = await getUserConnectionKey(uid);
+      if (!key) {
+        results.push({ user_id: uid, status: "not_connected" });
+        continue;
+      }
       try {
         if (existing) {
           const r = await callAsUser({
-            appUserId: uid,
+            connectionKey: key,
             path: `/calendar/v3/calendars/primary/events/${existing.google_event_id}`,
             method: "PATCH",
             body: eventBody,
@@ -124,9 +129,8 @@ Deno.serve(async (req) => {
               .eq("id", existing.id);
             results.push({ user_id: uid, status: "updated" });
           } else if (r.status === 404 || r.status === 410) {
-            // Recreate if deleted in Google.
             const cr = await callAsUser({
-              appUserId: uid,
+              connectionKey: key,
               path: "/calendar/v3/calendars/primary/events",
               method: "POST",
               body: eventBody,
@@ -146,7 +150,7 @@ Deno.serve(async (req) => {
           }
         } else {
           const cr = await callAsUser({
-            appUserId: uid,
+            connectionKey: key,
             path: "/calendar/v3/calendars/primary/events",
             method: "POST",
             body: eventBody,
@@ -169,6 +173,7 @@ Deno.serve(async (req) => {
         results.push({ user_id: uid, status: "error", error: String(e) });
       }
     }
+
 
     return jsonResponse({ ok: true, results });
   } catch (e) {
