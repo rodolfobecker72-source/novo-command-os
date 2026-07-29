@@ -746,6 +746,39 @@ export type Database = {
           },
         ]
       }
+      google_calendar_connections: {
+        Row: {
+          connected_at: string | null
+          connection_key: string | null
+          created_at: string
+          email: string | null
+          pending_session_id: string | null
+          updated_at: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          connection_key?: string | null
+          created_at?: string
+          email?: string | null
+          pending_session_id?: string | null
+          updated_at?: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          connection_key?: string | null
+          created_at?: string
+          email?: string | null
+          pending_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       google_calendar_sync_map: {
         Row: {
           activity_id: string
