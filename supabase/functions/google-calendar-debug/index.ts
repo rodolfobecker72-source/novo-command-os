@@ -6,42 +6,45 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const { lovableKey, clientKey } = getGatewayCreds();
   const appUserId = "65e447cc-fe44-4662-a51c-723c8af27067";
+  const url = new URL(req.url);
+  const providedSid = url.searchParams.get("sid");
+  let sid = providedSid;
 
-  const authRes = await fetch(`${GATEWAY_BASE}/api/v1/app-users/oauth2/authorize`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Client-Api-Key": clientKey,
-    },
-    body: JSON.stringify({
-      connector_id: CONNECTOR_ID,
-      app_user_id: appUserId,
-      return_url: "https://herocommandcrm.lovable.app/auth/google-calendar-callback",
-      credentials_configuration: { scopes: GOOGLE_CALENDAR_SCOPES },
-    }),
-  });
-  const authJson = JSON.parse(await authRes.text());
-  const sid = authJson.session_id;
+  const results: Record<string, unknown> = {};
 
-  const attempts = [
-    `${GATEWAY_BASE}/api/v1/app-users/oauth2/sessions/${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/oauth2/session/${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/oauth2/sessions?session_id=${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/oauth2/status?session_id=${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/oauth2/poll?session_id=${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/oauth2/exchange?session_id=${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/sessions/${sid}`,
-    `${GATEWAY_BASE}/api/v1/app-users/credentials?connector_id=${CONNECTOR_ID}&app_user_id=${appUserId}`,
-    `${GATEWAY_BASE}/api/v1/app-users/credentials/${appUserId}`,
-    `${GATEWAY_BASE}/api/v1/credentials?connector_id=${CONNECTOR_ID}&app_user_id=${appUserId}`,
-    `${GATEWAY_BASE}/api/v1/app-users/${appUserId}/credentials?connector_id=${CONNECTOR_ID}`,
+  if (!sid) {
+    const authRes = await fetch(`${GATEWAY_BASE}/api/v1/app-users/oauth2/authorize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Client-Api-Key": clientKey,
+      },
+      body: JSON.stringify({
+        connector_id: CONNECTOR_ID,
+        app_user_id: appUserId,
+        return_url: "https://herocommandcrm.lovable.app/auth/google-calendar-callback",
+        credentials_configuration: { scopes: GOOGLE_CALENDAR_SCOPES },
+      }),
+    });
+    const authJson = JSON.parse(await authRes.text());
+    sid = authJson.session_id;
+    results.authorize_url = authJson.authorization_url;
+    results.session_id = sid;
+  }
+
+  const bodyVariants = [
+    { session_id: sid },
+    { session_id: sid, connector_id: CONNECTOR_ID },
+    { session_id: sid, connector_id: CONNECTOR_ID, app_user_id: appUserId },
   ];
-  const results: Record<string, unknown> = { session_id: sid };
-  for (const u of attempts) {
-    const r = await fetch(u, { headers: { Authorization: `Bearer ${lovableKey}`, "X-Client-Api-Key": clientKey } });
-    const b = await r.text();
-    if (r.status !== 404) results[u] = { status: r.status, body: b.slice(0, 300) };
+  for (let i = 0; i < bodyVariants.length; i++) {
+    const r = await fetch(`${GATEWAY_BASE}/api/v1/app-users/oauth2/exchange`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Client-Api-Key": clientKey },
+      body: JSON.stringify(bodyVariants[i]),
+    });
+    results[`exchange_v${i}`] = { status: r.status, body: (await r.text()).slice(0, 800) };
   }
   return jsonResponse(results);
 });
