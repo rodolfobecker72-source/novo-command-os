@@ -1,7 +1,7 @@
 // Refactored: sync a project activity to each assignee's Google Calendar via the
-// Lovable App User Connector gateway. No more per-user access tokens in the DB.
+// Lovable App User Connector gateway using per-user stored connection keys.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { callAsUser, jsonResponse, corsHeaders } from "../_shared/appUserConnector.ts";
+import { callAsUser, getUserConnectionKey, jsonResponse, corsHeaders } from "../_shared/appUserConnector.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -27,12 +27,13 @@ Deno.serve(async (req) => {
     );
 
     const deleteEvent = async (userId: string, eventId: string) => {
+      const key = await getUserConnectionKey(userId);
+      if (!key) return; // user isn't connected — nothing to delete on Google
       const r = await callAsUser({
-        appUserId: userId,
+        connectionKey: key,
         path: `/calendar/v3/calendars/primary/events/${eventId}`,
         method: "DELETE",
       });
-      // 404/410/401 (not connected) are fine — the event is effectively gone.
       if (!r.ok && r.status !== 404 && r.status !== 410 && r.status !== 401) {
         console.warn("[sync] delete failed", userId, eventId, r.status, r.text);
       }
