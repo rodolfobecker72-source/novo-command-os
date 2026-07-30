@@ -699,6 +699,54 @@ export type Database = {
           },
         ]
       }
+      feedback_reports: {
+        Row: {
+          created_at: string
+          id: string
+          images: Json
+          message: string
+          page_path: string
+          rating: number | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+          user_name: string
+          workspace_id: string | null
+          workspace_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          images?: Json
+          message: string
+          page_path?: string
+          rating?: number | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+          user_name?: string
+          workspace_id?: string | null
+          workspace_name?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          images?: Json
+          message?: string
+          page_path?: string
+          rating?: number | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+          workspace_id?: string | null
+          workspace_name?: string
+        }
+        Relationships: []
+      }
       financial_accounts: {
         Row: {
           account_number: string
