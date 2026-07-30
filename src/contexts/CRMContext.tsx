@@ -143,6 +143,7 @@ function budgetFromDb(row: any, versions: BudgetVersion[]): Budget {
     rejectionReason: row.rejection_reason || '',
     rejectionObservation: row.rejection_observation || '',
     pdfReleased: row.pdf_released ?? false,
+    isRecurring: row.is_recurring ?? false,
     hideNfInPdf: row.hide_nf_in_pdf ?? false,
     hideOperationalInPdf: row.hide_operational_in_pdf ?? false,
     hideNfObservationInPdf: row.hide_nf_observation_in_pdf ?? false,
@@ -908,6 +909,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
           drive_url: original.driveUrl || '',
           status: 'oportunidade_mapeada',
           execution_month: month,
+          is_recurring: true,
         }).select().single();
         if (insErr) throw insErr;
 
@@ -983,6 +985,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (updates.rejectionReason !== undefined) dbUpdates.rejection_reason = updates.rejectionReason;
       if (updates.rejectionObservation !== undefined) dbUpdates.rejection_observation = updates.rejectionObservation;
       if (updates.pdfReleased !== undefined) dbUpdates.pdf_released = updates.pdfReleased;
+      if (updates.isRecurring !== undefined) dbUpdates.is_recurring = updates.isRecurring;
       if (updates.hideNfInPdf !== undefined) dbUpdates.hide_nf_in_pdf = updates.hideNfInPdf;
       if (updates.hideOperationalInPdf !== undefined) dbUpdates.hide_operational_in_pdf = updates.hideOperationalInPdf;
       if (updates.hideNfObservationInPdf !== undefined) dbUpdates.hide_nf_observation_in_pdf = updates.hideNfObservationInPdf;
