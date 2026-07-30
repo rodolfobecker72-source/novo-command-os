@@ -370,6 +370,12 @@ export function ProjectManagementPage() {
                                           <span className="font-medium">{card.proposalId} - </span>
                                         )}
                                         <span className="font-medium">{card.projectName}</span>
+                                        {budget?.isRecurring && (
+                                          <span className="ml-2 inline-flex items-center gap-1 align-middle text-[9px] uppercase tracking-wide text-accent border border-accent/30 bg-accent/5 rounded px-1 py-0 leading-none h-4">
+                                            <Repeat className="w-2.5 h-2.5" />
+                                            Recorrente
+                                          </span>
+                                        )}
                                       </div>
                                       {card.clientName && (
                                         <div className="text-xs text-muted-foreground truncate">{card.clientName}</div>
