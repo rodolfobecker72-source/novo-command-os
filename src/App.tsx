@@ -118,6 +118,7 @@ const App = () => (
                   {/* Administrativo */}
                   <Route path="/financeiro" element={<PageGuard pageKey="financeiro"><FinancialPage /></PageGuard>} />
                   <Route path="/patrimonio" element={<PageGuard pageKey="patrimonio"><PatrimonioPage /></PageGuard>} />
+                  <Route path="/admin-sistema" element={<SystemAdminPage />} />
 
                   {/* Users */}
                   <Route path="/usuarios" element={<PageGuard pageKey="usuarios"><UsersPage /></PageGuard>} />
