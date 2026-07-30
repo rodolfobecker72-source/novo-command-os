@@ -6,7 +6,6 @@ import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCRM } from '@/contexts/CRMContext';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
 
 const MONTH_NAMES_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
