@@ -500,14 +500,7 @@ export function ProjectManagementPage() {
 
 
       <ProjectStatusManagerDialog open={manageOpen} onOpenChange={setManageOpen} />
-      {activitiesFor && (
-        <ProjectActivitiesDialog
-          open={!!activitiesFor}
-          onOpenChange={(o) => { if (!o) { setActivitiesFor(null); setActivityRefreshKey(k => k + 1); } }}
-          projectCardId={activitiesFor.id}
-          projectName={activitiesFor.name}
-        />
-      )}
+
       </div>
     </div>
   );
