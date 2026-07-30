@@ -1,13 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   LayoutGrid,
   UserCog,
   Layers,
-  ChevronDown,
   Briefcase,
   Target,
   TrendingUp,
@@ -106,23 +104,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     }))
     .filter((group) => group.items.length > 0);
 
-  const getDefaultOpen = () => {
-    const open: Record<string, boolean> = {};
-    filteredNavGroups.forEach((group) => {
-      open[group.label] = group.items.some((item) => isParentActive(item.href));
-    });
-    if (!Object.values(open).some(Boolean) && filteredNavGroups.length > 0) {
-      open[filteredNavGroups[0].label] = true;
-    }
-    return open;
-  };
-
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(getDefaultOpen);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-
-  const toggleGroup = (label: string) => {
-    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
-  };
 
   const showUsuarios = role === 'owner';
 
@@ -148,7 +130,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 pt-6 space-y-4 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 pt-5 pb-4 space-y-4 overflow-y-auto scrollbar-thin">
         {hasPageAccess('boas-vindas') && (
           <NavLink
             to="/boas-vindas"
@@ -170,50 +152,28 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           </NavLink>
         )}
         {filteredNavGroups.map((group) => (
-          <div key={group.label}>
-            <button
-              onClick={() => toggleGroup(group.label)}
-              className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors rounded-lg"
-            >
-              <div className="flex items-center gap-2">
-                <group.icon className="w-4 h-4" />
-                <span>{group.label}</span>
-              </div>
-              <motion.div
-                animate={{ rotate: openGroups[group.label] ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="w-3.5 h-3.5" />
-              </motion.div>
-            </button>
-
-            <AnimatePresence initial={false}>
-              {openGroups[group.label] && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
+          <div key={group.label} className="pt-1">
+            <div className="flex items-center gap-2 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80">
+              <group.icon className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{group.label}</span>
+              <span className="flex-1 h-px bg-sidebar-border/70 ml-1" />
+            </div>
+            <div className="space-y-0.5 pl-1">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  onClick={handleNavClick}
+                  className={`nav-link ${isParentActive(item.href) ? 'active' : ''}`}
                 >
-                  <div className="mt-1 space-y-0.5 pl-2">
-                    {group.items.map((item) => (
-                      <NavLink
-                        key={item.name}
-                        to={item.href}
-                        onClick={handleNavClick}
-                        className={`nav-link ${isParentActive(item.href) ? 'active' : ''}`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm font-medium">{item.name}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <item.icon className="w-5 h-5 shrink-0" />
+                  <span className="text-sm font-medium truncate">{item.name}</span>
+                </NavLink>
+              ))}
+            </div>
           </div>
         ))}
+
       </nav>
 
       {/* Footer with user info */}
