@@ -95,6 +95,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasPageAccess, role, profile, logout } = useAuth();
+  const { isSystemAdmin } = useSystemAdmin();
 
   const isParentActive = (href: string) => location.pathname.startsWith(href);
 
