@@ -1,13 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   LayoutGrid,
   UserCog,
   Layers,
-  ChevronDown,
   Briefcase,
   Target,
   TrendingUp,
@@ -106,23 +104,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     }))
     .filter((group) => group.items.length > 0);
 
-  const getDefaultOpen = () => {
-    const open: Record<string, boolean> = {};
-    filteredNavGroups.forEach((group) => {
-      open[group.label] = group.items.some((item) => isParentActive(item.href));
-    });
-    if (!Object.values(open).some(Boolean) && filteredNavGroups.length > 0) {
-      open[filteredNavGroups[0].label] = true;
-    }
-    return open;
-  };
-
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(getDefaultOpen);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-
-  const toggleGroup = (label: string) => {
-    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
-  };
 
   const showUsuarios = role === 'owner';
 
@@ -148,7 +130,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 pt-6 space-y-4 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 pt-5 pb-4 space-y-4 overflow-y-auto scrollbar-thin">
         {hasPageAccess('boas-vindas') && (
           <NavLink
             to="/boas-vindas"
