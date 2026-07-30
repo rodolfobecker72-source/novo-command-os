@@ -1696,7 +1696,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       const currentVersionData = budget.versions.find(v => v.version === budget.currentVersion);
       const serviceTypes: ServiceType[] = currentVersionData?.services
         ? [...new Set(currentVersionData.services.map(s => s.serviceType))] : [budget.serviceType];
-      const isRecurring = budget.versions.some(v => typeof v.reason === 'string' && v.reason.startsWith('Duplicado de #'));
+      const isRecurring = budget.isRecurring ?? false;
       return {
         id: budget.id, budgetId: budget.id,
         projectName: `${budget.proposalId} - ${budget.projectName}`,
