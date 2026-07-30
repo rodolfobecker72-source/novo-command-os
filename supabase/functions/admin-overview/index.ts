@@ -39,6 +39,20 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!sysAdmin) return json({ error: "Acesso restrito ao administrador do sistema" }, 403);
 
+    // Optional action: update feedback status
+    let body: Record<string, unknown> = {};
+    try { body = await req.json(); } catch { /* no body */ }
+    if (body.action === "update_feedback_status") {
+      const id = String(body.id ?? "");
+      const status = String(body.status ?? "");
+      if (!id || !["aberto", "em_analise", "resolvido", "descartado"].includes(status)) {
+        return json({ error: "Parâmetros inválidos" }, 400);
+      }
+      const { error } = await admin.from("feedback_reports").update({ status }).eq("id", id);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
     // --- Workspaces + members ---
     const [{ data: workspaces }, { data: members }, { data: profiles }] = await Promise.all([
       admin.from("workspaces").select("id, name, created_at, created_by").order("created_at"),
