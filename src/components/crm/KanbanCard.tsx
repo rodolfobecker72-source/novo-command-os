@@ -7,7 +7,6 @@ import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
 import { GripVertical, Film, Camera, Smartphone, FileText, Calendar, AlertCircle, Copy, Repeat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useCRM } from '@/contexts/CRMContext';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
 
@@ -33,7 +32,7 @@ function formatExecutionMonth(ym: string): string {
 export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
   const navigate = useNavigate();
   const [duplicateOpen, setDuplicateOpen] = useState(false);
-  const { getCategoryLabel, updateBudget } = useCRM();
+  const { getCategoryLabel } = useCRM();
   const {
     attributes,
     listeners,

@@ -4,9 +4,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { CRMCard, formatCurrency } from '@/types/crm';
 import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle, Repeat } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useCRM } from '@/contexts/CRMContext';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
 
@@ -24,7 +23,7 @@ interface Props {
 
 export function KanbanListRow({ card, hideValues }: Props) {
   const navigate = useNavigate();
-  const { updateBudget } = useCRM();
+
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
