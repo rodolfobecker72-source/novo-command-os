@@ -111,6 +111,7 @@ import {
   Loader2,
   AlertCircle,
   Package,
+  Repeat,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -965,6 +966,19 @@ export function BudgetDetail() {
           </Button>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant={budget.isRecurring ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                const next = !budget.isRecurring;
+                updateBudget(budget.id, { isRecurring: next });
+                toast.success(next ? 'Marcado como recorrente' : 'Tag de recorrente removida');
+              }}
+              title={budget.isRecurring ? 'Remover tag de recorrente' : 'Marcar como recorrente'}
+            >
+              <Repeat className="w-4 h-4 mr-2" />
+              {budget.isRecurring ? 'Recorrente' : 'Marcar recorrente'}
+            </Button>
             {budget.status === 'aprovada' && (
               <Button
                 size="sm"

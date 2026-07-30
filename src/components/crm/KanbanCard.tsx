@@ -7,7 +7,6 @@ import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
 import { GripVertical, Film, Camera, Smartphone, FileText, Calendar, AlertCircle, Copy, Repeat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useCRM } from '@/contexts/CRMContext';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
 
@@ -33,7 +32,7 @@ function formatExecutionMonth(ym: string): string {
 export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
   const navigate = useNavigate();
   const [duplicateOpen, setDuplicateOpen] = useState(false);
-  const { getCategoryLabel, updateBudget } = useCRM();
+  const { getCategoryLabel } = useCRM();
   const {
     attributes,
     listeners,
@@ -167,20 +166,6 @@ export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
             >
               <Copy className="w-3 h-3" />
               Duplicar
-            </button>
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                const next = !card.isRecurring;
-                updateBudget(card.budgetId, { isRecurring: next });
-                toast.success(next ? 'Marcado como recorrente' : 'Tag de recorrente removida');
-              }}
-              className={`flex items-center gap-1 text-xs transition-colors ${card.isRecurring ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
-              title={card.isRecurring ? 'Remover tag de recorrente' : 'Marcar como recorrente'}
-            >
-              <Repeat className="w-3 h-3" />
-              {card.isRecurring ? 'Recorrente' : 'Marcar recorrente'}
             </button>
           </div>
         </div>
