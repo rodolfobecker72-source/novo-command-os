@@ -225,6 +225,27 @@ export function ProjectManagementPage() {
   };
 
 
+  if (activitiesFor) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header
+          title="Área de Projetos"
+          subtitle="Acompanhe todo fluxo de projetos da produtora, demandas, responsáveis, datas e objetivos."
+        />
+        <div className="p-4 md:p-6 max-w-5xl mx-auto">
+          <ProjectActivitiesDialog
+            variant="page"
+            open
+            onOpenChange={(o) => { if (!o) { setActivitiesFor(null); setActivityRefreshKey(k => k + 1); } }}
+            onBack={() => { setActivitiesFor(null); setActivityRefreshKey(k => k + 1); }}
+            projectCardId={activitiesFor.id}
+            projectName={activitiesFor.name}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header
@@ -232,6 +253,7 @@ export function ProjectManagementPage() {
         subtitle="Acompanhe todo fluxo de projetos da produtora, demandas, responsáveis, datas e objetivos."
       />
       <div className="p-4 md:p-6 max-w-5xl mx-auto">
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -478,14 +500,7 @@ export function ProjectManagementPage() {
 
 
       <ProjectStatusManagerDialog open={manageOpen} onOpenChange={setManageOpen} />
-      {activitiesFor && (
-        <ProjectActivitiesDialog
-          open={!!activitiesFor}
-          onOpenChange={(o) => { if (!o) { setActivitiesFor(null); setActivityRefreshKey(k => k + 1); } }}
-          projectCardId={activitiesFor.id}
-          projectName={activitiesFor.name}
-        />
-      )}
+
       </div>
     </div>
   );
