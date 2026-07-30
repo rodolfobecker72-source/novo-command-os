@@ -1552,6 +1552,21 @@ export type Database = {
           },
         ]
       }
+      system_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workspace_contract_template: {
         Row: {
           content: string
@@ -1837,6 +1852,7 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      is_system_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "owner" | "admin" | "vendedor" | "visualizador" | "time_hero"
