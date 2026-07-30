@@ -22,6 +22,7 @@ import {
   DollarSign,
   Building2,
   ShieldCheck,
+  ShieldAlert,
   Sparkles,
   History as HistoryIcon,
 } from 'lucide-react';
