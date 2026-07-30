@@ -77,6 +77,9 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   projectCardId: string;
   projectName: string;
+  /** 'page' renders full-screen content (no modal) with a back button. */
+  variant?: 'dialog' | 'page';
+  onBack?: () => void;
 }
 
 const COLUMNS: { key: ActivityStatus; label: string; dotClass: string; chipClass: string; colBg: string; cardBg: string; cardBorder: string; addText: string }[] = [
