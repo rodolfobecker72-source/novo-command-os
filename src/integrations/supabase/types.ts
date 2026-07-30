@@ -283,6 +283,7 @@ export type Database = {
           includes_raw_material: boolean
           includes_tax: boolean
           includes_technical_visit: boolean
+          is_recurring: boolean
           location: string
           nf_url: string | null
           objective: string
@@ -325,6 +326,7 @@ export type Database = {
           includes_raw_material?: boolean
           includes_tax?: boolean
           includes_technical_visit?: boolean
+          is_recurring?: boolean
           location?: string
           nf_url?: string | null
           objective?: string
@@ -367,6 +369,7 @@ export type Database = {
           includes_raw_material?: boolean
           includes_tax?: boolean
           includes_technical_visit?: boolean
+          is_recurring?: boolean
           location?: string
           nf_url?: string | null
           objective?: string
