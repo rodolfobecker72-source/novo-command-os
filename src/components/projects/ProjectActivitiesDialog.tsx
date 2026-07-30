@@ -643,13 +643,51 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Atividades do projeto</DialogTitle>
-          <DialogDescription className="truncate">{projectName}</DialogDescription>
-        </DialogHeader>
+  const totalCount = activities.length;
+  const doneCount = activities.filter(a => a.status === 'concluido').length;
+  const inProgressCount = activities.filter(a => a.status === 'em_andamento').length;
+  const notStartedCount = totalCount - doneCount - inProgressCount;
+  const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+
+  const progressPanel = (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className={cn('w-4 h-4', pct === 100 ? 'text-success' : 'text-muted-foreground')} />
+          <span className="text-sm font-semibold">Andamento do projeto</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className={cn('text-2xl font-bold tabular-nums', pct === 100 ? 'text-success' : 'text-primary')}>{pct}%</span>
+          <span className="text-xs text-muted-foreground">{doneCount} de {totalCount} atividades concluídas</span>
+        </div>
+      </div>
+      <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+        <div
+          className={cn('h-full transition-all', pct === 100 ? 'bg-success' : 'bg-primary')}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg bg-muted/40 px-3 py-2">
+          <p className="text-lg font-semibold tabular-nums">{notStartedCount}</p>
+          <p className="text-[11px] text-muted-foreground">Não iniciado</p>
+        </div>
+        <div className="rounded-lg bg-info/[0.08] px-3 py-2">
+          <p className="text-lg font-semibold tabular-nums text-info">{inProgressCount}</p>
+          <p className="text-[11px] text-muted-foreground">Em andamento</p>
+        </div>
+        <div className="rounded-lg bg-success/[0.08] px-3 py-2">
+          <p className="text-lg font-semibold tabular-nums text-success">{doneCount}</p>
+          <p className="text-[11px] text-muted-foreground">Concluído</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const inner = (
+      <>
+        {progressPanel}
+
 
         {/* Public share link — read-only */}
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-3">
