@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
+import { TutorialButton } from '@/components/layout/TutorialButton';
 
 interface HeaderProps {
   title: string;
@@ -74,6 +75,9 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-1 md:gap-2 shrink-0">
+
+        {/* Tutorial da página */}
+        <TutorialButton fallbackTitle={title} />
 
         {/* User Menu - visible on all viewports */}
         <DropdownMenu>
