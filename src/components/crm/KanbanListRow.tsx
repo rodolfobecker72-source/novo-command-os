@@ -103,20 +103,6 @@ export function KanbanListRow({ card, hideValues }: Props) {
       >
         <Copy className="w-4 h-4" />
       </button>
-      <button
-        type="button"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          const next = !card.isRecurring;
-          updateBudget(card.budgetId, { isRecurring: next });
-          toast.success(next ? 'Marcado como recorrente' : 'Tag de recorrente removida');
-        }}
-        className={`transition-colors shrink-0 ${card.isRecurring ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
-        title={card.isRecurring ? 'Remover tag de recorrente' : 'Marcar como recorrente'}
-      >
-        <Repeat className="w-4 h-4" />
-      </button>
       {card.value !== undefined && card.value !== null && !hideValues && (
         <span className="text-sm font-semibold text-accent whitespace-nowrap ml-auto min-w-[110px] text-right">
           {formatCurrency(card.value)}
