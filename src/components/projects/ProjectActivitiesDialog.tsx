@@ -97,7 +97,7 @@ function formatDateBR(iso: string | null): string {
   return `${d}/${m}/${y.slice(2)}`;
 }
 
-export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, projectName }: Props) {
+export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, projectName, variant = 'dialog', onBack }: Props) {
   const { workspace, profile } = useAuth();
   const workspaceId = workspace?.id;
   const [comments, setComments] = useState<Array<{ id: string; userId: string; userName: string; photoUrl: string | null; text: string; createdAt: string; editedAt?: string | null; mentions?: string[]; readBy?: string[] }>>([]);
