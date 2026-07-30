@@ -29,6 +29,8 @@ export function AppLayout() {
           <Outlet context={{ onOpenMobileMenu: () => setMobileOpen(true) }} />
         </ErrorBoundary>
       </main>
+
+      <FeedbackButton />
     </div>
   );
 }
