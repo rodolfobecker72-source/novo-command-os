@@ -4,8 +4,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { CRMCard, formatCurrency } from '@/types/crm';
 import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle, Repeat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useCRM } from '@/contexts/CRMContext';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
 
 const MONTH_NAMES_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -22,6 +24,7 @@ interface Props {
 
 export function KanbanListRow({ card, hideValues }: Props) {
   const navigate = useNavigate();
+  const { updateBudget } = useCRM();
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -99,6 +102,20 @@ export function KanbanListRow({ card, hideValues }: Props) {
         title="Duplicar para outros meses"
       >
         <Copy className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          const next = !card.isRecurring;
+          updateBudget(card.budgetId, { isRecurring: next });
+          toast.success(next ? 'Marcado como recorrente' : 'Tag de recorrente removida');
+        }}
+        className={`transition-colors shrink-0 ${card.isRecurring ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+        title={card.isRecurring ? 'Remover tag de recorrente' : 'Marcar como recorrente'}
+      >
+        <Repeat className="w-4 h-4" />
       </button>
       {card.value !== undefined && card.value !== null && !hideValues && (
         <span className="text-sm font-semibold text-accent whitespace-nowrap ml-auto min-w-[110px] text-right">

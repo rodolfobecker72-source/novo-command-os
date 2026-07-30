@@ -334,6 +334,7 @@ export interface Budget {
   rejectionReason: string;
   rejectionObservation: string;
   pdfReleased: boolean;
+  isRecurring?: boolean;
   hideNfInPdf: boolean;
   hideOperationalInPdf: boolean;
   hideNfObservationInPdf: boolean;

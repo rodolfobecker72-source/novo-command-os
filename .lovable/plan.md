@@ -1,48 +1,29 @@
 ## Objetivo
-No **Calendário do Time**, permitir selecionar múltiplos responsáveis (com opção "Todos"), atribuir uma cor única a cada pessoa e exibir uma legenda no rodapé. A mesma cor por pessoa também deve ser usada no **Meu Calendário** (individual). Eventos de entrega mantêm o ícone de entrega além da cor da pessoa.
 
-## Mudanças
+Permitir marcar/desmarcar manualmente um projeto como **Recorrente** direto no card do CRM, e exibir essa tag também na área de Projetos.
 
-### 1. Paleta compartilhada de cores por pessoa
-Novo utilitário `src/utils/memberColors.ts`:
-- Paleta fixa de ~14 cores (tons distintos: violeta, âmbar, esmeralda, rosa, ciano, laranja, índigo, teal, rose, lime, sky, fuchsia, amber-dark, slate) — todas com bom contraste em light/dark.
-- Função `getMemberColor(userId: string)` → retorna `{ bg, border, text, dot, hex }` de forma determinística (hash do userId → índice na paleta), garantindo mesma cor em qualquer tela.
+## Situação atual
 
-### 2. `TeamCalendarPage.tsx` — seleção múltipla
-- Trocar `memberId: string` por `selectedMemberIds: Set<string>`.
-- Substituir o `<Select>` atual por um **Popover + Command** (multi-check) com:
-  - Checkbox "Selecionar todos" no topo (marca/desmarca todos).
-  - Lista de membros com checkbox.
-  - Trigger mostrando "N selecionados" ou nomes truncados.
-- Refatorar o `useEffect` de carregamento para iterar sobre cada `userId` selecionado (queries `contains` e `.eq` para o campo legado) e consolidar `bids` e `memberActivityEvents`, guardando em cada evento o `assignedUserId` (a pessoa a quem o evento pertence — quando a atividade tem múltiplos responsáveis, gerar um evento por responsável selecionado para colorir corretamente).
-- Passar `memberColorMap` para as views (Month/Week/Day) e para o `CalendarEventCard`.
+Hoje a tag "Recorrente" já aparece nos cards do CRM (`KanbanCard.tsx` e `KanbanListRow.tsx`), mas é **calculada automaticamente**: o `CRMContext` marca como recorrente qualquer orçamento cuja versão tenha o motivo iniciando com "Duplicado de #". Não existe campo no banco nem forma de o usuário ativar/desativar.
 
-### 3. Cor por pessoa no `CalendarEventCard.tsx`
-- Nova prop opcional `memberColor?: { bg; border; text; dot }`.
-- Quando presente, sobrescreve `statusStyle` e `dotColor` (mantendo o layout).
-- Para eventos de **entrega** (`isDelivery` ou `eventType === 'delivery'`): manter o **ícone de pacote** (`Package`) visível ao lado do título, junto da cor da pessoa — hoje a "entrega" é sinalizada apenas pelo fundo azul; passará a ser sinalizada pelo ícone.
+## O que será feito
 
-### 4. Legenda no rodapé (Team Calendar)
-- Novo componente `MemberLegend` renderizado abaixo da área do calendário:
-  - Uma "pill" por pessoa selecionada: bolinha na cor + nome.
-  - Item extra explicativo: ícone `Package` + "Entrega".
-- Sticky/border-top, esconde quando nenhum membro está selecionado.
+1. **Banco de dados**
+   - Nova coluna `is_recurring` (booleano, padrão falso) na tabela de orçamentos.
+   - Preenchimento inicial: marcar como recorrente os orçamentos que hoje já são detectados como duplicados, para não perder a marcação atual.
 
-### 5. `MyCalendarPage.tsx` — usar a mesma cor do usuário logado
-- Ao renderizar eventos (`project`, `activity`), aplicar `getMemberColor(user.id)` via a nova prop do `CalendarEventCard` / bloco de evento equivalente.
-- Eventos de entrega recebem o ícone `Package` junto ao título (mesma regra da Team).
-- Compromissos, notas, e leads continuam com sua cor atual (não estão vinculados a "pessoa" no sentido do time).
+2. **CRM — controle no card**
+   - No card do Kanban (visão card e visão lista) adicionar, na área de ações do card, um botão "Recorrente" que liga/desliga a tag com um clique (com feedback imediato e toast de confirmação).
+   - A tag passa a refletir o valor salvo no banco, e não mais a heurística de duplicação.
+   - Manter o comportamento de duplicação: ao duplicar um projeto para meses futuros, as cópias já nascem marcadas como recorrentes.
 
-### 6. Views auxiliares (`CalendarMonthView`, `CalendarWeekView`, `CalendarDayView`)
-- Repassar `memberColorMap` para o `CalendarEventCard`.
-- Nenhuma mudança de layout além disso.
+3. **Área de Projetos**
+   - Exibir a tag "Recorrente" (mesmo estilo visual do CRM: ícone de cópia + borda/destaque em accent) no card do projeto na listagem de gestão de projetos, ao lado do nome/identificação do projeto.
 
 ## Detalhes técnicos
-- Nenhuma migração de banco — cor é derivada do `user.id` no cliente.
-- Persistência da seleção múltipla em `sessionStorage` (chave por workspace) para não perder ao trocar de aba.
-- Tokens semânticos: preferir classes Tailwind existentes (`bg-violet-500/15 border-violet-500/30 text-violet-700 dark:text-violet-300` etc.) mapeadas na paleta, para manter compatibilidade com dark mode.
-- Sem alterações em business logic (drag-and-drop, sync, RLS).
 
-## Fora de escopo
-- Permitir escolher/editar manualmente a cor de cada pessoa (fica automático).
-- Alteração no calendário público do cliente.
+- Migração: `ALTER TABLE public.budgets ADD COLUMN is_recurring boolean NOT NULL DEFAULT false;` + `UPDATE` inicial baseado no motivo das versões. RLS/grants existentes da tabela continuam válidos.
+- `src/contexts/CRMContext.tsx`: mapear `is_recurring` → `isRecurring` no mapper de orçamento, usar esse valor em `getCRMCards()`, e expor uma ação `toggleBudgetRecurring(budgetId, value)` (update otimista + persistência). O realtime já sincroniza a tabela para outros usuários.
+- `src/types/crm.ts`: adicionar `isRecurring` ao tipo `Budget`.
+- `src/components/crm/KanbanCard.tsx` e `KanbanListRow.tsx`: botão de toggle com `stopPropagation` no `onPointerDown` (para não conflitar com o drag).
+- `src/pages/projects/ProjectManagementPage.tsx`: renderizar o badge quando `card.isRecurring`.
