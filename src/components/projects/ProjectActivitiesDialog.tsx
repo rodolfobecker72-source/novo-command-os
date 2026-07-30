@@ -1066,9 +1066,40 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
             </div>
           </div>
         </div>
+      </>
+  );
+
+  if (variant === 'page') {
+    if (!open) return null;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 flex-wrap">
+          <Button type="button" variant="outline" size="sm" onClick={() => (onBack ? onBack() : onOpenChange(false))}>
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Voltar para projetos
+          </Button>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold truncate">{projectName}</h1>
+            <p className="text-xs text-muted-foreground">Atividades do projeto</p>
+          </div>
+        </div>
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Atividades do projeto</DialogTitle>
+          <DialogDescription className="truncate">{projectName}</DialogDescription>
+        </DialogHeader>
+        {inner}
       </DialogContent>
     </Dialog>
   );
+
 }
 
 function Column({
