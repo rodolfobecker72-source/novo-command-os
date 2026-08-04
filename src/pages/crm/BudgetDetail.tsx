@@ -163,6 +163,7 @@ export function BudgetDetail() {
   const [editedProjectName, setEditedProjectName] = useState('');
   const [editedProjectDescription, setEditedProjectDescription] = useState('');
   const [editedProposalId, setEditedProposalId] = useState('');
+  const [editedLocation, setEditedLocation] = useState('');
   const [editedIncludesTax, setEditedIncludesTax] = useState(false);
   const [editedIncludesLogistics, setEditedIncludesLogistics] = useState(false);
   const [editedIncludesAccommodation, setEditedIncludesAccommodation] = useState(false);
