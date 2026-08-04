@@ -45,7 +45,7 @@ import { MyCalendarPage } from "@/pages/welcome/MyCalendarPage";
 import GoogleCalendarCallback from "@/pages/GoogleCalendarCallback";
 
 import { MaintenancePage } from "@/pages/MaintenancePage";
-import PublicProjectPage from "@/pages/public/PublicProjectPage";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,8 +68,6 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
-              {/* Public project view (no auth) */}
-              <Route path="/p/projeto/:cardId" element={<PublicProjectPage />} />
 
               {/* Google Calendar OAuth popup callback (public — just closes) */}
               <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />

@@ -22,7 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
-import { Plus, Trash2, Loader2, ExternalLink, Copy, User, Calendar, FileText, ChevronDown, ChevronRight, MessageSquare, Send, GripVertical, X, Eye, Share2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, ExternalLink, Copy, User, Calendar, FileText, ChevronDown, ChevronRight, MessageSquare, Send, GripVertical, X, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -689,34 +689,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
         {progressPanel}
 
 
-        {/* Public share link — read-only */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-3">
-          <Eye className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0 space-y-1">
-            <p className="text-xs font-semibold text-primary">Link de acompanhamento para o cliente</p>
-            <p className="text-[11px] text-muted-foreground">
-              Somente visualização. Quem receber o link consegue apenas acompanhar o andamento — não é necessário login e nenhuma alteração pode ser feita.
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="shrink-0"
-            onClick={async () => {
-              const url = `${window.location.origin}/p/projeto/${projectCardId}`;
-              try {
-                await navigator.clipboard.writeText(url);
-                toast.success('Link de acompanhamento copiado');
-              } catch {
-                toast.error('Não foi possível copiar');
-              }
-            }}
-          >
-            <Share2 className="w-3.5 h-3.5 mr-1.5" />
-            Copiar link
-          </Button>
-        </div>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2">
