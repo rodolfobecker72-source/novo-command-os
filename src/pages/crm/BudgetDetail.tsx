@@ -163,6 +163,7 @@ export function BudgetDetail() {
   const [editedProjectName, setEditedProjectName] = useState('');
   const [editedProjectDescription, setEditedProjectDescription] = useState('');
   const [editedProposalId, setEditedProposalId] = useState('');
+  const [editedLocation, setEditedLocation] = useState('');
   const [editedIncludesTax, setEditedIncludesTax] = useState(false);
   const [editedIncludesLogistics, setEditedIncludesLogistics] = useState(false);
   const [editedIncludesAccommodation, setEditedIncludesAccommodation] = useState(false);
@@ -399,6 +400,7 @@ export function BudgetDetail() {
       await updateBudget(budget.id, { 
         proposalId: editedProposalId,
         paymentTerms: editedPaymentTerms,
+        location: editedLocation,
         projectName: editedProjectName,
         projectDescription: editedProjectDescription,
         includesTax: editedIncludesTax,
@@ -1161,6 +1163,7 @@ export function BudgetDetail() {
                           size="sm"
                           onClick={() => {
                             setEditedPaymentTerms(budget.paymentTerms);
+                            setEditedLocation(budget.location || '');
                             setEditedProjectName(budget.projectName);
                             setEditedProjectDescription(budget.projectDescription || '');
                             setEditedProposalId(budget.proposalId);
@@ -1324,6 +1327,22 @@ export function BudgetDetail() {
                         <p className="font-medium">{budget.paymentTerms || 'Não definido'}</p>
                       )}
                     </div>
+
+                    {/* Local */}
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Local</p>
+                      {isEditing ? (
+                        <Input
+                          value={editedLocation}
+                          onChange={(e) => setEditedLocation(e.target.value)}
+                          placeholder="Ex: São Paulo - SP"
+                        />
+                      ) : (
+                        <p className="font-medium">{budget.location || 'Não definido'}</p>
+                      )}
+                    </div>
+
+
 
                     {/* Data para Execução - always visible */}
                     <div>
