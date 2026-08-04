@@ -1328,6 +1328,22 @@ export function BudgetDetail() {
                       )}
                     </div>
 
+                    {/* Local */}
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Local</p>
+                      {isEditing ? (
+                        <Input
+                          value={editedLocation}
+                          onChange={(e) => setEditedLocation(e.target.value)}
+                          placeholder="Ex: São Paulo - SP"
+                        />
+                      ) : (
+                        <p className="font-medium">{budget.location || 'Não definido'}</p>
+                      )}
+                    </div>
+
+
+
                     {/* Data para Execução - always visible */}
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Data para Execução</p>
