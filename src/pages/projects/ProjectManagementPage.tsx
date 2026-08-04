@@ -279,7 +279,7 @@ export function ProjectManagementPage() {
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar projeto por nome, cliente ou ID..."
+            placeholder="Buscar por nome, cliente, ID ou mês (ex: julho)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-9 pl-9 pr-8"
