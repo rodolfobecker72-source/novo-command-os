@@ -1,29 +1,26 @@
-## Objetivo
+# Correção da tela em branco e proteção do backend
 
-Permitir marcar/desmarcar manualmente um projeto como **Recorrente** direto no card do CRM, e exibir essa tag também na área de Projetos.
+## O que foi verificado agora
 
-## Situação atual
+- O banco de dados na nuvem está saudável: consulta real de dados respondeu normalmente.
+- As credenciais de conexão do app (arquivo `.env`) estavam **vazias**; foram restauradas e o servidor reiniciou.
+- Abrindo o app aqui já logado, `/crm/dashboard` renderiza a sidebar e o conteúdo normalmente, sem erro de execução.
 
-Hoje a tag "Recorrente" já aparece nos cards do CRM (`KanbanCard.tsx` e `KanbanListRow.tsx`), mas é **calculada automaticamente**: o `CRMContext` marca como recorrente qualquer orçamento cuja versão tenha o motivo iniciando com "Duplicado de #". Não existe campo no banco nem forma de o usuário ativar/desativar.
+Conclusão: a tela branca vem do app ter carregado enquanto as credenciais estavam vazias. Nesse estado, o cliente do banco é criado com valores indefinidos e a aplicação quebra antes de desenhar qualquer coisa — sem nenhuma mensagem para o usuário. A versão em cache no seu navegador ainda pode ser a quebrada.
 
-## O que será feito
+## Passo 1 — Voltar a carregar para você
 
-1. **Banco de dados**
-   - Nova coluna `is_recurring` (booleano, padrão falso) na tabela de orçamentos.
-   - Preenchimento inicial: marcar como recorrente os orçamentos que hoje já são detectados como duplicados, para não perder a marcação atual.
+- Recarregar o preview com cache limpo (Ctrl/Cmd + Shift + R).
+- Se continuar em branco, coletar o erro exato do seu navegador e tratar como um segundo problema (não é o mesmo desta análise).
 
-2. **CRM — controle no card**
-   - No card do Kanban (visão card e visão lista) adicionar, na área de ações do card, um botão "Recorrente" que liga/desliga a tag com um clique (com feedback imediato e toast de confirmação).
-   - A tag passa a refletir o valor salvo no banco, e não mais a heurística de duplicação.
-   - Manter o comportamento de duplicação: ao duplicar um projeto para meses futuros, as cópias já nascem marcadas como recorrentes.
+## Passo 2 — Nunca mais tela branca sem explicação
 
-3. **Área de Projetos**
-   - Exibir a tag "Recorrente" (mesmo estilo visual do CRM: ícone de cópia + borda/destaque em accent) no card do projeto na listagem de gestão de projetos, ao lado do nome/identificação do projeto.
+1. **Guarda de credenciais**: em `src/integrations/supabase/client.ts` não é permitido editar (arquivo gerado). Em vez disso, criar `src/lib/backendConfig.ts` que valida `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` e exporta um booleano `isBackendConfigured`.
+2. **Tela de indisponibilidade**: em `src/main.tsx`, se `isBackendConfigured` for falso, renderizar uma tela simples em pt-BR ("Não foi possível conectar ao servidor — tente recarregar"), com botão de recarregar, em vez de montar o `App`.
+3. **ErrorBoundary global**: hoje o `ErrorBoundary` existe mas não envolve a aplicação inteira. Envolver o `App` em `src/main.tsx` para que qualquer erro de render vire a tela de erro já existente, e não uma página branca.
 
 ## Detalhes técnicos
 
-- Migração: `ALTER TABLE public.budgets ADD COLUMN is_recurring boolean NOT NULL DEFAULT false;` + `UPDATE` inicial baseado no motivo das versões. RLS/grants existentes da tabela continuam válidos.
-- `src/contexts/CRMContext.tsx`: mapear `is_recurring` → `isRecurring` no mapper de orçamento, usar esse valor em `getCRMCards()`, e expor uma ação `toggleBudgetRecurring(budgetId, value)` (update otimista + persistência). O realtime já sincroniza a tabela para outros usuários.
-- `src/types/crm.ts`: adicionar `isRecurring` ao tipo `Budget`.
-- `src/components/crm/KanbanCard.tsx` e `KanbanListRow.tsx`: botão de toggle com `stopPropagation` no `onPointerDown` (para não conflitar com o drag).
-- `src/pages/projects/ProjectManagementPage.tsx`: renderizar o badge quando `card.isRecurring`.
+- Arquivos afetados: `src/main.tsx` (guarda + boundary), novo `src/lib/backendConfig.ts`.
+- Nada muda no banco de dados, nas rotas ou na lógica de negócio.
+- Sem alterações no `.env` pelo código — apenas leitura e validação.
