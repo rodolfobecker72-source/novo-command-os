@@ -1163,7 +1163,7 @@ export function BudgetDetail() {
                           size="sm"
                           onClick={() => {
                             setEditedPaymentTerms(budget.paymentTerms);
-                            setEditedProjectName(budget.projectName);
+                            setEditedLocation(budget.location || '');
                             setEditedProjectDescription(budget.projectDescription || '');
                             setEditedProposalId(budget.proposalId);
                             setEditedIncludesTax(budget.includesTax);
