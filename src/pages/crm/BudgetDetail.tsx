@@ -400,6 +400,7 @@ export function BudgetDetail() {
       await updateBudget(budget.id, { 
         proposalId: editedProposalId,
         paymentTerms: editedPaymentTerms,
+        location: editedLocation,
         projectName: editedProjectName,
         projectDescription: editedProjectDescription,
         includesTax: editedIncludesTax,
