@@ -1164,6 +1164,7 @@ export function BudgetDetail() {
                           onClick={() => {
                             setEditedPaymentTerms(budget.paymentTerms);
                             setEditedLocation(budget.location || '');
+                            setEditedProjectName(budget.projectName);
                             setEditedProjectDescription(budget.projectDescription || '');
                             setEditedProposalId(budget.proposalId);
                             setEditedIncludesTax(budget.includesTax);
