@@ -164,16 +164,37 @@ export function ProjectManagementPage() {
     const result: Record<string, { month: string | null; cards: typeof projectCards }[]> = {};
     for (const col of projectColumns) result[col.key] = [];
 
+    const MONTH_NAMES = [
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+    ];
+    const normalize = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    /** Texto pesquisável do mês de execução: "2026-01 01/2026 janeiro janeiro 2026 jan" */
+    const monthSearchText = (month: string | null) => {
+      if (!month) return '';
+      const [year, mm] = month.split('-');
+      const idx = parseInt(mm, 10) - 1;
+      const name = MONTH_NAMES[idx] ?? '';
+      return normalize(
+        [month, `${mm}/${year}`, name, `${name} ${year}`, name.slice(0, 3), `${name.slice(0, 3)} ${year}`].join(' ')
+      );
+    };
+
     const filteredCards = searchQuery
       ? projectCards.filter(card => {
-          const q = searchQuery.toLowerCase();
+          const q = normalize(searchQuery);
+          const month = budgetById[card.budgetId]?.executionMonth ?? null;
           return (
-            (card.projectName || '').toLowerCase().includes(q) ||
-            (card.clientName || '').toLowerCase().includes(q) ||
-            (card.proposalId || '').toLowerCase().includes(q)
+            normalize(card.projectName || '').includes(q) ||
+            normalize(card.clientName || '').includes(q) ||
+            normalize(card.proposalId || '').includes(q) ||
+            monthSearchText(month).includes(q)
           );
         })
       : projectCards;
+
 
     for (const card of filteredCards) {
       const statusKey = result[card.status] ? card.status : null;
@@ -258,7 +279,7 @@ export function ProjectManagementPage() {
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar projeto por nome, cliente ou ID..."
+            placeholder="Buscar por nome, cliente, ID ou mês (ex: julho)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-9 pl-9 pr-8"
