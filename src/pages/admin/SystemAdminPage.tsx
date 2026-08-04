@@ -300,7 +300,7 @@ export function SystemAdminPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Cadastros feitos na página inicial (/home)
+                  Cadastros feitos na página de captura
                 </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
