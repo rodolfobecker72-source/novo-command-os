@@ -3920,6 +3920,29 @@ export function BudgetDetail() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={pdfPreviewOpen} onOpenChange={(open) => { if (!open) closePdfPreview(); }}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              Pré-visualização da Proposta{pdfPreviewVersion ? ` — V${pdfPreviewVersion.version}` : ''}
+            </DialogTitle>
+            <DialogDescription>Confira o documento antes de baixar.</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 rounded-lg border overflow-hidden bg-muted">
+            {pdfPreviewUrl && (
+              <iframe src={pdfPreviewUrl} title="Pré-visualização do PDF" className="w-full h-full" />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closePdfPreview}>Fechar</Button>
+            <Button onClick={() => { if (pdfPreviewVersion) generatePDFForVersion(pdfPreviewVersion); }}>
+              <Download className="w-4 h-4 mr-2" />
+              Baixar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ServiceItemSelector
         open={catalogSelector.open}
         onOpenChange={(open) => setCatalogSelector(prev => ({ ...prev, open }))}
