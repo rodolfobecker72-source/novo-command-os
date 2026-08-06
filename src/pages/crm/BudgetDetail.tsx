@@ -1895,8 +1895,8 @@ export function BudgetDetail() {
                 })()}
 
                 {/* Operational Costs in Budget View */}
-                {currentVersionData && (() => {
-                  const displayOpCosts = isEditingVersion ? editVersionOperationalCosts : (currentVersionData.operationalCosts || []);
+                {(isEditingVersion || currentVersionData) && (() => {
+                  const displayOpCosts = isEditingVersion ? editVersionOperationalCosts : (currentVersionData?.operationalCosts || []);
                   if (!isEditingVersion && displayOpCosts.length === 0) return null;
                   return (
                   <motion.div
