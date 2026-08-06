@@ -900,6 +900,52 @@ export function BudgetDetail() {
     }
   };
 
+  const previewPDFForVersion = async (version: BudgetVersion) => {
+    if (!canDownloadPDF) {
+      toast.error('O PDF ainda não foi liberado pelo administrador');
+      return;
+    }
+    if (!version.services || version.services.length === 0) {
+      toast.error('Versão não possui serviços');
+      return;
+    }
+    setPdfPreviewLoading(true);
+    try {
+      const layoutSettings = await fetchLayoutSettings();
+      const doc = await generateProposalPDF({
+        budget,
+        version,
+        client,
+        responsibleUser: profile ? { id: profile.id, name: profile.name, photo: profile.photo_url || '' } : null,
+        layoutSettings,
+        categoryLabels: serviceCategories.reduce((acc, c) => { acc[c.key] = c.label; return acc; }, {} as Record<string, string>),
+        objectiveLabels: (() => { const map: Record<string, Record<string, string>> = {}; const objectives = getObjectivesForCategory ? serviceCategories.flatMap(c => (getObjectivesForCategory(c.key) || []).map(o => ({ ...o, categoryKey: c.key }))) : []; objectives.forEach(o => { if (!map[o.categoryKey]) map[o.categoryKey] = {}; map[o.categoryKey][o.value] = o.label; }); return map; })(),
+        skipSave: true,
+      });
+      const url = URL.createObjectURL(doc.output('blob'));
+      setPdfPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      setPdfPreviewVersion(version);
+      setPdfPreviewOpen(true);
+    } catch (error) {
+      console.error('Error generating PDF preview:', error);
+      toast.error('Erro ao gerar pré-visualização');
+    } finally {
+      setPdfPreviewLoading(false);
+    }
+  };
+
+  const closePdfPreview = () => {
+    setPdfPreviewOpen(false);
+    setPdfPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setPdfPreviewVersion(null);
+  };
+
   const generatePDF = () => {
     if (!currentVersionData) {
       toast.error('Nenhuma versão encontrada');
@@ -907,6 +953,7 @@ export function BudgetDetail() {
     }
     generatePDFForVersion(currentVersionData);
   };
+
 
   const generateContract = async () => {
     if (!canDownloadPDF) {
