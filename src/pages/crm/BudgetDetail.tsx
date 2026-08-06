@@ -183,6 +183,10 @@ export function BudgetDetail() {
   
   // Inline version editing states
   const [isEditingVersion, setIsEditingVersion] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewVersion, setPdfPreviewVersion] = useState<BudgetVersion | null>(null);
+  const [pdfPreviewLoading, setPdfPreviewLoading] = useState(false);
   const [editVersionServices, setEditVersionServices] = useState<ServiceItem[]>([]);
   const [editVersionOperationalCosts, setEditVersionOperationalCosts] = useState<CostItem[]>([]);
   const [editVersionNfPct, setEditVersionNfPct] = useState(13);
