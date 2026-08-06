@@ -2903,6 +2903,17 @@ export function BudgetDetail() {
                                     <Button 
                                       variant="ghost" 
                                       size="sm"
+                                      disabled={pdfPreviewLoading}
+                                      onClick={(e) => { e.stopPropagation(); previewPDFForVersion(version); }}
+                                      title={`Visualizar PDF V${version.version}`}
+                                    >
+                                      {pdfPreviewLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                                    </Button>
+                                  )}
+                                  {canDownloadPDF && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
                                       onClick={(e) => { e.stopPropagation(); generatePDFForVersion(version); }}
                                       title={`Gerar PDF V${version.version}`}
                                     >
