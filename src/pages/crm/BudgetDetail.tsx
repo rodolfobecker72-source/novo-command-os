@@ -183,6 +183,10 @@ export function BudgetDetail() {
   
   // Inline version editing states
   const [isEditingVersion, setIsEditingVersion] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewVersion, setPdfPreviewVersion] = useState<BudgetVersion | null>(null);
+  const [pdfPreviewLoading, setPdfPreviewLoading] = useState(false);
   const [editVersionServices, setEditVersionServices] = useState<ServiceItem[]>([]);
   const [editVersionOperationalCosts, setEditVersionOperationalCosts] = useState<CostItem[]>([]);
   const [editVersionNfPct, setEditVersionNfPct] = useState(13);
@@ -900,6 +904,52 @@ export function BudgetDetail() {
     }
   };
 
+  const previewPDFForVersion = async (version: BudgetVersion) => {
+    if (!canDownloadPDF) {
+      toast.error('O PDF ainda não foi liberado pelo administrador');
+      return;
+    }
+    if (!version.services || version.services.length === 0) {
+      toast.error('Versão não possui serviços');
+      return;
+    }
+    setPdfPreviewLoading(true);
+    try {
+      const layoutSettings = await fetchLayoutSettings();
+      const doc = await generateProposalPDF({
+        budget,
+        version,
+        client,
+        responsibleUser: profile ? { id: profile.id, name: profile.name, photo: profile.photo_url || '' } : null,
+        layoutSettings,
+        categoryLabels: serviceCategories.reduce((acc, c) => { acc[c.key] = c.label; return acc; }, {} as Record<string, string>),
+        objectiveLabels: (() => { const map: Record<string, Record<string, string>> = {}; const objectives = getObjectivesForCategory ? serviceCategories.flatMap(c => (getObjectivesForCategory(c.key) || []).map(o => ({ ...o, categoryKey: c.key }))) : []; objectives.forEach(o => { if (!map[o.categoryKey]) map[o.categoryKey] = {}; map[o.categoryKey][o.value] = o.label; }); return map; })(),
+        skipSave: true,
+      });
+      const url = URL.createObjectURL(doc.output('blob'));
+      setPdfPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      setPdfPreviewVersion(version);
+      setPdfPreviewOpen(true);
+    } catch (error) {
+      console.error('Error generating PDF preview:', error);
+      toast.error('Erro ao gerar pré-visualização');
+    } finally {
+      setPdfPreviewLoading(false);
+    }
+  };
+
+  const closePdfPreview = () => {
+    setPdfPreviewOpen(false);
+    setPdfPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setPdfPreviewVersion(null);
+  };
+
   const generatePDF = () => {
     if (!currentVersionData) {
       toast.error('Nenhuma versão encontrada');
@@ -907,6 +957,7 @@ export function BudgetDetail() {
     }
     generatePDFForVersion(currentVersionData);
   };
+
 
   const generateContract = async () => {
     if (!canDownloadPDF) {
@@ -1895,8 +1946,8 @@ export function BudgetDetail() {
                 })()}
 
                 {/* Operational Costs in Budget View */}
-                {currentVersionData && (() => {
-                  const displayOpCosts = isEditingVersion ? editVersionOperationalCosts : (currentVersionData.operationalCosts || []);
+                {(isEditingVersion || currentVersionData) && (() => {
+                  const displayOpCosts = isEditingVersion ? editVersionOperationalCosts : (currentVersionData?.operationalCosts || []);
                   if (!isEditingVersion && displayOpCosts.length === 0) return null;
                   return (
                   <motion.div
@@ -2846,6 +2897,17 @@ export function BudgetDetail() {
                                       title={`Excluir V${version.version}`}
                                     >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                  {canDownloadPDF && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      disabled={pdfPreviewLoading}
+                                      onClick={(e) => { e.stopPropagation(); previewPDFForVersion(version); }}
+                                      title={`Visualizar PDF V${version.version}`}
+                                    >
+                                      {pdfPreviewLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                                     </Button>
                                   )}
                                   {canDownloadPDF && (
@@ -3853,6 +3915,29 @@ export function BudgetDetail() {
             <Button onClick={handleFinalizeExecution}>
               <Flag className="w-4 h-4 mr-2" />
               Finalizar Execução
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={pdfPreviewOpen} onOpenChange={(open) => { if (!open) closePdfPreview(); }}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              Pré-visualização da Proposta{pdfPreviewVersion ? ` — V${pdfPreviewVersion.version}` : ''}
+            </DialogTitle>
+            <DialogDescription>Confira o documento antes de baixar.</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 rounded-lg border overflow-hidden bg-muted">
+            {pdfPreviewUrl && (
+              <iframe src={pdfPreviewUrl} title="Pré-visualização do PDF" className="w-full h-full" />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closePdfPreview}>Fechar</Button>
+            <Button onClick={() => { if (pdfPreviewVersion) generatePDFForVersion(pdfPreviewVersion); }}>
+              <Download className="w-4 h-4 mr-2" />
+              Baixar PDF
             </Button>
           </DialogFooter>
         </DialogContent>
