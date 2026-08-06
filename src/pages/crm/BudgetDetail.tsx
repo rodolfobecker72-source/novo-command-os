@@ -2897,7 +2897,7 @@ export function BudgetDetail() {
                 )}
 
                 {/* Ocultar NF/Despesas no PDF */}
-                {isAdminOrOwner && (
+                {(isAdminOrOwner || isVendedor) && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
