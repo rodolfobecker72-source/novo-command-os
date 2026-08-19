@@ -405,7 +405,10 @@ export function ProjectManagementPage() {
                                     </Select>
                                     <button
                                       type="button"
-                                      onClick={() => setActivitiesFor({ id: card.id, name: `${card.proposalId ? card.proposalId + ' - ' : ''}${card.projectName}${card.clientName ? ' · ' + card.clientName : ''}` })}
+                                      onClick={() => {
+                                        saveScrollPosition();
+                                        setActivitiesFor({ id: card.id, name: `${card.proposalId ? card.proposalId + ' - ' : ''}${card.projectName}${card.clientName ? ' · ' + card.clientName : ''}` });
+                                      }}
                                       className="min-w-0 flex-1 text-left hover:text-primary"
                                       title="Ver atividades do projeto"
                                     >
