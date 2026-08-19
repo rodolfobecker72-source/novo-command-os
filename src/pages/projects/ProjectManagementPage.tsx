@@ -94,6 +94,29 @@ export function ProjectManagementPage() {
   const [highlightCardId, setHighlightCardId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const SCROLL_KEY = 'project-management-scroll-y';
+  const saveScrollPosition = () => {
+    try {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    } catch {}
+  };
+  const restoreScrollPosition = () => {
+    try {
+      const y = sessionStorage.getItem(SCROLL_KEY);
+      if (y !== null) {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: Number(y), behavior: 'auto' });
+        });
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!activitiesFor) {
+      restoreScrollPosition();
+    }
+  }, [activitiesFor]);
+
   useEffect(() => {
     if (!workspace?.id) return;
     let cancelled = false;
