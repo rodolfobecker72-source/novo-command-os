@@ -83,6 +83,7 @@ export function MediaCenterPage() {
   const [allocateSizeGb, setAllocateSizeGb] = useState('');
 
   const [clientPickerOpen, setClientPickerOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
 
   const { data: hardDrives = [], isLoading } = useQuery({
     queryKey: ['hard_drives', workspaceId],
