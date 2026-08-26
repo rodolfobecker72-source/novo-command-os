@@ -829,7 +829,7 @@ export function MediaCenterPage() {
               disabled={
                 !allocateHdId ||
                 !allocateProjectNumber.trim() ||
-                !allocateClientName.trim() ||
+                
                 !allocateSizeGb ||
                 allocateProject.isPending
               }
