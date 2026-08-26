@@ -726,7 +726,7 @@ export function MediaCenterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Cliente</Label>
+              <Label>Cliente (opcional)</Label>
               <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -738,22 +738,56 @@ export function MediaCenterPage() {
                       !allocateClientName && 'text-muted-foreground'
                     )}
                   >
-                    {allocateClientName || 'Selecione um cliente ativo...'}
+                    {allocateClientName || 'Sem cliente / selecione...'}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[200]" align="start">
                   <Command>
-                    <CommandInput placeholder="Buscar cliente..." />
+                    <CommandInput
+                      placeholder="Buscar ou digitar cliente..."
+                      value={clientSearch}
+                      onValueChange={setClientSearch}
+                    />
                     <CommandList>
                       <CommandEmpty>Nenhum cliente ativo encontrado.</CommandEmpty>
                       <CommandGroup>
+                        <CommandItem
+                          value="__sem_cliente__"
+                          onSelect={() => {
+                            setAllocateClientName('');
+                            setClientSearch('');
+                            setClientPickerOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn('mr-2 h-4 w-4', !allocateClientName ? 'opacity-100' : 'opacity-0')}
+                          />
+                          Sem cliente
+                        </CommandItem>
+                        {clientSearch.trim() &&
+                          !activeClients.some(
+                            (c) => c.name.toLowerCase() === clientSearch.trim().toLowerCase()
+                          ) && (
+                            <CommandItem
+                              value={`__custom__${clientSearch}`}
+                              onSelect={() => {
+                                setAllocateClientName(clientSearch.trim());
+                                setClientSearch('');
+                                setClientPickerOpen(false);
+                              }}
+                            >
+                              <Check className="mr-2 h-4 w-4 opacity-0" />
+                              Usar "{clientSearch.trim()}"
+                            </CommandItem>
+                          )}
                         {activeClients.map((c) => (
                           <CommandItem
                             key={c.id}
                             value={c.name}
                             onSelect={() => {
                               setAllocateClientName(c.name);
+                              setClientSearch('');
                               setClientPickerOpen(false);
                             }}
                           >
@@ -772,8 +806,9 @@ export function MediaCenterPage() {
                 </PopoverContent>
               </Popover>
               <p className="text-xs text-muted-foreground">
-                Lista contém apenas clientes com orçamento aprovado ou projeto cadastrado.
+                Opcional. Você pode digitar um nome livre ou deixar sem cliente.
               </p>
+
             </div>
             <div className="space-y-2">
               <Label>Tamanho (GB)</Label>
