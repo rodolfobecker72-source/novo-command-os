@@ -241,7 +241,7 @@ export function MediaCenterPage() {
           hd.projects.some(
             (p) =>
               p.projectNumber.toLowerCase().includes(lowerSearch) ||
-              p.clientName.toLowerCase().includes(lowerSearch)
+              (p.clientName || "").toLowerCase().includes(lowerSearch)
           )
       );
     }
@@ -255,7 +255,7 @@ export function MediaCenterPage() {
         if (
           !search ||
           p.projectNumber.toLowerCase().includes(lowerSearch) ||
-          p.clientName.toLowerCase().includes(lowerSearch) ||
+          (p.clientName || "").toLowerCase().includes(lowerSearch) ||
           hd.label.toLowerCase().includes(lowerSearch)
         ) {
           items.push({ hdLabel: hd.label, hdId: hd.id, project: p, index: i });
@@ -494,7 +494,7 @@ export function MediaCenterPage() {
                           {hd.projects.map((p, i) => (
                             <TableRow key={i}>
                               <TableCell className="text-sm font-medium">{p.projectNumber}</TableCell>
-                              <TableCell className="text-sm">{p.clientName}</TableCell>
+                              <TableCell className="text-sm">{p.clientName || "—"}</TableCell>
                               <TableCell className="text-sm text-right">{formatStorage(Number(p.sizeGb) || 0)}</TableCell>
                               <TableCell>
                                 <Button
@@ -541,7 +541,7 @@ export function MediaCenterPage() {
                   {allProjects.map((item, i) => (
                     <TableRow key={`${item.hdId}-${item.index}-${i}`}>
                       <TableCell className="font-medium">{item.project.projectNumber}</TableCell>
-                      <TableCell>{item.project.clientName}</TableCell>
+                      <TableCell>{item.project.clientName || "—"}</TableCell>
                       <TableCell>{item.hdLabel}</TableCell>
                       <TableCell className="text-right">{formatStorage(Number(item.project.sizeGb) || 0)}</TableCell>
                       <TableCell>
