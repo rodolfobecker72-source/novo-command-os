@@ -181,16 +181,6 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
       {/* Footer with user info */}
       <div className="px-4 py-4 border-t border-sidebar-border space-y-1">
-        {isSystemAdmin && (
-          <NavLink
-            to="/admin-sistema"
-            onClick={handleNavClick}
-            className={`nav-link w-full ${location.pathname === '/admin-sistema' ? 'active' : ''}`}
-          >
-            <ShieldAlert className="w-5 h-5" />
-            <span className="text-sm font-medium">Admin do Sistema</span>
-          </NavLink>
-        )}
         {showUsuarios && (
           <NavLink
             to="/usuarios"
