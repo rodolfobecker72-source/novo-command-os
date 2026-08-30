@@ -918,6 +918,61 @@ export function MediaCenterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Editar projeto do HD */}
+      <Dialog open={!!editProject} onOpenChange={(v) => !v && setEditProject(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Projeto</DialogTitle>
+            <DialogDescription>Altere os dados do projeto ou mova para outro HD.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Nº do Projeto</Label>
+              <Input value={epNumber} onChange={(e) => setEpNumber(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cliente</Label>
+              <Input
+                value={epClient}
+                placeholder="Opcional"
+                onChange={(e) => setEpClient(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tamanho (GB)</Label>
+              <Input type="number" value={epSize} onChange={(e) => setEpSize(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>HD</Label>
+              <Select value={epHdId} onValueChange={setEpHdId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o HD" />
+                </SelectTrigger>
+                <SelectContent className="z-[200]">
+                  {hardDrives.map((hd) => (
+                    <SelectItem key={hd.id} value={hd.id}>
+                      {hd.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProject(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => saveProjectEdit.mutate()}
+              disabled={!epNumber.trim() || !epSize || !epHdId || saveProjectEdit.isPending}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
     </>
   );
