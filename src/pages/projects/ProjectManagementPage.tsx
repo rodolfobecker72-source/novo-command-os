@@ -84,6 +84,7 @@ export function ProjectManagementPage() {
   const { workspace, role } = useAuth();
   const canDelete = role === 'owner' || role === 'admin';
   const [manageOpen, setManageOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activitiesFor, setActivitiesFor] = useState<{ id: string; name: string } | null>(null);
