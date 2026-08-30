@@ -1,6 +1,6 @@
 import { useState, useMemo, ReactNode, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronRight, Settings2, Calendar as CalendarIcon, GripVertical, ExternalLink, Search, Trash2, Repeat } from 'lucide-react';
+import { ChevronRight, Settings2, Calendar as CalendarIcon, GripVertical, ExternalLink, Search, Trash2, Repeat, Archive } from 'lucide-react';
 import {
   DndContext, DragEndEvent, PointerSensor, useSensor, useSensors,
   useDraggable, useDroppable, closestCenter,
@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { ProjectStatusManagerDialog } from '@/components/projects/ProjectStatusManagerDialog';
+import { ArchiveToHistoryDialog } from '@/components/projects/ArchiveToHistoryDialog';
 import { ProjectActivitiesDialog } from '@/components/projects/ProjectActivitiesDialog';
 import { Header } from '@/components/layout/Header';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,7 @@ export function ProjectManagementPage() {
   const { workspace, role } = useAuth();
   const canDelete = role === 'owner' || role === 'admin';
   const [manageOpen, setManageOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activitiesFor, setActivitiesFor] = useState<{ id: string; name: string } | null>(null);
@@ -316,10 +318,16 @@ export function ProjectManagementPage() {
             </button>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={() => setManageOpen(true)} className="shrink-0">
-          <Settings2 className="w-4 h-4 mr-2" />
-          Gerenciar status
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={() => setArchiveOpen(true)}>
+            <Archive className="w-4 h-4 mr-2" />
+            Enviar para Histórico
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>
+            <Settings2 className="w-4 h-4 mr-2" />
+            Gerenciar status
+          </Button>
+        </div>
       </div>
 
       <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -553,6 +561,7 @@ export function ProjectManagementPage() {
 
 
       <ProjectStatusManagerDialog open={manageOpen} onOpenChange={setManageOpen} />
+      <ArchiveToHistoryDialog open={archiveOpen} onOpenChange={setArchiveOpen} />
 
       </div>
     </div>

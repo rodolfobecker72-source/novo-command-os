@@ -19,7 +19,7 @@ export function ProjectHistoryPage() {
 
   const [query, setQuery] = useState('');
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
-  const [editing, setEditing] = useState<{ key: string; name: string; link: string } | null>(null);
+  const [editing, setEditing] = useState<{ key: string; name: string; link: string; archivedId?: string } | null>(null);
   const [editLink, setEditLink] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -41,18 +41,65 @@ export function ProjectHistoryPage() {
     enabled: !!workspaceId,
   });
 
+  const { data: archived = [] } = useQuery({
+    queryKey: ['archived_projects', workspaceId],
+    queryFn: async () => {
+      if (!workspaceId) return [] as any[];
+      const { data, error } = await supabase
+        .from('archived_projects')
+        .select('id, group_name, project_number, project_name, client_name, link')
+        .eq('workspace_id', workspaceId);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!workspaceId,
+  });
+
   const keyOf = (p: { year: string; id: number }) => `${p.year}:${p.id}`;
-  const linkOf = (p: { year: string; id: number; link: string }) =>
-    linkOverrides[keyOf(p)] ?? p.link;
+
+  type HistoryItem = {
+    rowKey: string;
+    year: string;
+    id: number;
+    name: string;
+    link: string;
+    archivedId?: string;
+  };
+
+  const linkOf = (p: HistoryItem) =>
+    p.archivedId ? p.link : linkOverrides[keyOf(p)] ?? p.link;
+
+  const allItems = useMemo<HistoryItem[]>(() => {
+    const staticItems: HistoryItem[] = HISTORICAL_PROJECTS.map((p) => ({
+      rowKey: `s:${p.year}:${p.id}:${p.name}`,
+      year: p.year,
+      id: p.id,
+      name: p.name,
+      link: p.link,
+    }));
+    const archivedItems: HistoryItem[] = archived.map((a: any) => {
+      const num = parseInt(String(a.project_number).replace(/\D/g, ''), 10);
+      const label = [a.project_number, a.project_name].filter(Boolean).join(' - ');
+      return {
+        rowKey: `a:${a.id}`,
+        year: a.group_name,
+        id: isNaN(num) ? 0 : num,
+        name: a.client_name ? `${label} (${a.client_name})` : label || 'Projeto',
+        link: a.link || '-',
+        archivedId: a.id,
+      };
+    });
+    return [...staticItems, ...archivedItems];
+  }, [archived]);
 
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const filtered = HISTORICAL_PROJECTS.filter(
+    const filtered = allItems.filter(
       (p) =>
         p.year !== 'Backlog' &&
         (!q || p.name.toLowerCase().includes(q) || p.year.toLowerCase().includes(q))
     );
-    const byYear = new Map<string, typeof HISTORICAL_PROJECTS>();
+    const byYear = new Map<string, HistoryItem[]>();
     for (const p of filtered) {
       if (!byYear.has(p.year)) byYear.set(p.year, []);
       byYear.get(p.year)!.push(p);
@@ -73,7 +120,7 @@ export function ProjectHistoryPage() {
       return a.localeCompare(b, 'pt-BR');
     });
     return entries;
-  }, [query]);
+  }, [query, allItems]);
 
   const toggleYear = (year: string) => {
     setExpandedYears((prev) => {
@@ -89,9 +136,9 @@ export function ProjectHistoryPage() {
 
   const isValidLink = (l: string) => l && l !== '-' && /^https?:\/\//i.test(l);
 
-  const openEdit = (p: { year: string; id: number; name: string; link: string }) => {
+  const openEdit = (p: HistoryItem) => {
     const current = linkOf(p);
-    setEditing({ key: keyOf(p), name: p.name, link: current });
+    setEditing({ key: keyOf(p), name: p.name, link: current, archivedId: p.archivedId });
     setEditLink(isValidLink(current) ? current : '');
   };
 
@@ -104,16 +151,25 @@ export function ProjectHistoryPage() {
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('historical_project_links')
-        .upsert(
-          { workspace_id: workspaceId, history_key: editing.key, link: trimmed },
-          { onConflict: 'workspace_id,history_key' }
-        );
-      if (error) throw error;
+      if (editing.archivedId) {
+        const { error } = await supabase
+          .from('archived_projects')
+          .update({ link: trimmed })
+          .eq('id', editing.archivedId);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ['archived_projects', workspaceId] });
+      } else {
+        const { error } = await supabase
+          .from('historical_project_links')
+          .upsert(
+            { workspace_id: workspaceId, history_key: editing.key, link: trimmed },
+            { onConflict: 'workspace_id,history_key' }
+          );
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ['historical_project_links', workspaceId] });
+      }
       toast.success('Link atualizado com sucesso');
       setEditing(null);
-      queryClient.invalidateQueries({ queryKey: ['historical_project_links', workspaceId] });
     } catch (e: any) {
       toast.error(e?.message || 'Erro ao salvar o link');
     } finally {
@@ -187,7 +243,7 @@ export function ProjectHistoryPage() {
                   const link = linkOf(p);
                   return (
                     <div
-                      key={`${p.year}-${p.id}-${p.name}`}
+                      key={p.rowKey}
                       className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
                     >
                       <span className="flex-1 text-sm truncate">{p.name}</span>

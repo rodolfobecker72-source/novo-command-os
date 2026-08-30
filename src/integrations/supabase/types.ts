@@ -103,6 +103,56 @@ export type Database = {
           },
         ]
       }
+      archived_projects: {
+        Row: {
+          archived_at: string
+          client_name: string
+          created_at: string
+          group_name: string
+          id: string
+          link: string
+          project_name: string
+          project_number: string
+          source_card_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string
+          client_name?: string
+          created_at?: string
+          group_name: string
+          id?: string
+          link?: string
+          project_name?: string
+          project_number?: string
+          source_card_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string
+          client_name?: string
+          created_at?: string
+          group_name?: string
+          id?: string
+          link?: string
+          project_name?: string
+          project_number?: string
+          source_card_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "archived_projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assets: {
         Row: {
           assigned_to: string
@@ -1189,6 +1239,7 @@ export type Database = {
       }
       project_cards: {
         Row: {
+          archived_at: string | null
           budget_id: string
           client_id: string
           client_name: string
@@ -1213,6 +1264,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          archived_at?: string | null
           budget_id: string
           client_id?: string
           client_name?: string
@@ -1237,6 +1289,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          archived_at?: string | null
           budget_id?: string
           client_id?: string
           client_name?: string

@@ -298,6 +298,7 @@ interface CRMContextType {
   projectColumns: ProjectColumn[];
   updateProjectCard: (id: string, updates: Partial<ProjectCard>) => Promise<void>;
   deleteProjectCard: (id: string) => Promise<void>;
+  archiveProjectCards: (ids: string[], groupName: string) => Promise<void>;
   addProjectColumn: (column: Omit<ProjectColumn, 'id' | 'order'>) => Promise<void>;
   updateProjectColumn: (id: string, updates: Partial<ProjectColumn>) => Promise<void>;
   deleteProjectColumn: (id: string) => Promise<void>;
@@ -367,7 +368,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         supabase.from('project_columns').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('budgets').select('*').eq('workspace_id', wsId),
         supabase.from('budget_versions').select('*').eq('workspace_id', wsId),
-        supabase.from('project_cards').select('*').eq('workspace_id', wsId),
+        supabase.from('project_cards').select('*').eq('workspace_id', wsId).is('archived_at', null),
         supabase.from('assets').select('*').eq('workspace_id', wsId),
         supabase.from('hard_drives').select('*').eq('workspace_id', wsId),
         supabase.from('legacy_projects').select('*').eq('workspace_id', wsId),
@@ -1634,6 +1635,38 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     } catch (e: any) { toast.error('Erro: ' + e.message); }
   };
 
+  const archiveProjectCards = async (ids: string[], groupName: string) => {
+    const wsId = await ensureWorkspace();
+    const group = groupName.trim();
+    if (!group || ids.length === 0) return;
+    try {
+      const cards = projectCards.filter(c => ids.includes(c.id));
+      const rows = cards.map(c => ({
+        workspace_id: wsId,
+        group_name: group,
+        project_number: c.proposalId || '',
+        project_name: c.projectName || '',
+        client_name: c.clientName || '',
+        link: c.driveUrl || c.materialLink || (c.materialLinks?.[0] ?? '') || '',
+        source_card_id: c.id,
+      }));
+      const { error: insErr } = await supabase.from('archived_projects').insert(rows);
+      if (insErr) throw insErr;
+
+      const { error: updErr } = await supabase
+        .from('project_cards')
+        .update({ archived_at: new Date().toISOString() })
+        .in('id', ids);
+      if (updErr) throw updErr;
+
+      setProjectCards(prev => prev.filter(c => !ids.includes(c.id)));
+      toast.success(`${ids.length} projeto(s) enviado(s) para o histórico`);
+    } catch (e: any) {
+      toast.error('Erro ao arquivar: ' + e.message);
+      throw e;
+    }
+  };
+
 
 
   const addProjectColumn = async (colData: Omit<ProjectColumn, 'id' | 'order'>) => {
@@ -1739,7 +1772,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     legacyProjects, addLegacyProject, deleteLegacyProject, getLegacyProject, getHDForBudget,
     scoreHistory, getClientScoreHistory,
     assets, addAsset, updateAsset, deleteAsset,
-    projectCards, projectColumns, updateProjectCard, deleteProjectCard, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
+    projectCards, projectColumns, updateProjectCard, deleteProjectCard, archiveProjectCards, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
     getCRMCards, getCardsByStatus, moveCard,
   }), [
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
