@@ -316,10 +316,16 @@ export function ProjectManagementPage() {
             </button>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={() => setManageOpen(true)} className="shrink-0">
-          <Settings2 className="w-4 h-4 mr-2" />
-          Gerenciar status
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={() => setArchiveOpen(true)}>
+            <Archive className="w-4 h-4 mr-2" />
+            Enviar para Histórico
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>
+            <Settings2 className="w-4 h-4 mr-2" />
+            Gerenciar status
+          </Button>
+        </div>
       </div>
 
       <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
