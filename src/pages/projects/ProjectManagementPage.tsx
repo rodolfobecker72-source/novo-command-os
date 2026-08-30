@@ -560,6 +560,7 @@ export function ProjectManagementPage() {
 
 
       <ProjectStatusManagerDialog open={manageOpen} onOpenChange={setManageOpen} />
+      <ArchiveToHistoryDialog open={archiveOpen} onOpenChange={setArchiveOpen} />
 
       </div>
     </div>
