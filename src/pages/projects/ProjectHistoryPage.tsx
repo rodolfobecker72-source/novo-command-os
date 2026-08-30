@@ -243,7 +243,7 @@ export function ProjectHistoryPage() {
                   const link = linkOf(p);
                   return (
                     <div
-                      key={`${p.year}-${p.id}-${p.name}`}
+                      key={p.rowKey}
                       className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
                     >
                       <span className="flex-1 text-sm truncate">{p.name}</span>
