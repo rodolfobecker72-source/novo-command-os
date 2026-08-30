@@ -85,6 +85,14 @@ export function MediaCenterPage() {
   const [clientPickerOpen, setClientPickerOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
 
+  // Edição de projeto dentro do HD
+  const [editProject, setEditProject] = useState<{ hdId: string; index: number } | null>(null);
+  const [epNumber, setEpNumber] = useState('');
+  const [epClient, setEpClient] = useState('');
+  const [epSize, setEpSize] = useState('');
+  const [epHdId, setEpHdId] = useState('');
+
+
   const { data: hardDrives = [], isLoading } = useQuery({
     queryKey: ['hard_drives', workspaceId],
     queryFn: async () => {
