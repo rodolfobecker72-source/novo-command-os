@@ -602,15 +602,26 @@ export function MediaCenterPage() {
                       <TableCell>{item.hdLabel}</TableCell>
                       <TableCell className="text-right">{formatStorage(Number(item.project.sizeGb) || 0)}</TableCell>
                       <TableCell>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => removeProject.mutate({ hdId: item.hdId, projectIndex: item.index })}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => openEditProject(item.hdId, item.index, item.project)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => removeProject.mutate({ hdId: item.hdId, projectIndex: item.index })}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>
