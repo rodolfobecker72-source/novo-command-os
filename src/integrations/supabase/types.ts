@@ -892,6 +892,41 @@ export type Database = {
           },
         ]
       }
+      historical_project_links: {
+        Row: {
+          created_at: string
+          history_key: string
+          id: string
+          link: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          history_key: string
+          id?: string
+          link?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          history_key?: string
+          id?: string
+          link?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historical_project_links_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanban_columns: {
         Row: {
           color: string
