@@ -28,7 +28,6 @@ import {
 import commandLogo from '@/assets/command-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { APP_PAGES } from '@/config/pages';
-import { useSystemAdmin } from '@/hooks/useSystemAdmin';
 import { useNavigate } from 'react-router-dom';
 
 interface NavGroup {
