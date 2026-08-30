@@ -85,6 +85,14 @@ export function MediaCenterPage() {
   const [clientPickerOpen, setClientPickerOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
 
+  // Edição de projeto dentro do HD
+  const [editProject, setEditProject] = useState<{ hdId: string; index: number } | null>(null);
+  const [epNumber, setEpNumber] = useState('');
+  const [epClient, setEpClient] = useState('');
+  const [epSize, setEpSize] = useState('');
+  const [epHdId, setEpHdId] = useState('');
+
+
   const { data: hardDrives = [], isLoading } = useQuery({
     queryKey: ['hard_drives', workspaceId],
     queryFn: async () => {
@@ -217,6 +225,55 @@ export function MediaCenterPage() {
     },
     onError: () => toast({ title: 'Erro ao remover projeto', variant: 'destructive' }),
   });
+
+  const saveProjectEdit = useMutation({
+    mutationFn: async () => {
+      if (!editProject) return;
+      const sourceHd = hardDrives.find((h) => h.id === editProject.hdId);
+      if (!sourceHd) throw new Error('HD não encontrado');
+      const updated: HdProject = {
+        projectNumber: epNumber.trim(),
+        clientName: epClient.trim(),
+        sizeGb: Number(epSize) || 0,
+      };
+      const targetHdId = epHdId || editProject.hdId;
+
+      if (targetHdId === editProject.hdId) {
+        const newProjects = sourceHd.projects.map((p, i) => (i === editProject.index ? updated : p));
+        const { error } = await supabase
+          .from('hard_drives')
+          .update({ projects: newProjects as any })
+          .eq('id', sourceHd.id);
+        if (error) throw error;
+      } else {
+        const targetHd = hardDrives.find((h) => h.id === targetHdId);
+        if (!targetHd) throw new Error('HD de destino não encontrado');
+        const sourceProjects = sourceHd.projects.filter((_, i) => i !== editProject.index);
+        const targetProjects = [...targetHd.projects, updated];
+        const [r1, r2] = await Promise.all([
+          supabase.from('hard_drives').update({ projects: sourceProjects as any }).eq('id', sourceHd.id),
+          supabase.from('hard_drives').update({ projects: targetProjects as any }).eq('id', targetHd.id),
+        ]);
+        if (r1.error) throw r1.error;
+        if (r2.error) throw r2.error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hard_drives'] });
+      setEditProject(null);
+      toast({ title: 'Projeto atualizado!' });
+    },
+    onError: () => toast({ title: 'Erro ao atualizar projeto', variant: 'destructive' }),
+  });
+
+  const openEditProject = (hdId: string, index: number, p: HdProject) => {
+    setEditProject({ hdId, index });
+    setEpNumber(p.projectNumber || '');
+    setEpClient(p.clientName || '');
+    setEpSize(String(p.sizeGb ?? ''));
+    setEpHdId(hdId);
+  };
+
 
   // Computed
   const totalHds = hardDrives.length;
@@ -487,7 +544,7 @@ export function MediaCenterPage() {
                             <TableHead className="text-xs">Projeto</TableHead>
                             <TableHead className="text-xs">Cliente</TableHead>
                             <TableHead className="text-xs text-right">Tamanho</TableHead>
-                            <TableHead className="text-xs w-10" />
+                            <TableHead className="text-xs w-20" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -497,15 +554,26 @@ export function MediaCenterPage() {
                               <TableCell className="text-sm">{p.clientName || "—"}</TableCell>
                               <TableCell className="text-sm text-right">{formatStorage(Number(p.sizeGb) || 0)}</TableCell>
                               <TableCell>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  onClick={() => removeProject.mutate({ hdId: hd.id, projectIndex: i })}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                    onClick={() => openEditProject(hd.id, i, p)}
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-destructive hover:text-destructive"
+                                    onClick={() => removeProject.mutate({ hdId: hd.id, projectIndex: i })}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
                               </TableCell>
+
                             </TableRow>
                           ))}
                         </TableBody>
@@ -545,15 +613,26 @@ export function MediaCenterPage() {
                       <TableCell>{item.hdLabel}</TableCell>
                       <TableCell className="text-right">{formatStorage(Number(item.project.sizeGb) || 0)}</TableCell>
                       <TableCell>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => removeProject.mutate({ hdId: item.hdId, projectIndex: item.index })}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => openEditProject(item.hdId, item.index, item.project)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => removeProject.mutate({ hdId: item.hdId, projectIndex: item.index })}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>
@@ -839,6 +918,61 @@ export function MediaCenterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Editar projeto do HD */}
+      <Dialog open={!!editProject} onOpenChange={(v) => !v && setEditProject(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Projeto</DialogTitle>
+            <DialogDescription>Altere os dados do projeto ou mova para outro HD.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Nº do Projeto</Label>
+              <Input value={epNumber} onChange={(e) => setEpNumber(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cliente</Label>
+              <Input
+                value={epClient}
+                placeholder="Opcional"
+                onChange={(e) => setEpClient(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tamanho (GB)</Label>
+              <Input type="number" value={epSize} onChange={(e) => setEpSize(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>HD</Label>
+              <Select value={epHdId} onValueChange={setEpHdId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o HD" />
+                </SelectTrigger>
+                <SelectContent className="z-[200]">
+                  {hardDrives.map((hd) => (
+                    <SelectItem key={hd.id} value={hd.id}>
+                      {hd.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProject(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => saveProjectEdit.mutate()}
+              disabled={!epNumber.trim() || !epSize || !epHdId || saveProjectEdit.isPending}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
     </>
   );
