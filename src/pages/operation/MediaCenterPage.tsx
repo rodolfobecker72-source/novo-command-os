@@ -226,6 +226,55 @@ export function MediaCenterPage() {
     onError: () => toast({ title: 'Erro ao remover projeto', variant: 'destructive' }),
   });
 
+  const saveProjectEdit = useMutation({
+    mutationFn: async () => {
+      if (!editProject) return;
+      const sourceHd = hardDrives.find((h) => h.id === editProject.hdId);
+      if (!sourceHd) throw new Error('HD não encontrado');
+      const updated: HdProject = {
+        projectNumber: epNumber.trim(),
+        clientName: epClient.trim(),
+        sizeGb: Number(epSize) || 0,
+      };
+      const targetHdId = epHdId || editProject.hdId;
+
+      if (targetHdId === editProject.hdId) {
+        const newProjects = sourceHd.projects.map((p, i) => (i === editProject.index ? updated : p));
+        const { error } = await supabase
+          .from('hard_drives')
+          .update({ projects: newProjects as any })
+          .eq('id', sourceHd.id);
+        if (error) throw error;
+      } else {
+        const targetHd = hardDrives.find((h) => h.id === targetHdId);
+        if (!targetHd) throw new Error('HD de destino não encontrado');
+        const sourceProjects = sourceHd.projects.filter((_, i) => i !== editProject.index);
+        const targetProjects = [...targetHd.projects, updated];
+        const [r1, r2] = await Promise.all([
+          supabase.from('hard_drives').update({ projects: sourceProjects as any }).eq('id', sourceHd.id),
+          supabase.from('hard_drives').update({ projects: targetProjects as any }).eq('id', targetHd.id),
+        ]);
+        if (r1.error) throw r1.error;
+        if (r2.error) throw r2.error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hard_drives'] });
+      setEditProject(null);
+      toast({ title: 'Projeto atualizado!' });
+    },
+    onError: () => toast({ title: 'Erro ao atualizar projeto', variant: 'destructive' }),
+  });
+
+  const openEditProject = (hdId: string, index: number, p: HdProject) => {
+    setEditProject({ hdId, index });
+    setEpNumber(p.projectNumber || '');
+    setEpClient(p.clientName || '');
+    setEpSize(String(p.sizeGb ?? ''));
+    setEpHdId(hdId);
+  };
+
+
   // Computed
   const totalHds = hardDrives.length;
   const totalCapacity = hardDrives.reduce((acc, hd) => acc + Number(hd.capacity_gb), 0);
