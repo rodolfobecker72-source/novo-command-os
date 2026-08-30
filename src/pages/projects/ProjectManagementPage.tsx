@@ -319,10 +319,12 @@ export function ProjectManagementPage() {
           )}
         </div>
         <div className="flex gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={() => setArchiveOpen(true)}>
-            <Archive className="w-4 h-4 mr-2" />
-            Enviar para Histórico
-          </Button>
+          {canDelete && (
+            <Button variant="outline" size="sm" onClick={() => setArchiveOpen(true)}>
+              <Archive className="w-4 h-4 mr-2" />
+              Enviar para Histórico
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>
             <Settings2 className="w-4 h-4 mr-2" />
             Gerenciar status
