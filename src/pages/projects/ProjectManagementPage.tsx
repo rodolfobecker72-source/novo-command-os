@@ -1,6 +1,6 @@
 import { useState, useMemo, ReactNode, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronRight, Settings2, Calendar as CalendarIcon, GripVertical, ExternalLink, Search, Trash2, Repeat } from 'lucide-react';
+import { ChevronRight, Settings2, Calendar as CalendarIcon, GripVertical, ExternalLink, Search, Trash2, Repeat, Archive } from 'lucide-react';
 import {
   DndContext, DragEndEvent, PointerSensor, useSensor, useSensors,
   useDraggable, useDroppable, closestCenter,
