@@ -19,7 +19,7 @@ export function ProjectHistoryPage() {
 
   const [query, setQuery] = useState('');
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
-  const [editing, setEditing] = useState<{ key: string; name: string; link: string } | null>(null);
+  const [editing, setEditing] = useState<{ key: string; name: string; link: string; archivedId?: string } | null>(null);
   const [editLink, setEditLink] = useState('');
   const [saving, setSaving] = useState(false);
 
