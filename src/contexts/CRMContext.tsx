@@ -298,6 +298,7 @@ interface CRMContextType {
   projectColumns: ProjectColumn[];
   updateProjectCard: (id: string, updates: Partial<ProjectCard>) => Promise<void>;
   deleteProjectCard: (id: string) => Promise<void>;
+  archiveProjectCards: (ids: string[], groupName: string) => Promise<void>;
   addProjectColumn: (column: Omit<ProjectColumn, 'id' | 'order'>) => Promise<void>;
   updateProjectColumn: (id: string, updates: Partial<ProjectColumn>) => Promise<void>;
   deleteProjectColumn: (id: string) => Promise<void>;
