@@ -368,7 +368,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         supabase.from('project_columns').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('budgets').select('*').eq('workspace_id', wsId),
         supabase.from('budget_versions').select('*').eq('workspace_id', wsId),
-        supabase.from('project_cards').select('*').eq('workspace_id', wsId),
+        supabase.from('project_cards').select('*').eq('workspace_id', wsId).is('archived_at', null),
         supabase.from('assets').select('*').eq('workspace_id', wsId),
         supabase.from('hard_drives').select('*').eq('workspace_id', wsId),
         supabase.from('legacy_projects').select('*').eq('workspace_id', wsId),
