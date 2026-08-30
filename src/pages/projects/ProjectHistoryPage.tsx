@@ -1,14 +1,49 @@
 import { useMemo, useState } from 'react';
-import { ExternalLink, Search, History, ChevronDown, ChevronRight, FolderOpen, Folder } from 'lucide-react';
+import { ExternalLink, Search, History, ChevronDown, ChevronRight, FolderOpen, Folder, Pencil } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { HISTORICAL_PROJECTS } from '@/data/historicalProjects';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export function ProjectHistoryPage() {
+  const { workspace } = useAuth();
+  const workspaceId = workspace?.id;
+  const queryClient = useQueryClient();
+
   const [query, setQuery] = useState('');
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+  const [editing, setEditing] = useState<{ key: string; name: string; link: string } | null>(null);
+  const [editLink, setEditLink] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const { data: linkOverrides = {} } = useQuery({
+    queryKey: ['historical_project_links', workspaceId],
+    queryFn: async () => {
+      if (!workspaceId) return {};
+      const { data, error } = await supabase
+        .from('historical_project_links')
+        .select('history_key, link')
+        .eq('workspace_id', workspaceId);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data || []).forEach((row: any) => {
+        map[row.history_key] = row.link;
+      });
+      return map;
+    },
+    enabled: !!workspaceId,
+  });
+
+  const keyOf = (p: { year: string; id: number }) => `${p.year}:${p.id}`;
+  const linkOf = (p: { year: string; id: number; link: string }) =>
+    linkOverrides[keyOf(p)] ?? p.link;
 
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -53,6 +88,38 @@ export function ProjectHistoryPage() {
   const collapseAll = () => setExpandedYears(new Set());
 
   const isValidLink = (l: string) => l && l !== '-' && /^https?:\/\//i.test(l);
+
+  const openEdit = (p: { year: string; id: number; name: string; link: string }) => {
+    const current = linkOf(p);
+    setEditing({ key: keyOf(p), name: p.name, link: current });
+    setEditLink(isValidLink(current) ? current : '');
+  };
+
+  const saveEdit = async () => {
+    if (!editing || !workspaceId) return;
+    const trimmed = editLink.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast.error('Informe um link válido começando com http:// ou https://');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('historical_project_links')
+        .upsert(
+          { workspace_id: workspaceId, history_key: editing.key, link: trimmed },
+          { onConflict: 'workspace_id,history_key' }
+        );
+      if (error) throw error;
+      toast.success('Link atualizado com sucesso');
+      setEditing(null);
+      queryClient.invalidateQueries({ queryKey: ['historical_project_links', workspaceId] });
+    } catch (e: any) {
+      toast.error(e?.message || 'Erro ao salvar o link');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
@@ -116,31 +183,74 @@ export function ProjectHistoryPage() {
             </div>
             <CollapsibleContent>
               <div className="border rounded-lg divide-y overflow-hidden">
-                {projects.map((p) => (
-                  <div
-                    key={`${p.year}-${p.id}-${p.name}`}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
-                  >
-                    <span className="flex-1 text-sm truncate">{p.name}</span>
-                    {isValidLink(p.link) ? (
-                      <a
-                        href={p.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                {projects.map((p) => {
+                  const link = linkOf(p);
+                  return (
+                    <div
+                      key={`${p.year}-${p.id}-${p.name}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
+                    >
+                      <span className="flex-1 text-sm truncate">{p.name}</span>
+                      {isValidLink(link) ? (
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                        >
+                          Acessar material <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground shrink-0">Sem link</span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => openEdit(p)}
+                        aria-label="Editar link do projeto"
                       >
-                        Acessar material <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-muted-foreground shrink-0">Sem link</span>
-                    )}
-                  </div>
-                ))}
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </CollapsibleContent>
           </Collapsible>
         );
       })}
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar link do projeto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{editing?.name}</p>
+            <div className="space-y-1.5">
+              <Label htmlFor="history-link">Link do material</Label>
+              <Input
+                id="history-link"
+                value={editLink}
+                onChange={(e) => setEditLink(e.target.value)}
+                placeholder="https://..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Deixe vazio para remover o link.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEdit} disabled={saving}>
+              {saving ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
