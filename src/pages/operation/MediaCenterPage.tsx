@@ -544,7 +544,7 @@ export function MediaCenterPage() {
                             <TableHead className="text-xs">Projeto</TableHead>
                             <TableHead className="text-xs">Cliente</TableHead>
                             <TableHead className="text-xs text-right">Tamanho</TableHead>
-                            <TableHead className="text-xs w-10" />
+                            <TableHead className="text-xs w-20" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -554,15 +554,26 @@ export function MediaCenterPage() {
                               <TableCell className="text-sm">{p.clientName || "—"}</TableCell>
                               <TableCell className="text-sm text-right">{formatStorage(Number(p.sizeGb) || 0)}</TableCell>
                               <TableCell>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  onClick={() => removeProject.mutate({ hdId: hd.id, projectIndex: i })}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                    onClick={() => openEditProject(hd.id, i, p)}
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-destructive hover:text-destructive"
+                                    onClick={() => removeProject.mutate({ hdId: hd.id, projectIndex: i })}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
                               </TableCell>
+
                             </TableRow>
                           ))}
                         </TableBody>
