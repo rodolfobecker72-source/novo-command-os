@@ -136,9 +136,9 @@ export function ProjectHistoryPage() {
 
   const isValidLink = (l: string) => l && l !== '-' && /^https?:\/\//i.test(l);
 
-  const openEdit = (p: { year: string; id: number; name: string; link: string }) => {
+  const openEdit = (p: HistoryItem) => {
     const current = linkOf(p);
-    setEditing({ key: keyOf(p), name: p.name, link: current });
+    setEditing({ key: keyOf(p), name: p.name, link: current, archivedId: p.archivedId });
     setEditLink(isValidLink(current) ? current : '');
   };
 
@@ -151,16 +151,25 @@ export function ProjectHistoryPage() {
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('historical_project_links')
-        .upsert(
-          { workspace_id: workspaceId, history_key: editing.key, link: trimmed },
-          { onConflict: 'workspace_id,history_key' }
-        );
-      if (error) throw error;
+      if (editing.archivedId) {
+        const { error } = await supabase
+          .from('archived_projects')
+          .update({ link: trimmed })
+          .eq('id', editing.archivedId);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ['archived_projects', workspaceId] });
+      } else {
+        const { error } = await supabase
+          .from('historical_project_links')
+          .upsert(
+            { workspace_id: workspaceId, history_key: editing.key, link: trimmed },
+            { onConflict: 'workspace_id,history_key' }
+          );
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ['historical_project_links', workspaceId] });
+      }
       toast.success('Link atualizado com sucesso');
       setEditing(null);
-      queryClient.invalidateQueries({ queryKey: ['historical_project_links', workspaceId] });
     } catch (e: any) {
       toast.error(e?.message || 'Erro ao salvar o link');
     } finally {
