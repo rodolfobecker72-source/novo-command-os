@@ -1635,6 +1635,38 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     } catch (e: any) { toast.error('Erro: ' + e.message); }
   };
 
+  const archiveProjectCards = async (ids: string[], groupName: string) => {
+    const wsId = await ensureWorkspace();
+    const group = groupName.trim();
+    if (!group || ids.length === 0) return;
+    try {
+      const cards = projectCards.filter(c => ids.includes(c.id));
+      const rows = cards.map(c => ({
+        workspace_id: wsId,
+        group_name: group,
+        project_number: c.proposalId || '',
+        project_name: c.projectName || '',
+        client_name: c.clientName || '',
+        link: c.driveUrl || c.materialLink || (c.materialLinks?.[0] ?? '') || '',
+        source_card_id: c.id,
+      }));
+      const { error: insErr } = await supabase.from('archived_projects').insert(rows);
+      if (insErr) throw insErr;
+
+      const { error: updErr } = await supabase
+        .from('project_cards')
+        .update({ archived_at: new Date().toISOString() })
+        .in('id', ids);
+      if (updErr) throw updErr;
+
+      setProjectCards(prev => prev.filter(c => !ids.includes(c.id)));
+      toast.success(`${ids.length} projeto(s) enviado(s) para o histórico`);
+    } catch (e: any) {
+      toast.error('Erro ao arquivar: ' + e.message);
+      throw e;
+    }
+  };
+
 
 
   const addProjectColumn = async (colData: Omit<ProjectColumn, 'id' | 'order'>) => {
