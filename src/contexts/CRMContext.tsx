@@ -1772,7 +1772,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     legacyProjects, addLegacyProject, deleteLegacyProject, getLegacyProject, getHDForBudget,
     scoreHistory, getClientScoreHistory,
     assets, addAsset, updateAsset, deleteAsset,
-    projectCards, projectColumns, updateProjectCard, deleteProjectCard, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
+    projectCards, projectColumns, updateProjectCard, deleteProjectCard, archiveProjectCards, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
     getCRMCards, getCardsByStatus, moveCard,
   }), [
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
