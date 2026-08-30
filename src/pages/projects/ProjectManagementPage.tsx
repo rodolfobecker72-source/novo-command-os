@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { ProjectStatusManagerDialog } from '@/components/projects/ProjectStatusManagerDialog';
+import { ArchiveToHistoryDialog } from '@/components/projects/ArchiveToHistoryDialog';
 import { ProjectActivitiesDialog } from '@/components/projects/ProjectActivitiesDialog';
 import { Header } from '@/components/layout/Header';
 import { cn } from '@/lib/utils';
