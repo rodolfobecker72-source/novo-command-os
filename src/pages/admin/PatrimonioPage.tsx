@@ -273,8 +273,8 @@ export function PatrimonioPage() {
                 {form.quantity <= 1 && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="hero_asset_number">Nº Patrimônio Hero</Label>
-                      <Input id="hero_asset_number" value={form.hero_asset_number} onChange={(e) => setForm(f => ({ ...f, hero_asset_number: e.target.value }))} placeholder="Ex: HERO-0001" />
+                      <Label htmlFor="hero_asset_number">Nº Patrimônio</Label>
+                      <Input id="hero_asset_number" value={form.hero_asset_number} onChange={(e) => setForm(f => ({ ...f, hero_asset_number: e.target.value }))} placeholder="Ex: 0001" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="serial_number">Nº de Série</Label>
@@ -341,14 +341,14 @@ export function PatrimonioPage() {
                   <div className="sm:col-span-2 space-y-3 rounded-md border p-3 bg-muted/20">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-medium">Unidades ({form.quantity})</Label>
-                      <span className="text-xs text-muted-foreground">Nº Patrimônio Hero e Nº de Série de cada unidade</span>
+                      <span className="text-xs text-muted-foreground">Nº Patrimônio e Nº de Série de cada unidade</span>
                     </div>
                     <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                       {syncUnits(form.units, form.quantity).map((u, idx) => (
                         <div key={idx} className="grid sm:grid-cols-[auto_1fr_1fr] gap-2 items-center">
                           <div className="text-xs font-mono text-muted-foreground w-8">#{idx + 1}</div>
                           <Input
-                            placeholder="Nº Patrimônio Hero"
+                            placeholder="Nº Patrimônio"
                             value={u.hero_asset_number}
                             onChange={(e) => setForm(f => {
                               const next = syncUnits(f.units, f.quantity);
@@ -479,7 +479,7 @@ export function PatrimonioPage() {
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
                     <TableHead>Item</TableHead>
-                    <TableHead>Nº Hero</TableHead>
+                    <TableHead>Nº Patrimônio</TableHead>
                     <TableHead>Responsável</TableHead>
                     <TableHead className="text-right">Qtd</TableHead>
                     <TableHead className="w-32 text-right">Ações</TableHead>
@@ -619,7 +619,7 @@ export function PatrimonioPage() {
                       {viewAsset.units.map((u, i) => (
                         <div key={i} className="grid grid-cols-[auto_1fr_1fr] gap-2 p-2 text-xs">
                           <span className="font-mono text-muted-foreground">#{i + 1}</span>
-                          <span><span className="text-muted-foreground">Hero:</span> {u.hero_asset_number || '—'}</span>
+                          <span><span className="text-muted-foreground">Patrimônio:</span> {u.hero_asset_number || '—'}</span>
                           <span><span className="text-muted-foreground">Série:</span> {u.serial_number || '—'}</span>
                         </div>
                       ))}
@@ -628,7 +628,7 @@ export function PatrimonioPage() {
                 ) : (
                   <>
                     <div>
-                      <div className="text-xs text-muted-foreground">Nº Patrimônio Hero</div>
+                      <div className="text-xs text-muted-foreground">Nº Patrimônio</div>
                       <div className="font-mono">{viewAsset.hero_asset_number || '—'}</div>
                     </div>
                     <div>
