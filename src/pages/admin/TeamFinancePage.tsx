@@ -167,7 +167,16 @@ export function TeamFinancePage() {
   }, [selected]);
 
   const monthEntries = useMemo(
-    () => (monthSel ? entries.filter((e) => e.month === monthSel) : []),
+    () =>
+      monthSel
+        ? entries
+            .filter((e) => e.month === monthSel)
+            .sort(
+              (a, b) =>
+                (Number(a.proposalId) || 0) - (Number(b.proposalId) || 0) ||
+                a.proposalId.localeCompare(b.proposalId, 'pt-BR'),
+            )
+        : [],
     [entries, monthSel],
   );
 
@@ -381,7 +390,10 @@ export function TeamFinancePage() {
                         monthEntries.map((e) => {
                           const k = rowKey(e);
                           return (
-                            <TableRow key={k}>
+                            <TableRow
+                              key={k}
+                              className={e.paymentStatus === 'pago' ? 'bg-success/10' : undefined}
+                            >
                               <TableCell className="font-medium">
                                 #{e.proposalId} {e.projectName ? `- ${e.projectName}` : ''}
                               </TableCell>
