@@ -109,11 +109,22 @@ export function Signup() {
               <Label htmlFor="password">Senha</Label>
               <PasswordInput
                 id="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres, com letras e números"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <PasswordInput
+                id="confirmPassword"
+                placeholder="Repita a senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
               />
             </div>
             <Button 
