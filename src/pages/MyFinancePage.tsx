@@ -13,7 +13,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatCurrency, PAYMENT_STATUS_LABELS } from '@/types/crm';
-import { Wallet, CheckCircle2, Clock } from 'lucide-react';
+import { Wallet, CheckCircle2, Clock, Lock } from 'lucide-react';
+import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
 
 interface Entry {
   budgetId: string;
@@ -29,8 +30,9 @@ interface Entry {
 }
 
 export default function MyFinancePage() {
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
   const { budgets, clients } = useCRM();
+  const { enabled: teamFinanceEnabled, loading: settingsLoading } = useTeamFinanceEnabled();
 
   const myName = profile?.name || '';
 
@@ -111,6 +113,22 @@ export default function MyFinancePage() {
     const d = new Date(Number(y), Number(mm) - 1, 1);
     return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   };
+
+  const blocked = !settingsLoading && !teamFinanceEnabled && role !== 'owner';
+
+  if (blocked) {
+    return (
+      <>
+        <Header title="Meu Financeiro" subtitle="Trabalhos apontados a você nas execuções" />
+        <div className="p-4 md:p-6 max-w-2xl mx-auto">
+          <Card className="p-8 text-center text-muted-foreground space-y-2">
+            <Lock className="w-6 h-6 mx-auto text-muted-foreground" />
+            <p>Esta área está desativada pela gestão do seu workspace.</p>
+          </Card>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

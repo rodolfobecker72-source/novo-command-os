@@ -23,6 +23,9 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency, PAYMENT_STATUS_LABELS, PaymentStatus } from '@/types/crm';
 import { Wallet, CheckCircle2, Clock, Users } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
 
 type Source =
   | { kind: 'service'; serviceId: string; costId: string; isExtra: boolean }
@@ -44,6 +47,11 @@ interface Entry {
 export function TeamFinancePage() {
   const { workspace } = useAuth();
   const { budgets, clients, updateExecutionCost, updateExecution } = useCRM();
+  const {
+    enabled: teamFinanceEnabled,
+    loading: settingsLoading,
+    update: updateTeamFinance,
+  } = useTeamFinanceEnabled();
   const [people, setPeople] = useState<string[]>([]);
   const [selected, setSelected] = useState<string>('');
 
@@ -203,6 +211,31 @@ export function TeamFinancePage() {
         subtitle="Consulte e ajuste os valores apontados a cada pessoa"
       />
       <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
+        <Card className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Liberar “Meu Financeiro” para o time</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Quando desligado, apenas a gestão vê os valores por aqui.
+              </p>
+            </div>
+            <Switch
+              checked={teamFinanceEnabled}
+              disabled={settingsLoading}
+              onCheckedChange={async (v) => {
+                const ok = await updateTeamFinance(v);
+                toast[ok ? 'success' : 'error'](
+                  ok
+                    ? v
+                      ? 'Área liberada para o time'
+                      : 'Área restrita à gestão'
+                    : 'Não foi possível salvar',
+                );
+              }}
+            />
+          </div>
+        </Card>
+
         <Card className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2 text-sm font-medium">

@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { TutorialButton } from '@/components/layout/TutorialButton';
+import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
 
 interface HeaderProps {
   title: string;
@@ -29,6 +30,7 @@ export function Header({ title, subtitle }: HeaderProps) {
   const { profile, logout, role } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const { enabled: teamFinanceEnabled } = useTeamFinanceEnabled();
 
   let onOpenMobileMenu: (() => void) | undefined;
   try {
@@ -98,7 +100,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               <UserPen className="w-4 h-4 mr-2" />
               Meu Perfil
             </DropdownMenuItem>
-            {role && role !== 'owner' && (
+            {role && role !== 'owner' && teamFinanceEnabled && (
               <DropdownMenuItem onClick={() => navigate('/meu-financeiro')}>
                 <Wallet className="w-4 h-4 mr-2" />
                 Meu Financeiro
