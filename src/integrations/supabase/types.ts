@@ -2011,10 +2011,15 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { invite_id: string }; Returns: undefined }
-      get_user_role: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
+      get_user_role:
+        | {
+            Args: { _user_id: string }
+            Returns: Database["public"]["Enums"]["app_role"]
+          }
+        | {
+            Args: { _user_id: string; _workspace_id: string }
+            Returns: Database["public"]["Enums"]["app_role"]
+          }
       get_user_workspace: { Args: { _user_id: string }; Returns: string }
       handle_signup_workspace: {
         Args: { workspace_name: string }
@@ -2032,6 +2037,10 @@ export type Database = {
         Returns: boolean
       }
       is_system_admin: { Args: { _user_id: string }; Returns: boolean }
+      workspace_has_members: {
+        Args: { _workspace_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "vendedor" | "visualizador" | "time_hero"
