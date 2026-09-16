@@ -400,7 +400,39 @@ export function FinancialPage() {
       });
     });
 
-    // Future expenses by month (pending payments)
+    // Project costs by month (budgeted cost, replaced by the real value when informed)
+    const projectCostByMonth = new Map<string, number>();
+    const costOf = (c: any) => {
+      const real = Number(c?.realValue ?? 0);
+      if (real > 0) return real;
+      const budgeted = Number(c?.budgetedValue ?? c?.value ?? 0);
+      return isNaN(budgeted) ? 0 : budgeted;
+    };
+    budgets.forEach(b => {
+      const month = b.execution_month;
+      if (!month) return;
+      const exec = b.execution as any;
+      let cost = 0;
+      if (exec) {
+        (exec.services || []).forEach((s: any) => {
+          (s.costs || []).forEach((c: any) => { cost += costOf(c); });
+          (s.extraCosts || []).forEach((c: any) => { cost += costOf(c); });
+        });
+        (exec.operationalCosts || []).forEach((c: any) => { cost += costOf(c); });
+        (exec.extraOperationalCosts || []).forEach((c: any) => { cost += costOf(c); });
+      } else {
+        const ver = b.approved_version != null
+          ? versions.find(v => v.budget_id === b.id && v.version === b.approved_version)
+          : versions.filter(v => v.budget_id === b.id).sort((a, c) => c.version - a.version)[0];
+        ((ver?.services as any[]) || []).forEach((s: any) => {
+          (s.costs || []).forEach((c: any) => { cost += Number(c?.value || 0); });
+        });
+        ((ver?.operational_costs as any[]) || []).forEach((c: any) => { cost += Number(c?.value || 0); });
+      }
+      if (cost > 0) projectCostByMonth.set(month, (projectCostByMonth.get(month) || 0) + cost);
+    });
+
+    // Future expenses by month (pending payments) + project costs
     const futureExpensesByMonth: { month: string; label: string; totalValue: number; totalPaid: number; pending: number }[] = [];
     const futureExpenses = cashflowEntries.filter(e => e.type === 'despesa' && !(e as any).is_paid);
     const expMonthsSet = new Set<string>();
@@ -408,9 +440,10 @@ export function FinancialPage() {
       const dueDate = (e as any).payment_due_date || e.date;
       if (dueDate) expMonthsSet.add(dueDate.substring(0, 7));
     });
+    projectCostByMonth.forEach((_v, m) => expMonthsSet.add(m));
     Array.from(expMonthsSet).sort().forEach(m => {
       const monthEntries = futureExpenses.filter(e => ((e as any).payment_due_date || e.date)?.substring(0, 7) === m);
-      const total = monthEntries.reduce((s, e) => s + Number(e.value), 0);
+      const total = monthEntries.reduce((s, e) => s + Number(e.value), 0) + (projectCostByMonth.get(m) || 0);
       futureExpensesByMonth.push({
         month: m,
         label: format(new Date(m + '-01T12:00:00'), 'MMM/yy', { locale: ptBR }),
@@ -1596,44 +1629,6 @@ export function FinancialPage() {
               })()}
             </CardContent>
           </Card>
-
-          {/* Receivables by month */}
-          <Card>
-            <CardHeader><CardTitle className="text-base">Receita Prevista por Mês</CardTitle></CardHeader>
-            <CardContent>
-              {painelData.receivablesByMonth.filter(r => r.remaining > 0).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Todos os projetos estão pagos.</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead className="text-right">Valor Total</TableHead>
-                      <TableHead className="text-right">Recebido</TableHead>
-                      <TableHead className="text-right">A Receber</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {painelData.receivablesByMonth.filter(r => r.remaining > 0).map(r => (
-                      <TableRow key={r.month}>
-                        <TableCell className="font-medium">{r.label}</TableCell>
-                        <TableCell className="text-right">{currencyFmt(r.totalValue)}</TableCell>
-                        <TableCell className="text-right text-green-600">{currencyFmt(r.totalPaid)}</TableCell>
-                        <TableCell className="text-right text-orange-500 font-medium">{currencyFmt(r.remaining)}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="font-bold border-t-2">
-                      <TableCell>Total</TableCell>
-                      <TableCell className="text-right">{currencyFmt(painelData.receivablesByMonth.filter(r => r.remaining > 0).reduce((s, r) => s + r.totalValue, 0))}</TableCell>
-                      <TableCell className="text-right text-green-600">{currencyFmt(painelData.receivablesByMonth.filter(r => r.remaining > 0).reduce((s, r) => s + r.totalPaid, 0))}</TableCell>
-                      <TableCell className="text-right text-orange-500">{currencyFmt(painelData.totalRecebiveis)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
 
         </TabsContent>
 
