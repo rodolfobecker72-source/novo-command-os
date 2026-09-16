@@ -38,11 +38,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMonthlyGoals } from '@/hooks/useMonthlyGoals';
 import {
   ProspectionLead, LeadOriginType, LeadSegment, LeadTemperature,
-  LeadFunnelStatus, LeadPriority, AcquisitionType,
+  LeadFunnelStatus, LeadPriority, AcquisitionType, LeadStatus,
   LEAD_ORIGIN_LABELS, LEAD_SEGMENT_LABELS, LEAD_TEMPERATURE_LABELS,
   LEAD_FUNNEL_STATUS_LABELS, LEAD_PRIORITY_LABELS, ACQUISITION_TYPE_LABELS,
-  FUNNEL_STATUS_ORDER,
+  FUNNEL_STATUS_ORDER, getStatusColor,
 } from '@/types/prospection';
+import { ManageLeadStatusesDialog } from '@/components/prospection/ManageLeadStatusesDialog';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
