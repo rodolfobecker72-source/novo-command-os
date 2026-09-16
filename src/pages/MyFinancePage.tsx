@@ -29,8 +29,9 @@ interface Entry {
 }
 
 export default function MyFinancePage() {
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
   const { budgets, clients } = useCRM();
+  const { enabled: teamFinanceEnabled, loading: settingsLoading } = useTeamFinanceEnabled();
 
   const myName = profile?.name || '';
 
