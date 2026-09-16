@@ -100,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           setWorkspace(wsData as Workspace | null);
-          console.log('[Auth] User data loaded successfully. Workspace:', (wsData as any)?.id);
         } else {
           setMembership(null);
           setWorkspace(null);
@@ -125,7 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[Auth] onAuthStateChange event:', event, '| initialLoad:', initialLoad, '| hasLoaded:', hasLoadedRef.current);
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
@@ -136,12 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If user data is already loaded, do NOT set isLoading=true again
           // This prevents the spinner flash on duplicate SIGNED_IN events (tab focus, session restore)
           if (hasLoadedRef.current) {
-            console.log('[Auth] SIGNED_IN but data already loaded — skipping reload');
             return;
           }
           // Prevent concurrent loads
           if (loadingUserDataRef.current) {
-            console.log('[Auth] SIGNED_IN but already loading — skipping');
             return;
           }
           loadingUserDataRef.current = true;

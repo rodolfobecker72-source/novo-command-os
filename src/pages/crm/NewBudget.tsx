@@ -387,12 +387,8 @@ export function NewBudget() {
     }, 30000);
 
     try {
-      console.log('[NewBudget] Iniciando salvamento...');
-      console.log('[NewBudget] clientId:', formData.clientId);
-      console.log('[NewBudget] services:', services.length);
 
       // Step 1: Create budget
-      console.log('[NewBudget] Step 1: Criando orçamento...');
       const newBudget = await addBudget({
         proposalId: formData.proposalId.trim(),
         projectName: formData.projectName,
@@ -432,10 +428,8 @@ export function NewBudget() {
         return;
       }
 
-      console.log('[NewBudget] Step 1 OK - Budget ID:', newBudget.id);
 
       // Step 2: Create budget version
-      console.log('[NewBudget] Step 2: Criando versão do orçamento...');
       await addBudgetVersion(newBudget.id, {
         services: services.map(s => ({
           id: s.id,
@@ -460,7 +454,6 @@ export function NewBudget() {
         reason: 'Versão inicial',
       });
 
-      console.log('[NewBudget] Step 2 OK - Versão criada');
       clearTimeout(safetyTimeout);
       toast.success('Orçamento criado com sucesso!');
       navigate('/crm');
