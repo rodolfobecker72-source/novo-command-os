@@ -143,8 +143,8 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
           <DialogHeader>
             <DialogTitle>Gerenciar status dos leads</DialogTitle>
             <DialogDescription>
-              Crie, renomeie, reordene (arrastando) e exclua os status do funil. O comportamento especial
-              define onde o sistema pede a confirmação da reunião e onde aparece o botão de migrar para o CRM.
+              Crie, renomeie, troque a cor e reordene (arrastando) os status do funil. Os status padrão
+              não podem ser excluídos; os que você criar podem.
             </DialogDescription>
           </DialogHeader>
 
