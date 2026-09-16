@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { getAllPageKeys, isRoleRestricted } from '@/config/pages';
@@ -236,25 +236,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return membership.page_permissions.includes(pageKey);
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        profile,
-        workspace,
-        membership,
-        role,
-        isLoading,
-        login,
-        signup,
-        logout,
-        hasPageAccess,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextType>(
+    () => ({
+      session,
+      user,
+      profile,
+      workspace,
+      membership,
+      role,
+      isLoading,
+      login,
+      signup,
+      logout,
+      hasPageAccess,
+    }),
+    // login/signup/logout/hasPageAccess dependem apenas de membership/role
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session, user, profile, workspace, membership, role, isLoading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

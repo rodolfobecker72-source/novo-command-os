@@ -1787,6 +1787,9 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     projectCards, projectColumns, updateProjectCard, deleteProjectCard, archiveProjectCards, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
     getCRMCards, getCardsByStatus, moveCard,
   }), [
+    // workspaceId/session entram nas deps para evitar closures desatualizadas
+    // das funções (que não são useCallback) ao trocar de workspace ou sessão.
+    workspaceId, session,
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
     hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns,
   ]);
