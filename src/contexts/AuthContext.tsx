@@ -225,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!membership) return false;
     // Check role-based restrictions first (e.g. vendedor cannot access Configurações pages)
     if (role && isRoleRestricted(pageKey, role)) return false;
-    // Owner and admin have access to everything
+    // Owner e admin acessam tudo que não estiver restrito acima (ver restrictedFrom em pages.ts)
     if (role === 'owner' || role === 'admin') return true;
     // If no specific permissions set, grant all access
     if (!membership.page_permissions || membership.page_permissions.length === 0) return true;
