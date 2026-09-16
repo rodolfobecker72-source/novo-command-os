@@ -16,7 +16,7 @@ export const PAGE_TUTORIALS: PageTutorial[] = [
   { path: '/crm', title: 'CRM', description: 'Fluxo completo do orçamento: criação, versões, aprovação e execução.' },
   { path: '/gestao-projetos', title: 'Área de Projetos', description: 'Acompanhe atividades, responsáveis e progresso de cada projeto.' },
   { path: '/calendario-time', title: 'Calendário do Time', description: 'Visualize as atividades de vários membros com cores e legendas.' },
-  { path: '/calendario', title: 'Calendário de Projetos', description: 'Programação de projetos aprovados e prazos de entrega.' },
+  
   { path: '/central-midia', title: 'Central de Mídias', description: 'Organize arquivos, HDs e mídias dos projetos.' },
   { path: '/projetos/historico', title: 'Histórico de Projetos', description: 'Consulte projetos anteriores agrupados por período.' },
   { path: '/categorias', title: 'Categorias de Serviço', description: 'Crie, edite e reordene as categorias usadas nos orçamentos.' },
