@@ -1254,7 +1254,12 @@ export function FinancialPage() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-bold">{currencyFmt(p.totalValue)}</TableCell>
+                            <TableCell className="text-right font-bold">
+                              {currencyFmt(p.totalValue)}
+                              <span className={cn("ml-2 text-xs font-medium", p.marginPercent >= 0 ? 'text-green-600' : 'text-destructive')}>
+                                ({p.marginPercent.toFixed(1)}%)
+                              </span>
+                            </TableCell>
                             <TableCell className="text-center">
                               <div className="flex justify-center gap-1">
                                 <Button
