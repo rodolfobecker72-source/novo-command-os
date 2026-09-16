@@ -1148,6 +1148,7 @@ export function BudgetDetail() {
           {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Info Card */}
+            {(activeTab === 'budget' || !(budget.status === 'aprovada' && budget.execution)) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1552,6 +1553,7 @@ export function BudgetDetail() {
                 </CardContent>
               </Card>
             </motion.div>
+            )}
 
             {/* Budget View */}
             {activeTab === 'budget' && (
@@ -2982,9 +2984,9 @@ export function BudgetDetail() {
                         <BarChart3 className="w-6 h-6 text-success" />
                       </div>
                       <div className="flex-1">
-                        <CardTitle>Planilha de Execução</CardTitle>
+                        <CardTitle>{budget.projectName}</CardTitle>
                         <CardDescription>
-                          Acompanhe os custos reais vs. orçados
+                          Planilha de Execução — Acompanhe os custos reais vs. orçados
                         </CardDescription>
                       </div>
                       {(() => {
