@@ -31,13 +31,21 @@ export type LeadSegment =
   | 'setor_publico'
   | 'terceiro_setor';
 
-export type LeadFunnelStatus =
-  | 'mapeado'
-  | 'contato_realizado'
-  | 'reuniao_agendada'
-  | 'qualificado_crm'
-  | 'perdido'
-  | 'nutricao';
+/** Status do funil é dinâmico por workspace (tabela lead_statuses). */
+export type LeadFunnelStatus = string;
+
+/** Papéis especiais que disparam comportamentos automáticos. */
+export type LeadStatusRole = 'meeting' | 'qualified';
+
+export interface LeadStatus {
+  id: string;
+  key: string;
+  label: string;
+  color: string;
+  order: number;
+  role: LeadStatusRole | null;
+  isDefault: boolean;
+}
 
 export interface ProspectionLead {
   id: string;
