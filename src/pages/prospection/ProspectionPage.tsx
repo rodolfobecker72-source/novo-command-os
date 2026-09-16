@@ -941,7 +941,7 @@ export function ProspectionPage() {
         // that were marked as "realizada" without a scheduling timestamp;
         // also keeps leads currently in "reuniao_agendada" regardless of timestamps.
         const meetingsInPeriod = funnelLeads.filter(l => {
-          if (l.funnelStatus === 'reuniao_agendada') return true;
+          if (meetingKey && l.funnelStatus === meetingKey) return true;
           const hasHappenedFlag = l.meetingHappened === true || l.meetingHappened === false;
           if (!l.meetingScheduledAt && !hasHappenedFlag) return false;
           if (!periodStart || !periodEnd) return true;
