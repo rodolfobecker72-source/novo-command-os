@@ -68,6 +68,7 @@ const navGroups: NavGroup[] = [
     icon: ShieldCheck,
     items: [
       { name: 'Financeiro', href: '/financeiro', icon: DollarSign, pageKey: 'financeiro' },
+      { name: 'Financeiro do Time', href: '/financeiro-time', icon: Users, pageKey: 'financeiro-time' },
       { name: 'Patrimônio', href: '/patrimonio', icon: Building2, pageKey: 'patrimonio' },
     ],
   },
