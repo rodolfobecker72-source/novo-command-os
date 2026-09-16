@@ -374,7 +374,7 @@ export function ProspectionPage() {
   // Open create dialog
   const openCreate = () => {
     setEditingLead(null);
-    setFormData(emptyLead);
+    setFormData({ ...emptyLead, funnelStatus: firstStatusKey });
     setDialogOpen(true);
   };
 
