@@ -13,7 +13,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatCurrency, PAYMENT_STATUS_LABELS } from '@/types/crm';
-import { Wallet, CheckCircle2, Clock } from 'lucide-react';
+import { Wallet, CheckCircle2, Clock, Lock } from 'lucide-react';
+import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
 
 interface Entry {
   budgetId: string;
