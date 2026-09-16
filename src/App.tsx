@@ -132,7 +132,7 @@ const App = () => (
                   <Route path="/sobre" element={<AboutPage />} />
 
                   {/* Meu Financeiro (avatar menu) */}
-                  <Route path="/meu-financeiro" element={<MyFinancePage />} />
+                  <Route path="/meu-financeiro" element={<PageGuard pageKey="meu-financeiro"><MyFinancePage /></PageGuard>} />
                 </Route>
               </Route>
               
