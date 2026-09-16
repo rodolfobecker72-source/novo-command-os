@@ -37,6 +37,7 @@ import { ProjectManagementPage } from "@/pages/projects/ProjectManagementPage";
 import { ProjectHistoryPage } from "@/pages/projects/ProjectHistoryPage";
 import { FinancialPage } from '@/pages/admin/FinancialPage';
 import { PatrimonioPage } from '@/pages/admin/PatrimonioPage';
+import { TeamFinancePage } from '@/pages/admin/TeamFinancePage';
 import { SystemAdminPage } from '@/pages/admin/SystemAdminPage';
 import { ProspectionProvider } from "@/contexts/ProspectionContext";
 import MyFinancePage from "@/pages/MyFinancePage";
