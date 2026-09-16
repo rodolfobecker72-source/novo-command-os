@@ -193,10 +193,6 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-xs">Comportamento</Label>
-                <RoleSelect value={newRole} onChange={setNewRole} />
-              </div>
               <Button onClick={handleCreate} className="gap-2 rounded-xl h-9">
                 <Plus className="w-4 h-4" /> Adicionar
               </Button>
