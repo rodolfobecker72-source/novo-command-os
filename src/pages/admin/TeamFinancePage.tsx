@@ -98,9 +98,9 @@ export function TeamFinancePage() {
 
   // Team members first, then freelas (suppliers that are not workspace members)
   const freelas = useMemo(() => {
-    const teamSet = new Set(people);
+    const teamSet = new Set(peopleNames);
     return suppliers.filter((s) => !teamSet.has(s));
-  }, [suppliers, people]);
+  }, [suppliers, peopleNames]);
 
   const entries = useMemo<Entry[]>(() => {
     if (!selected) return [];
@@ -226,27 +226,30 @@ export function TeamFinancePage() {
       />
       <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
         <Card className="p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium">Liberar “Meu Financeiro” para o time</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Quando desligado, apenas a gestão vê os valores por aqui.
-              </p>
-            </div>
-            <Switch
-              checked={teamFinanceEnabled}
-              disabled={settingsLoading}
-              onCheckedChange={async (v) => {
-                const ok = await updateTeamFinance(v);
-                toast[ok ? 'success' : 'error'](
-                  ok
-                    ? v
-                      ? 'Área liberada para o time'
-                      : 'Área restrita à gestão'
-                    : 'Não foi possível salvar',
-                );
-              }}
-            />
+          <p className="text-sm font-medium">Liberar “Meu Financeiro” por pessoa</p>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Escolha quais membros do time podem ver o próprio financeiro. Freelas não precisam
+            dessa liberação.
+          </p>
+          <div className="divide-y">
+            {people.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2.5">
+                <span className="text-sm">{p.name}</span>
+                <Switch
+                  checked={Boolean(accessMap[p.id])}
+                  onCheckedChange={async (v) => {
+                    const ok = await setMemberEnabled(p.id, v);
+                    toast[ok ? 'success' : 'error'](
+                      ok
+                        ? v
+                          ? `Financeiro liberado para ${p.name}`
+                          : `Financeiro bloqueado para ${p.name}`
+                        : 'Não foi possível salvar',
+                    );
+                  }}
+                />
+              </div>
+            ))}
           </div>
         </Card>
 
