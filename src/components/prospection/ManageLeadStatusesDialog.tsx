@@ -81,11 +81,14 @@ function SortableStatusRow({
         className="h-9 rounded-xl text-sm flex-1 min-w-[140px]"
       />
       <ColorSelect value={status.color} onChange={onColor} />
-      <RoleSelect value={status.role} onChange={onRole} />
       <span className="text-xs text-muted-foreground w-16 text-right">{count} lead{count === 1 ? '' : 's'}</span>
-      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onDelete}>
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      {status.isDefault ? (
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border/60 rounded-lg px-2 py-1">Padrão</span>
+      ) : (
+        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onDelete}>
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   );
 }
