@@ -285,7 +285,7 @@ export function ExecutionForecast({ executionForecast, executionTotalValue, getG
                       {p.id ? (
                         <button
                           type="button"
-                          onClick={() => { setProjectsDialog(null); navigate(`/crm/orcamento/${p.id}`); }}
+                          onClick={() => { setProjectsDialog(null); navigate(`/crm/orcamento/${p.id}?from=dashboard`); }}
                           className="text-primary hover:underline text-left"
                         >
                           {p.name}

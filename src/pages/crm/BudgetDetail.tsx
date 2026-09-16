@@ -177,8 +177,8 @@ export function BudgetDetail() {
   const fromParam = searchParams.get('from');
   const initialTab = searchParams.get('tab') === 'execution' ? 'execution' : 'budget';
   const [activeTab, setActiveTab] = useState(initialTab);
-  const backTo = fromParam === 'financeiro' ? '/financeiro?tab=projetos' : '/crm';
-  const backLabel = fromParam === 'financeiro' ? 'Voltar para Projetos/Mês' : 'Voltar ao CRM';
+  const backTo = fromParam === 'financeiro' ? '/financeiro?tab=projetos' : fromParam === 'dashboard' ? '/crm/dashboard' : '/crm';
+  const backLabel = fromParam === 'financeiro' ? 'Voltar para Projetos/Mês' : fromParam === 'dashboard' ? 'Voltar ao Dashboard' : 'Voltar ao CRM';
   const [deleteOpen, setDeleteOpen] = useState(false);
   
   // Inline version editing states
