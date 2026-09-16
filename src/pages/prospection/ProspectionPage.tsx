@@ -322,33 +322,6 @@ export function ProspectionPage() {
     }).sort((a, b) => a.companyName.localeCompare(b.companyName, 'pt-BR'));
   }, [leads, filterYear, filterMonth, filterOrigin, filterResponsible, filterAcquisition, search]);
 
-  // Metrics
-  const metrics = useMemo(() => {
-    const total = filteredLeads.length;
-    const active = filteredLeads.filter(l => l.funnelStatus !== qualifiedKey).length;
-    const meetings = meetingKey ? filteredLeads.filter(l => l.funnelStatus === meetingKey).length : 0;
-    const lost = 0;
-    const volume = filteredLeads.reduce((sum, l) => sum + (l.estimatedPotential || 0), 0);
-
-    const mapped = filteredLeads.filter(l => l.funnelStatus === firstStatusKey).length;
-    const meetingsTotal = meetings;
-    const qualifiedCRM = qualifiedKey ? filteredLeads.filter(l => l.funnelStatus === qualifiedKey).length : 0;
-
-    const convMappedToMeeting = total > 0 ? ((meetingsTotal / Math.max(mapped + meetingsTotal, 1)) * 100) : 0;
-    const convMeetingToCRM = meetingsTotal > 0 ? ((qualifiedCRM / Math.max(meetingsTotal + qualifiedCRM, 1)) * 100) : 0;
-    const lossRate = 0;
-
-    return { total, active, meetings, lost, volume, convMappedToMeeting, convMeetingToCRM, lossRate };
-  }, [filteredLeads, qualifiedKey, meetingKey, firstStatusKey]);
-
-  const dashboardCards = [
-    { label: 'Total Leads', value: metrics.total, icon: Users, color: 'bg-primary/10 text-primary' },
-    { label: 'Leads Ativos', value: metrics.active, icon: Target, color: 'bg-success/10 text-success' },
-    { label: 'Reuniões Agendadas', value: metrics.meetings, icon: CalendarCheck, color: 'bg-warning/10 text-warning' },
-    { label: 'Leads Perdidos', value: metrics.lost, icon: XCircle, color: 'bg-destructive/10 text-destructive' },
-    { label: 'Volume Estimado', value: `R$ ${metrics.volume.toLocaleString('pt-BR')}`, icon: DollarSign, color: 'bg-primary/10 text-primary' },
-  ];
-
   // Open create dialog
   const openCreate = () => {
     setEditingLead(null);
@@ -463,57 +436,6 @@ export function ProspectionPage() {
     const names = new Set(leads.map(l => l.prospectionResponsible).filter(Boolean));
     return Array.from(names);
   }, [leads]);
-
-  // Dashboard panel data
-  const today = new Date();
-  const todayStr = format(today, 'yyyy-MM-dd');
-
-  const scheduledActivities = useMemo(() => {
-    return filteredLeads
-      .filter(l => l.nextActionDate && !['perdido', 'qualificado_crm'].includes(l.funnelStatus))
-      .sort((a, b) => a.nextActionDate.localeCompare(b.nextActionDate));
-  }, [filteredLeads]);
-
-  const overdueActivities = useMemo(() => {
-    return scheduledActivities.filter(l => l.nextActionDate < todayStr);
-  }, [scheduledActivities, todayStr]);
-
-  const todayActivities = useMemo(() => {
-    return scheduledActivities.filter(l => l.nextActionDate === todayStr);
-  }, [scheduledActivities, todayStr]);
-
-  const upcomingActivities = useMemo(() => {
-    return scheduledActivities.filter(l => l.nextActionDate > todayStr);
-  }, [scheduledActivities, todayStr]);
-
-  const panelMetrics = useMemo(() => {
-    const fl = filteredLeads;
-    const total = fl.length;
-    const byOrigin = Object.entries(LEAD_ORIGIN_LABELS).map(([k, v]) => ({
-      key: k, label: v, count: fl.filter(l => l.origin === k).length,
-    })).filter(o => o.count > 0).sort((a, b) => b.count - a.count);
-
-    const bySegment = Object.entries(LEAD_SEGMENT_LABELS).map(([k, v]) => ({
-      key: k, label: v, count: fl.filter(l => l.segment === k).length,
-    })).filter(s => s.count > 0).sort((a, b) => b.count - a.count);
-
-    const byTemperature = {
-      quente: fl.filter(l => l.temperature === 'quente').length,
-      morno: fl.filter(l => l.temperature === 'morno').length,
-      frio: fl.filter(l => l.temperature === 'frio').length,
-    };
-
-    const outbound = fl.filter(l => l.acquisitionType === 'outbound').length;
-    const inbound = fl.filter(l => l.acquisitionType === 'inbound').length;
-
-    const avgPotential = total > 0 ? fl.reduce((s, l) => s + (l.estimatedPotential || 0), 0) / total : 0;
-
-    const highPriority = fl.filter(l => l.priority === 'alta' && !['perdido', 'qualificado_crm'].includes(l.funnelStatus)).length;
-
-    const withoutAction = fl.filter(l => !l.nextActionDate && !['perdido', 'qualificado_crm'].includes(l.funnelStatus)).length;
-
-    return { total, byOrigin, bySegment, byTemperature, outbound, inbound, avgPotential, highPriority, withoutAction };
-  }, [filteredLeads]);
 
   return (
     <div className="min-h-screen bg-background">
