@@ -347,21 +347,21 @@ export function ProspectionPage() {
   // Metrics
   const metrics = useMemo(() => {
     const total = filteredLeads.length;
-    const active = filteredLeads.filter(l => !['perdido', 'qualificado_crm'].includes(l.funnelStatus)).length;
-    const meetings = filteredLeads.filter(l => l.funnelStatus === 'reuniao_agendada').length;
-    const lost = filteredLeads.filter(l => l.funnelStatus === 'perdido').length;
+    const active = filteredLeads.filter(l => l.funnelStatus !== qualifiedKey).length;
+    const meetings = meetingKey ? filteredLeads.filter(l => l.funnelStatus === meetingKey).length : 0;
+    const lost = 0;
     const volume = filteredLeads.reduce((sum, l) => sum + (l.estimatedPotential || 0), 0);
 
-    const mapped = filteredLeads.filter(l => l.funnelStatus === 'mapeado').length;
+    const mapped = filteredLeads.filter(l => l.funnelStatus === firstStatusKey).length;
     const meetingsTotal = meetings;
-    const qualifiedCRM = filteredLeads.filter(l => l.funnelStatus === 'qualificado_crm').length;
+    const qualifiedCRM = qualifiedKey ? filteredLeads.filter(l => l.funnelStatus === qualifiedKey).length : 0;
 
     const convMappedToMeeting = total > 0 ? ((meetingsTotal / Math.max(mapped + meetingsTotal, 1)) * 100) : 0;
     const convMeetingToCRM = meetingsTotal > 0 ? ((qualifiedCRM / Math.max(meetingsTotal + qualifiedCRM, 1)) * 100) : 0;
-    const lossRate = total > 0 ? ((lost / total) * 100) : 0;
+    const lossRate = 0;
 
     return { total, active, meetings, lost, volume, convMappedToMeeting, convMeetingToCRM, lossRate };
-  }, [filteredLeads]);
+  }, [filteredLeads, qualifiedKey, meetingKey, firstStatusKey]);
 
   const dashboardCards = [
     { label: 'Total Leads', value: metrics.total, icon: Users, color: 'bg-primary/10 text-primary' },
