@@ -235,34 +235,6 @@ export function TeamFinancePage() {
       />
       <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
         <Card className="p-4">
-          <p className="text-sm font-medium">Liberar “Meu Financeiro” por pessoa</p>
-          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-            Escolha quais membros do time podem ver o próprio financeiro. Freelas não precisam
-            dessa liberação.
-          </p>
-          <div className="divide-y">
-            {people.map((p) => (
-              <div key={p.id} className="flex items-center justify-between py-2.5">
-                <span className="text-sm">{p.name}</span>
-                <Switch
-                  checked={Boolean(accessMap[p.id])}
-                  onCheckedChange={async (v) => {
-                    const ok = await setMemberEnabled(p.id, v);
-                    toast[ok ? 'success' : 'error'](
-                      ok
-                        ? v
-                          ? `Financeiro liberado para ${p.name}`
-                          : `Financeiro bloqueado para ${p.name}`
-                        : 'Não foi possível salvar',
-                    );
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Users className="w-4 h-4 text-primary" /> Pessoa do time
@@ -295,6 +267,31 @@ export function TeamFinancePage() {
               </SelectContent>
             </Select>
           </div>
+          {selectedPerson && (
+            <div className="mt-4 flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">
+                  Liberar “Meu Financeiro” para {selectedPerson.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Quando liberado, essa pessoa vê o próprio financeiro no perfil dela.
+                </p>
+              </div>
+              <Switch
+                checked={Boolean(accessMap[selectedPerson.id])}
+                onCheckedChange={async (v) => {
+                  const ok = await setMemberEnabled(selectedPerson.id, v);
+                  toast[ok ? 'success' : 'error'](
+                    ok
+                      ? v
+                        ? `Financeiro liberado para ${selectedPerson.name}`
+                        : `Financeiro bloqueado para ${selectedPerson.name}`
+                      : 'Não foi possível salvar',
+                  );
+                }}
+              />
+            </div>
+          )}
         </Card>
 
         {!selected ? (
