@@ -252,6 +252,10 @@ export function BudgetDetail() {
   const [defaultTargetMargin, setDefaultTargetMargin] = useState<number>(20);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (!workspace?.id) return;
     supabase
       .from('payment_terms')
