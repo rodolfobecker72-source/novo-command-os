@@ -107,7 +107,7 @@ interface ProspectionContextType {
   migrateLeadToCRM: (id: string) => { clientName: string } | null;
   // Status do funil personalizáveis
   statuses: LeadStatus[];
-  addStatus: (data: { label: string; color: string; role: LeadStatus['role']; order: number }) => Promise<void>;
+  addStatus: (data: { label: string; color: string; role?: LeadStatus['role']; order: number }) => Promise<void>;
   updateStatus: (id: string, updates: Partial<Pick<LeadStatus, 'label' | 'color' | 'role'>>) => Promise<void>;
   deleteStatus: (id: string, moveToKey: string) => Promise<void>;
   reorderStatuses: (ordered: LeadStatus[]) => Promise<void>;
