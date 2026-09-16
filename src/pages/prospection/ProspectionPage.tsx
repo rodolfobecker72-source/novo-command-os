@@ -545,10 +545,17 @@ export function ProspectionPage() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
         </div>
-        <Button onClick={openCreate} size="default" className="gap-2 rounded-xl shadow-sm w-full sm:w-auto">
-          <Plus className="w-4 h-4" /> Novo Lead
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setManageStatusOpen(true)} size="default" className="gap-2 rounded-xl w-full sm:w-auto">
+            <Settings2 className="w-4 h-4" /> Gerenciar Status
+          </Button>
+          <Button onClick={openCreate} size="default" className="gap-2 rounded-xl shadow-sm w-full sm:w-auto">
+            <Plus className="w-4 h-4" /> Novo Lead
+          </Button>
+        </div>
       </motion.div>
+
+      <ManageLeadStatusesDialog open={manageStatusOpen} onOpenChange={setManageStatusOpen} />
 
       {/* Tab Switcher */}
       <div className="flex gap-2">
