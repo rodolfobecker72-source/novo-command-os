@@ -107,7 +107,7 @@ interface ProspectionContextType {
   migrateLeadToCRM: (id: string) => { clientName: string } | null;
   // Status do funil personalizáveis
   statuses: LeadStatus[];
-  addStatus: (data: { label: string; color: string; role: LeadStatus['role']; order: number }) => Promise<void>;
+  addStatus: (data: { label: string; color: string; role?: LeadStatus['role']; order: number }) => Promise<void>;
   updateStatus: (id: string, updates: Partial<Pick<LeadStatus, 'label' | 'color' | 'role'>>) => Promise<void>;
   deleteStatus: (id: string, moveToKey: string) => Promise<void>;
   reorderStatuses: (ordered: LeadStatus[]) => Promise<void>;
@@ -179,7 +179,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     onChange: () => { load(true); loadStatuses(); },
   });
 
-  const addStatus = useCallback(async (data: { label: string; color: string; role: LeadStatus['role']; order: number }) => {
+  const addStatus = useCallback(async (data: { label: string; color: string; role?: LeadStatus['role']; order: number }) => {
     if (!workspaceId) return;
     try {
       let key = slugifyStatusKey(data.label);
@@ -191,7 +191,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
         label: data.label.trim(),
         color: data.color,
         order: insertOrder,
-        role: data.role,
+        role: data.role ?? null,
         is_default: false,
       });
       if (error) throw error;
@@ -223,6 +223,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     try {
       const target = statuses.find(s => s.id === id);
       if (!target) return;
+      if (target.isDefault) { toast.error('Status padrão não pode ser excluído'); return; }
       const { error: moveErr } = await supabase
         .from('prospection_leads')
         .update({ funnel_status: moveToKey })

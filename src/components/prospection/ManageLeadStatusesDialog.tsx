@@ -15,10 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useProspection } from '@/contexts/ProspectionContext';
 import {
-  LeadStatus, LeadStatusRole, LEAD_STATUS_COLORS, LEAD_STATUS_ROLE_LABELS, getStatusColor,
+  LeadStatus, LEAD_STATUS_COLORS, getStatusColor,
 } from '@/types/prospection';
 
-const ROLE_NONE = 'none';
 
 function ColorSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -40,29 +39,13 @@ function ColorSelect({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
-function RoleSelect({ value, onChange }: { value: LeadStatusRole | null; onChange: (v: LeadStatusRole | null) => void }) {
-  return (
-    <Select value={value ?? ROLE_NONE} onValueChange={v => onChange(v === ROLE_NONE ? null : (v as LeadStatusRole))}>
-      <SelectTrigger className="h-9 w-[180px] rounded-xl text-sm">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="z-[200]">
-        <SelectItem value={ROLE_NONE}>Sem comportamento</SelectItem>
-        <SelectItem value="meeting">{LEAD_STATUS_ROLE_LABELS.meeting}</SelectItem>
-        <SelectItem value="qualified">{LEAD_STATUS_ROLE_LABELS.qualified}</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
 function SortableStatusRow({
-  status, count, onLabel, onColor, onRole, onDelete,
+  status, count, onLabel, onColor, onDelete,
 }: {
   status: LeadStatus;
   count: number;
   onLabel: (v: string) => void;
   onColor: (v: string) => void;
-  onRole: (v: LeadStatusRole | null) => void;
   onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -98,11 +81,14 @@ function SortableStatusRow({
         className="h-9 rounded-xl text-sm flex-1 min-w-[140px]"
       />
       <ColorSelect value={status.color} onChange={onColor} />
-      <RoleSelect value={status.role} onChange={onRole} />
       <span className="text-xs text-muted-foreground w-16 text-right">{count} lead{count === 1 ? '' : 's'}</span>
-      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onDelete}>
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      {status.isDefault ? (
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border/60 rounded-lg px-2 py-1">Padrão</span>
+      ) : (
+        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={onDelete}>
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -116,7 +102,7 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
 
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('slate');
-  const [newRole, setNewRole] = useState<LeadStatusRole | null>(null);
+  
   const [newPosition, setNewPosition] = useState<string>('end');
   const [deleting, setDeleting] = useState<LeadStatus | null>(null);
   const [moveTo, setMoveTo] = useState<string>('');
@@ -136,10 +122,9 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
   const handleCreate = async () => {
     if (!newLabel.trim()) { toast.error('Informe o nome do status'); return; }
     const order = newPosition === 'end' ? ordered.length : Number(newPosition);
-    await addStatus({ label: newLabel, color: newColor, role: newRole, order });
+    await addStatus({ label: newLabel, color: newColor, order });
     setNewLabel('');
     setNewColor('slate');
-    setNewRole(null);
     setNewPosition('end');
   };
 
@@ -158,8 +143,8 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
           <DialogHeader>
             <DialogTitle>Gerenciar status dos leads</DialogTitle>
             <DialogDescription>
-              Crie, renomeie, reordene (arrastando) e exclua os status do funil. O comportamento especial
-              define onde o sistema pede a confirmação da reunião e onde aparece o botão de migrar para o CRM.
+              Crie, renomeie, troque a cor e reordene (arrastando) os status do funil. Os status padrão
+              não podem ser excluídos; os que você criar podem.
             </DialogDescription>
           </DialogHeader>
 
@@ -173,7 +158,7 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
                     count={countFor(s.key)}
                     onLabel={v => updateStatus(s.id, { label: v })}
                     onColor={v => updateStatus(s.id, { color: v })}
-                    onRole={v => updateStatus(s.id, { role: v })}
+                    
                     onDelete={() => {
                       if (ordered.length <= 1) { toast.error('É preciso manter ao menos um status'); return; }
                       setDeleting(s);
@@ -207,10 +192,6 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
                     <SelectItem value="end">No final</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Comportamento</Label>
-                <RoleSelect value={newRole} onChange={setNewRole} />
               </div>
               <Button onClick={handleCreate} className="gap-2 rounded-xl h-9">
                 <Plus className="w-4 h-4" /> Adicionar
