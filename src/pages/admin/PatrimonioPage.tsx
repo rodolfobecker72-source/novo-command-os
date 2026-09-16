@@ -18,7 +18,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Plus, Search, Pencil, Trash2, Package, Building2, ExternalLink, Loader2, DollarSign, Hash, ShieldCheck, Eye, PowerOff,
+  Plus, Search, Pencil, Trash2, Package, Building2, ExternalLink, Loader2, DollarSign, Hash, ShieldCheck, Eye, PowerOff, AlertTriangle,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Header } from '@/components/layout/Header';
@@ -426,6 +426,27 @@ export function PatrimonioPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {insuranceAlerts.length > 0 && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-4 h-4" />
+              Renovação de seguro
+            </p>
+            {insuranceAlerts.map(({ asset, exp, expired }) => (
+              <div key={asset.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span>{asset.name}</span>
+                <Badge variant={expired ? 'destructive' : 'secondary'}>
+                  {expired
+                    ? `Apólice vencida em ${exp.toLocaleDateString('pt-BR')}`
+                    : `Apólice vence em ${exp.toLocaleDateString('pt-BR')}`}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
