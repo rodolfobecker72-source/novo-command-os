@@ -123,8 +123,10 @@ export function ProspectionPage() {
   // Status do funil (personalizáveis por workspace)
   const [manageStatusOpen, setManageStatusOpen] = useState(false);
   const orderedStatuses = useMemo(() => [...statuses].sort((a, b) => a.order - b.order), [statuses]);
-  const meetingKey = orderedStatuses.find(s => s.role === 'meeting')?.key || null;
-  const qualifiedKey = orderedStatuses.find(s => s.role === 'qualified')?.key || null;
+  const meetingKey = orderedStatuses.find(s => s.key === 'reuniao_agendada')?.key
+    || orderedStatuses.find(s => s.role === 'meeting')?.key || null;
+  const qualifiedKey = orderedStatuses.find(s => s.key === 'qualificado_crm')?.key
+    || orderedStatuses.find(s => s.role === 'qualified')?.key || null;
   const firstStatusKey = orderedStatuses[0]?.key || 'mapeado';
   const statusLabel = (key: LeadFunnelStatus) =>
     orderedStatuses.find(s => s.key === key)?.label || LEAD_FUNNEL_STATUS_LABELS[key] || key;
