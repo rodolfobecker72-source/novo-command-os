@@ -157,15 +157,29 @@ export function TeamFinancePage() {
     return { pago, pendente, mesAtual };
   }, [entries]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, Entry[]>();
-    entries.forEach((e) => {
-      const arr = map.get(e.month) || [];
-      arr.push(e);
-      map.set(e.month, arr);
-    });
-    return Array.from(map.entries());
+  const months = useMemo(() => {
+    const set = new Set<string>(entries.map((e) => e.month));
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
   }, [entries]);
+
+  const [monthSel, setMonthSel] = useState<string>('');
+
+  // Default month: current month if present, otherwise the most recent
+  useEffect(() => {
+    if (months.length === 0) {
+      setMonthSel('');
+      return;
+    }
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    setMonthSel((prev) =>
+      prev && months.includes(prev) ? prev : months.includes(currentMonth) ? currentMonth : months[0],
+    );
+  }, [months]);
+
+  const monthEntries = useMemo(
+    () => entries.filter((e) => e.month === monthSel),
+    [entries, monthSel],
+  );
 
   const formatMonth = (m: string) => {
     if (!m || m === '—') return 'Sem mês';
