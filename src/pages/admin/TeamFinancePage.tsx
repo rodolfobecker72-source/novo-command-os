@@ -306,120 +306,138 @@ export function TeamFinancePage() {
                 Nenhum trabalho apontado a esta pessoa ainda.
               </Card>
             ) : (
-              grouped.map(([month, items]) => {
-                const monthTotal = items.reduce((s, e) => s + e.realValue, 0);
-                return (
-                  <Card key={month} className="overflow-hidden">
-                    <div className="px-4 py-3 bg-muted/40 flex items-center justify-between border-b">
-                      <h3 className="font-semibold capitalize">{formatMonth(month)}</h3>
-                      <span className="text-sm font-semibold">{formatCurrency(monthTotal)}</span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Projeto</TableHead>
-                            <TableHead>Cliente</TableHead>
-                            <TableHead>Descrição</TableHead>
-                            <TableHead className="text-right">Valor</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Data Pgto</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {items.map((e) => {
-                            const k = rowKey(e);
-                            return (
-                              <TableRow key={k}>
-                                <TableCell className="font-medium">
-                                  #{e.proposalId} {e.projectName ? `- ${e.projectName}` : ''}
-                                </TableCell>
-                                <TableCell>{e.clientName}</TableCell>
-                                <TableCell className="text-sm">{e.description}</TableCell>
-                                <TableCell className="text-right font-semibold">
-                                  {editing === k ? (
-                                    <Input
-                                      autoFocus
-                                      type="number"
-                                      step="0.01"
-                                      value={draft}
-                                      onChange={(ev) => setDraft(ev.target.value)}
-                                      onBlur={async () => {
-                                        const v = Number(draft);
-                                        setEditing(null);
-                                        if (!Number.isNaN(v) && v !== e.realValue) {
-                                          await applyUpdate(e, { realValue: v });
-                                        }
-                                      }}
-                                      onKeyDown={(ev) => {
-                                        if (ev.key === 'Enter') (ev.target as HTMLInputElement).blur();
-                                        if (ev.key === 'Escape') setEditing(null);
-                                      }}
-                                      className="h-8 w-28 text-right ml-auto"
-                                    />
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="hover:underline"
-                                      onClick={() => {
-                                        setEditing(k);
-                                        setDraft(String(e.realValue));
-                                      }}
-                                    >
-                                      {formatCurrency(e.realValue)}
-                                    </button>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <Select
-                                    value={e.paymentStatus}
-                                    onValueChange={(v) =>
-                                      applyUpdate(e, {
-                                        paymentStatus: v as PaymentStatus,
-                                        paymentDate:
-                                          v === 'pago' ? e.paymentDate || new Date() : e.paymentDate,
-                                      })
-                                    }
-                                  >
-                                    <SelectTrigger className="h-8 w-36 text-xs">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="z-[200]">
-                                      {Object.entries(PAYMENT_STATUS_LABELS).map(([k2, label]) => (
-                                        <SelectItem key={k2} value={k2}>
-                                          {label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
+              <Card className="overflow-hidden">
+                <div className="px-4 py-3 bg-muted/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b">
+                  <div className="flex items-center gap-2">
+                    <Select value={monthSel} onValueChange={setMonthSel}>
+                      <SelectTrigger className="w-56 capitalize">
+                        <SelectValue placeholder="Selecione o mês" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[200]">
+                        {months.map((m) => (
+                          <SelectItem key={m} value={m} className="capitalize">
+                            {formatMonth(m)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <span className="text-sm font-semibold">
+                    {formatCurrency(monthEntries.reduce((s, e) => s + e.realValue, 0))}
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Projeto</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Data Pgto</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {monthEntries.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            Nenhum lançamento neste mês.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        monthEntries.map((e) => {
+                          const k = rowKey(e);
+                          return (
+                            <TableRow key={k}>
+                              <TableCell className="font-medium">
+                                #{e.proposalId} {e.projectName ? `- ${e.projectName}` : ''}
+                              </TableCell>
+                              <TableCell>{e.clientName}</TableCell>
+                              <TableCell className="text-sm">{e.description}</TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {editing === k ? (
                                   <Input
-                                    type="date"
-                                    className="h-8 w-36 text-xs"
-                                    value={
-                                      e.paymentDate
-                                        ? new Date(e.paymentDate).toISOString().slice(0, 10)
-                                        : ''
-                                    }
-                                    onChange={(ev) =>
-                                      applyUpdate(e, {
-                                        paymentDate: ev.target.value
-                                          ? new Date(ev.target.value + 'T12:00:00')
-                                          : null,
-                                      })
-                                    }
+                                    autoFocus
+                                    type="number"
+                                    step="0.01"
+                                    value={draft}
+                                    onChange={(ev) => setDraft(ev.target.value)}
+                                    onBlur={async () => {
+                                      const v = Number(draft);
+                                      setEditing(null);
+                                      if (!Number.isNaN(v) && v !== e.realValue) {
+                                        await applyUpdate(e, { realValue: v });
+                                      }
+                                    }}
+                                    onKeyDown={(ev) => {
+                                      if (ev.key === 'Enter') (ev.target as HTMLInputElement).blur();
+                                      if (ev.key === 'Escape') setEditing(null);
+                                    }}
+                                    className="h-8 w-28 text-right ml-auto"
                                   />
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </Card>
-                );
-              })
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="hover:underline"
+                                    onClick={() => {
+                                      setEditing(k);
+                                      setDraft(String(e.realValue));
+                                    }}
+                                  >
+                                    {formatCurrency(e.realValue)}
+                                  </button>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={e.paymentStatus}
+                                  onValueChange={(v) =>
+                                    applyUpdate(e, {
+                                      paymentStatus: v as PaymentStatus,
+                                      paymentDate:
+                                        v === 'pago' ? e.paymentDate || new Date() : e.paymentDate,
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 w-36 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[200]">
+                                    {Object.entries(PAYMENT_STATUS_LABELS).map(([k2, label]) => (
+                                      <SelectItem key={k2} value={k2}>
+                                        {label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                <Input
+                                  type="date"
+                                  className="h-8 w-36 text-xs"
+                                  value={
+                                    e.paymentDate
+                                      ? new Date(e.paymentDate).toISOString().slice(0, 10)
+                                      : ''
+                                  }
+                                  onChange={(ev) =>
+                                    applyUpdate(e, {
+                                      paymentDate: ev.target.value
+                                        ? new Date(ev.target.value + 'T12:00:00')
+                                        : null,
+                                    })
+                                  }
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
             )}
 
             {entries.length > 0 && (
