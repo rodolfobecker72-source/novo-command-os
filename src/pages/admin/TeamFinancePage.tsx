@@ -54,6 +54,9 @@ export function TeamFinancePage() {
   const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
   const [selected, setSelected] = useState<string>('');
 
+  // Membro do time atualmente selecionado (undefined para freelas)
+  const selectedPerson = people.find((p) => p.name === selected);
+
   // Load workspace members (id + name)
   useEffect(() => {
     if (!workspace) return;
