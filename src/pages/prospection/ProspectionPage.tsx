@@ -79,15 +79,6 @@ function PriorityBadge({ priority }: { priority: LeadPriority }) {
   );
 }
 
-function FunnelStatusBadge({ status, statuses }: { status: LeadFunnelStatus; statuses: LeadStatus[] }) {
-  const s = statuses.find(x => x.key === status);
-  const color = getStatusColor(s?.color || 'slate');
-  return (
-    <Badge variant="outline" className={`${color.badge} text-xs`}>
-      {s?.label || LEAD_FUNNEL_STATUS_LABELS[status] || status}
-    </Badge>
-  );
-}
 
 const emptyLead: Omit<ProspectionLead, 'id' | 'createdAt' | 'updatedAt'> = {
   companyName: '',
