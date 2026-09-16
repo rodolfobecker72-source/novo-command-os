@@ -15,10 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useProspection } from '@/contexts/ProspectionContext';
 import {
-  LeadStatus, LeadStatusRole, LEAD_STATUS_COLORS, LEAD_STATUS_ROLE_LABELS, getStatusColor,
+  LeadStatus, LEAD_STATUS_COLORS, getStatusColor,
 } from '@/types/prospection';
 
-const ROLE_NONE = 'none';
 
 function ColorSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
