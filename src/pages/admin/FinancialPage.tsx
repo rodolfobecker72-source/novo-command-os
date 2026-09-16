@@ -1597,44 +1597,6 @@ export function FinancialPage() {
             </CardContent>
           </Card>
 
-          {/* Receivables by month */}
-          <Card>
-            <CardHeader><CardTitle className="text-base">Receita Prevista por Mês</CardTitle></CardHeader>
-            <CardContent>
-              {painelData.receivablesByMonth.filter(r => r.remaining > 0).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Todos os projetos estão pagos.</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead className="text-right">Valor Total</TableHead>
-                      <TableHead className="text-right">Recebido</TableHead>
-                      <TableHead className="text-right">A Receber</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {painelData.receivablesByMonth.filter(r => r.remaining > 0).map(r => (
-                      <TableRow key={r.month}>
-                        <TableCell className="font-medium">{r.label}</TableCell>
-                        <TableCell className="text-right">{currencyFmt(r.totalValue)}</TableCell>
-                        <TableCell className="text-right text-green-600">{currencyFmt(r.totalPaid)}</TableCell>
-                        <TableCell className="text-right text-orange-500 font-medium">{currencyFmt(r.remaining)}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="font-bold border-t-2">
-                      <TableCell>Total</TableCell>
-                      <TableCell className="text-right">{currencyFmt(painelData.receivablesByMonth.filter(r => r.remaining > 0).reduce((s, r) => s + r.totalValue, 0))}</TableCell>
-                      <TableCell className="text-right text-green-600">{currencyFmt(painelData.receivablesByMonth.filter(r => r.remaining > 0).reduce((s, r) => s + r.totalPaid, 0))}</TableCell>
-                      <TableCell className="text-right text-orange-500">{currencyFmt(painelData.totalRecebiveis)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-
         </TabsContent>
 
 
