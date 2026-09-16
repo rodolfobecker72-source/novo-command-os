@@ -3,22 +3,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * Configuração por workspace: se o time pode acessar a página "Meu Financeiro".
+ * Liberação individual da página "Meu Financeiro" por membro do time.
+ * Cada membro tem um registro em team_finance_access (enabled true/false).
  */
 export function useTeamFinanceEnabled() {
-  const { workspace } = useAuth();
-  const [enabled, setEnabled] = useState(false);
+  const { workspace, user } = useAuth();
+  const [accessMap, setAccessMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!workspace) return;
     setLoading(true);
     const { data } = await supabase
-      .from('workspace_settings')
-      .select('team_finance_enabled')
-      .eq('workspace_id', workspace.id)
-      .maybeSingle();
-    setEnabled(Boolean((data as any)?.team_finance_enabled));
+      .from('team_finance_access' as any)
+      .select('user_id, enabled')
+      .eq('workspace_id', workspace.id);
+    const map: Record<string, boolean> = {};
+    (data || []).forEach((r: any) => {
+      map[r.user_id] = Boolean(r.enabled);
+    });
+    setAccessMap(map);
     setLoading(false);
   }, [workspace]);
 
@@ -26,30 +30,28 @@ export function useTeamFinanceEnabled() {
     load();
   }, [load]);
 
-  const update = useCallback(
-    async (value: boolean) => {
+  const setMemberEnabled = useCallback(
+    async (userId: string, value: boolean) => {
       if (!workspace) return false;
-      const { data: existing } = await supabase
-        .from('workspace_settings')
-        .select('id')
-        .eq('workspace_id', workspace.id)
-        .maybeSingle();
-
-      const { error } = existing
-        ? await supabase
-            .from('workspace_settings')
-            .update({ team_finance_enabled: value } as any)
-            .eq('id', (existing as any).id)
-        : await supabase
-            .from('workspace_settings')
-            .insert({ workspace_id: workspace.id, team_finance_enabled: value } as any);
-
+      const { error } = await supabase.from('team_finance_access' as any).upsert(
+        { workspace_id: workspace.id, user_id: userId, enabled: value } as any,
+        { onConflict: 'workspace_id,user_id' },
+      );
       if (error) return false;
-      setEnabled(value);
+      setAccessMap((prev) => ({ ...prev, [userId]: value }));
       return true;
     },
     [workspace],
   );
 
-  return { enabled, loading, update, reload: load };
+  const enabled = user ? Boolean(accessMap[user.id]) : false;
+
+  return {
+    enabled,
+    accessMap,
+    loading,
+    setMemberEnabled,
+    isEnabledFor: (userId: string) => Boolean(accessMap[userId]),
+    reload: load,
+  };
 }

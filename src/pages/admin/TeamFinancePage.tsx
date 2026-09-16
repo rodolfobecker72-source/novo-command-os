@@ -50,15 +50,11 @@ interface Entry {
 export function TeamFinancePage() {
   const { workspace } = useAuth();
   const { budgets, clients, updateExecutionCost, updateExecution } = useCRM();
-  const {
-    enabled: teamFinanceEnabled,
-    loading: settingsLoading,
-    update: updateTeamFinance,
-  } = useTeamFinanceEnabled();
-  const [people, setPeople] = useState<string[]>([]);
+  const { accessMap, setMemberEnabled } = useTeamFinanceEnabled();
+  const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
   const [selected, setSelected] = useState<string>('');
 
-  // Load workspace member names
+  // Load workspace members (id + name)
   useEffect(() => {
     if (!workspace) return;
     (async () => {
@@ -67,21 +63,26 @@ export function TeamFinancePage() {
         .select('user_id')
         .eq('workspace_id', workspace.id);
       const ids = (memberData || []).map((m: any) => m.user_id);
-      let names: string[] = [];
+      let list: { id: string; name: string }[] = [];
       if (ids.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, name')
           .in('id', ids);
-        names = (profilesData || []).map((p: any) => p.name).filter(Boolean);
+        list = (profilesData || [])
+          .filter((p: any) => p.name)
+          .map((p: any) => ({ id: p.id, name: p.name }));
       }
-      setPeople(names);
+      list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      setPeople(list);
     })();
   }, [workspace]);
 
+  const peopleNames = useMemo(() => people.map((p) => p.name), [people]);
+
   // Suppliers found in executions (includes freelas)
   const suppliers = useMemo(() => {
-    const set = new Set<string>(people);
+    const set = new Set<string>(peopleNames);
     for (const b of budgets) {
       const ex = b.execution;
       if (!ex) continue;
@@ -97,9 +98,9 @@ export function TeamFinancePage() {
 
   // Team members first, then freelas (suppliers that are not workspace members)
   const freelas = useMemo(() => {
-    const teamSet = new Set(people);
+    const teamSet = new Set(peopleNames);
     return suppliers.filter((s) => !teamSet.has(s));
-  }, [suppliers, people]);
+  }, [suppliers, peopleNames]);
 
   const entries = useMemo<Entry[]>(() => {
     if (!selected) return [];
@@ -166,7 +167,16 @@ export function TeamFinancePage() {
   }, [selected]);
 
   const monthEntries = useMemo(
-    () => (monthSel ? entries.filter((e) => e.month === monthSel) : []),
+    () =>
+      monthSel
+        ? entries
+            .filter((e) => e.month === monthSel)
+            .sort(
+              (a, b) =>
+                (Number(a.proposalId) || 0) - (Number(b.proposalId) || 0) ||
+                a.proposalId.localeCompare(b.proposalId, 'pt-BR'),
+            )
+        : [],
     [entries, monthSel],
   );
 
@@ -225,27 +235,30 @@ export function TeamFinancePage() {
       />
       <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
         <Card className="p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium">Liberar “Meu Financeiro” para o time</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Quando desligado, apenas a gestão vê os valores por aqui.
-              </p>
-            </div>
-            <Switch
-              checked={teamFinanceEnabled}
-              disabled={settingsLoading}
-              onCheckedChange={async (v) => {
-                const ok = await updateTeamFinance(v);
-                toast[ok ? 'success' : 'error'](
-                  ok
-                    ? v
-                      ? 'Área liberada para o time'
-                      : 'Área restrita à gestão'
-                    : 'Não foi possível salvar',
-                );
-              }}
-            />
+          <p className="text-sm font-medium">Liberar “Meu Financeiro” por pessoa</p>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Escolha quais membros do time podem ver o próprio financeiro. Freelas não precisam
+            dessa liberação.
+          </p>
+          <div className="divide-y">
+            {people.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2.5">
+                <span className="text-sm">{p.name}</span>
+                <Switch
+                  checked={Boolean(accessMap[p.id])}
+                  onCheckedChange={async (v) => {
+                    const ok = await setMemberEnabled(p.id, v);
+                    toast[ok ? 'success' : 'error'](
+                      ok
+                        ? v
+                          ? `Financeiro liberado para ${p.name}`
+                          : `Financeiro bloqueado para ${p.name}`
+                        : 'Não foi possível salvar',
+                    );
+                  }}
+                />
+              </div>
+            ))}
           </div>
         </Card>
 
@@ -259,10 +272,10 @@ export function TeamFinancePage() {
                 <SelectValue placeholder="Selecione uma pessoa" />
               </SelectTrigger>
               <SelectContent className="z-[200]">
-                {people.length > 0 && (
+                {peopleNames.length > 0 && (
                   <SelectGroup>
                     <SelectLabel>Pessoas do time</SelectLabel>
-                    {people.map((s) => (
+                    {peopleNames.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
@@ -377,7 +390,10 @@ export function TeamFinancePage() {
                         monthEntries.map((e) => {
                           const k = rowKey(e);
                           return (
-                            <TableRow key={k}>
+                            <TableRow
+                              key={k}
+                              className={e.paymentStatus === 'pago' ? 'bg-success/10' : undefined}
+                            >
                               <TableCell className="font-medium">
                                 #{e.proposalId} {e.projectName ? `- ${e.projectName}` : ''}
                               </TableCell>
