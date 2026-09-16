@@ -233,6 +233,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         </div>
 
         <ProfileEditDialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen} />
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
       </div>
     </aside>
   );
