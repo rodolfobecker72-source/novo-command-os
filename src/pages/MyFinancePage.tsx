@@ -114,6 +114,22 @@ export default function MyFinancePage() {
     return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   };
 
+  const blocked = !settingsLoading && !teamFinanceEnabled && role !== 'owner';
+
+  if (blocked) {
+    return (
+      <>
+        <Header title="Meu Financeiro" subtitle="Trabalhos apontados a você nas execuções" />
+        <div className="p-4 md:p-6 max-w-2xl mx-auto">
+          <Card className="p-8 text-center text-muted-foreground space-y-2">
+            <Lock className="w-6 h-6 mx-auto text-muted-foreground" />
+            <p>Esta área está desativada pela gestão do seu workspace.</p>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Header title="Meu Financeiro" subtitle="Trabalhos apontados a você nas execuções" />
