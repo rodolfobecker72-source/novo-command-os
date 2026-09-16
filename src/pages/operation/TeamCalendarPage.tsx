@@ -98,16 +98,26 @@ export function TeamCalendarPage() {
   useEffect(() => {
     if (!workspace?.id) return;
     (async () => {
-      const { data: wm } = await supabase
+      const { data: wm, error: wmError } = await supabase
         .from('workspace_members')
         .select('user_id')
         .eq('workspace_id', workspace.id);
+      if (wmError) {
+        console.error('[TeamCalendar] Falha ao carregar membros:', wmError.message);
+        toast.error('Não foi possível carregar as pessoas do time.');
+        return;
+      }
       const ids = (wm || []).map((m: any) => m.user_id);
       if (!ids.length) { setMembers([]); return; }
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, name')
         .in('id', ids);
+      if (profilesError) {
+        console.error('[TeamCalendar] Falha ao carregar perfis:', profilesError.message);
+        toast.error('Não foi possível carregar os nomes do time.');
+        return;
+      }
       const list: Member[] = (profiles || [])
         .map((p: any) => ({ id: p.id, name: p.name || '' }))
         .filter(p => p.name)
@@ -119,11 +129,15 @@ export function TeamCalendarPage() {
         try {
           const raw = sessionStorage.getItem(storageKey);
           if (raw) {
-            const arr = JSON.parse(raw) as string[];
+            const parsed = JSON.parse(raw);
+            const arr: string[] = Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
             const valid = arr.filter(id => list.some(m => m.id === id));
             if (valid.length) setSelectedMemberIds(new Set(valid));
           }
-        } catch { /* ignore */ }
+        } catch (err) {
+          console.warn('[TeamCalendar] Seleção salva inválida, ignorando:', err);
+          sessionStorage.removeItem(storageKey);
+        }
       }
     })();
   }, [workspace?.id, storageKey]);

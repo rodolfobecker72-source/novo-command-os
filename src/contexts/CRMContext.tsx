@@ -401,7 +401,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_KANBAN_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data } = await supabase.from('kanban_columns').insert(defaults).select();
+        const { data, error } = await supabase.from('kanban_columns').insert(defaults).select();
+        if (error) {
+          console.error('[CRM] Falha ao criar colunas padrão do kanban:', error.message);
+          toast.error('Não foi possível criar as colunas padrão do CRM. Recarregue a página.');
+        }
         kanbanData = data || [];
       }
       setKanbanColumns(kanbanData.map(kanbanColumnFromDb));
@@ -411,7 +415,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_SERVICE_CATEGORIES.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data } = await supabase.from('service_categories').insert(defaults).select();
+        const { data, error } = await supabase.from('service_categories').insert(defaults).select();
+        if (error) {
+          console.error('[CRM] Falha ao criar categorias de serviço padrão:', error.message);
+          toast.error('Não foi possível criar as categorias de serviço padrão. Recarregue a página.');
+        }
         catData = data || [];
       }
       setServiceCategories(catData.map(serviceCategoryFromDb));
@@ -423,7 +431,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_PROJECT_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data } = await supabase.from('project_columns').insert(defaults).select();
+        const { data, error } = await supabase.from('project_columns').insert(defaults).select();
+        if (error) {
+          console.error('[CRM] Falha ao criar colunas padrão de projetos:', error.message);
+          toast.error('Não foi possível criar as colunas padrão de Projetos. Recarregue a página.');
+        }
         projColData = data || [];
       }
       setProjectColumns(projColData.map(projectColumnFromDb));
