@@ -106,6 +106,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     .filter((group) => group.items.length > 0);
 
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const showUsuarios = role === 'owner';
 
@@ -189,6 +190,14 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <span className="text-sm font-medium">Usuários</span>
           </NavLink>
         )}
+        <button
+          type="button"
+          onClick={() => { handleNavClick(); setFeedbackOpen(true); }}
+          className="nav-link w-full"
+        >
+          <AlertCircle className="w-5 h-5" />
+          <span className="text-sm font-medium">Reports</span>
+        </button>
         <NavLink
           to="/sobre"
           onClick={handleNavClick}
