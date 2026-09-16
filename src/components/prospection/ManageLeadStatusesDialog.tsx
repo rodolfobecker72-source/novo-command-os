@@ -39,29 +39,13 @@ function ColorSelect({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
-function RoleSelect({ value, onChange }: { value: LeadStatusRole | null; onChange: (v: LeadStatusRole | null) => void }) {
-  return (
-    <Select value={value ?? ROLE_NONE} onValueChange={v => onChange(v === ROLE_NONE ? null : (v as LeadStatusRole))}>
-      <SelectTrigger className="h-9 w-[180px] rounded-xl text-sm">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="z-[200]">
-        <SelectItem value={ROLE_NONE}>Sem comportamento</SelectItem>
-        <SelectItem value="meeting">{LEAD_STATUS_ROLE_LABELS.meeting}</SelectItem>
-        <SelectItem value="qualified">{LEAD_STATUS_ROLE_LABELS.qualified}</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
 function SortableStatusRow({
-  status, count, onLabel, onColor, onRole, onDelete,
+  status, count, onLabel, onColor, onDelete,
 }: {
   status: LeadStatus;
   count: number;
   onLabel: (v: string) => void;
   onColor: (v: string) => void;
-  onRole: (v: LeadStatusRole | null) => void;
   onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
