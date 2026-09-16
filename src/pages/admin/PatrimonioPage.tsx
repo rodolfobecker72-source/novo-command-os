@@ -221,6 +221,21 @@ export function PatrimonioPage() {
     estruturas: assets.filter(a => a.category === 'estrutura').reduce((s, a) => s + (Number(a.quantity) || 1), 0),
   }), [assets]);
 
+  const insuranceAlerts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const limit = new Date(today);
+    limit.setDate(limit.getDate() + 30);
+    return assets
+      .filter(a => a.needs_insurance && a.insurance_expires_at)
+      .map(a => {
+        const exp = new Date(`${a.insurance_expires_at}T12:00:00`);
+        return { asset: a, exp, expired: exp < today, expiringSoon: !exp || (exp >= today && exp <= limit) };
+      })
+      .filter(x => x.expired || x.expiringSoon)
+      .sort((a, b) => a.exp.getTime() - b.exp.getTime());
+  }, [assets]);
+
   return (
     <div>
       <Header title="Patrimônio" subtitle="Cadastro dos bens e equipamentos" />
