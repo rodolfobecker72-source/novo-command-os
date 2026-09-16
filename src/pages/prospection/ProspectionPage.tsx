@@ -1062,7 +1062,7 @@ export function ProspectionPage() {
                             >
                               {s.label}
                             </text>
-                            {s.key === 'reuniao_agendada' && (
+                            {meetingKey && s.key === meetingKey && (
                               <text
                                 x={cx}
                                 y={y1 + stageHeight / 2 + 34}
