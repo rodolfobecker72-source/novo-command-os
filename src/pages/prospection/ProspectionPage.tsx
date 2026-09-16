@@ -467,7 +467,7 @@ export function ProspectionPage() {
       score: 0,
     });
     if (newClient) {
-      changeLeadStatus(lead, 'qualificado_crm');
+      if (qualifiedKey) changeLeadStatus(lead, qualifiedKey);
       toast.success(`"${lead.companyName}" migrado para o CRM como cliente!`);
     }
   };
@@ -477,10 +477,8 @@ export function ProspectionPage() {
     toast.success(`"${lead.companyName}" reativado!`);
   };
 
-  // Kanban columns (nutricao shown separately)
-  const kanbanStatuses: LeadFunnelStatus[] = [
-    'mapeado', 'contato_realizado', 'reuniao_agendada', 'qualificado_crm', 'nutricao',
-  ];
+  // Colunas do kanban seguem os status cadastrados
+  const kanbanStatuses: LeadFunnelStatus[] = orderedStatuses.map(s => s.key);
 
 
   const uniqueResponsibles = useMemo(() => {
