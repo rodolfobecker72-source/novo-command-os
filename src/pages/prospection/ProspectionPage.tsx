@@ -1719,7 +1719,7 @@ export function ProspectionPage() {
                   <div><span className="text-muted-foreground text-xs">Setor:</span><p>{LEAD_SEGMENT_LABELS[detailLead.segment]}</p></div>
                   <div><span className="text-muted-foreground text-xs">Tipo de Aquisição:</span><p>{ACQUISITION_TYPE_LABELS[detailLead.acquisitionType]}</p></div>
                   <div><span className="text-muted-foreground text-xs">Temperatura:</span><p>{LEAD_TEMPERATURE_LABELS[detailLead.temperature]}</p></div>
-                  <div><span className="text-muted-foreground text-xs">Status do Funil:</span><p>{LEAD_FUNNEL_STATUS_LABELS[detailLead.funnelStatus]}</p></div>
+                  <div><span className="text-muted-foreground text-xs">Status do Funil:</span><p>{statusLabel(detailLead.funnelStatus)}</p></div>
                   <div><span className="text-muted-foreground text-xs">Prioridade:</span><p>{LEAD_PRIORITY_LABELS[detailLead.priority]}</p></div>
                   <div><span className="text-muted-foreground text-xs">Potencial:</span><p className="font-semibold">R$ {detailLead.estimatedPotential.toLocaleString('pt-BR')}</p></div>
                   <div><span className="text-muted-foreground text-xs">Resp. Prospecção:</span><p>{detailLead.prospectionResponsible || '-'}</p></div>
