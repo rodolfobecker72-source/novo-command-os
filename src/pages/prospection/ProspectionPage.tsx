@@ -904,12 +904,9 @@ export function ProspectionPage() {
 
       {/* Funil */}
       {activeTab === 'funil' && (() => {
-        const funnelStages: { key: LeadFunnelStatus; label: string; color: string }[] = [
-          { key: 'mapeado', label: 'Mapeado', color: '#94a3b8' },
-          { key: 'contato_realizado', label: 'Contato Realizado', color: '#3b82f6' },
-          { key: 'reuniao_agendada', label: 'Reunião Agendada', color: '#f59e0b' },
-          { key: 'qualificado_crm', label: 'Qualificado p/ CRM', color: '#10b981' },
-        ];
+        const funnelStages: { key: LeadFunnelStatus; label: string; color: string }[] = orderedStatuses
+          .filter(s => s.key !== 'nutricao')
+          .map(s => ({ key: s.key, label: s.label, color: getStatusColor(s.color).hex }));
 
         const yearNum = Number(funnelYear);
         let periodStart: Date | null = null;
