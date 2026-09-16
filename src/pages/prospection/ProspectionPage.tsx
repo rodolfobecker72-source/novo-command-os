@@ -79,18 +79,12 @@ function PriorityBadge({ priority }: { priority: LeadPriority }) {
   );
 }
 
-function FunnelStatusBadge({ status }: { status: LeadFunnelStatus }) {
-  const colorMap: Record<LeadFunnelStatus, string> = {
-    mapeado: 'bg-muted text-muted-foreground',
-    contato_realizado: 'bg-primary/10 text-primary border-primary/20',
-    reuniao_agendada: 'bg-warning/15 text-warning border-warning/20',
-    qualificado_crm: 'bg-success/20 text-success border-success/30',
-    perdido: 'bg-destructive/15 text-destructive border-destructive/20',
-    nutricao: 'bg-primary/5 text-muted-foreground border-primary/10',
-  };
+function FunnelStatusBadge({ status, statuses }: { status: LeadFunnelStatus; statuses: LeadStatus[] }) {
+  const s = statuses.find(x => x.key === status);
+  const color = getStatusColor(s?.color || 'slate');
   return (
-    <Badge variant="outline" className={`${colorMap[status]} text-xs`}>
-      {LEAD_FUNNEL_STATUS_LABELS[status]}
+    <Badge variant="outline" className={`${color.badge} text-xs`}>
+      {s?.label || LEAD_FUNNEL_STATUS_LABELS[status] || status}
     </Badge>
   );
 }
