@@ -130,12 +130,31 @@ function DraggableLeadCard({ lead, children }: { lead: ProspectionLead; children
 }
 
 export function ProspectionPage() {
-  const { leads, addLead, updateLead, deleteLead, reactivateLead } = useProspection();
+  const { leads, addLead, updateLead, deleteLead, reactivateLead, statuses } = useProspection();
   const { addClient, clients } = useCRM();
   const { getMeetingsGoalForMonth } = useMonthlyGoals();
   const isLeadMigrated = (lead: ProspectionLead) =>
     clients.some(c => c.companyName.trim().toLowerCase() === lead.companyName.trim().toLowerCase());
   const auth = useAuth();
+
+  // Status do funil (personalizáveis por workspace)
+  const [manageStatusOpen, setManageStatusOpen] = useState(false);
+  const orderedStatuses = useMemo(() => [...statuses].sort((a, b) => a.order - b.order), [statuses]);
+  const meetingKey = orderedStatuses.find(s => s.role === 'meeting')?.key || null;
+  const qualifiedKey = orderedStatuses.find(s => s.role === 'qualified')?.key || null;
+  const firstStatusKey = orderedStatuses[0]?.key || 'mapeado';
+  const statusLabel = (key: LeadFunnelStatus) =>
+    orderedStatuses.find(s => s.key === key)?.label || LEAD_FUNNEL_STATUS_LABELS[key] || key;
+
+  const FunnelStatusBadge = ({ status }: { status: LeadFunnelStatus }) => {
+    const s = orderedStatuses.find(x => x.key === status);
+    const color = getStatusColor(s?.color || 'slate');
+    return (
+      <Badge variant="outline" className={`${color.badge} text-xs`}>
+        {s?.label || LEAD_FUNNEL_STATUS_LABELS[status] || status}
+      </Badge>
+    );
+  };
 
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const changeLeadStatus = (lead: ProspectionLead, newStatus: LeadFunnelStatus, extraUpdates: Partial<ProspectionLead> = {}) => {
@@ -144,13 +163,13 @@ export function ProspectionPage() {
       return;
     }
     const updates: Partial<ProspectionLead> = { ...extraUpdates, funnelStatus: newStatus };
-    // Entering "reunião agendada" — mark schedule time and reset confirmation
-    if (newStatus === 'reuniao_agendada' && lead.funnelStatus !== 'reuniao_agendada') {
+    // Entering the meeting status — mark schedule time and reset confirmation
+    if (meetingKey && newStatus === meetingKey && lead.funnelStatus !== meetingKey) {
       updates.meetingScheduledAt = new Date().toISOString();
       updates.meetingHappened = null;
     }
-    // Leaving "reunião agendada" without confirmation — ask if the meeting actually happened
-    if (lead.funnelStatus === 'reuniao_agendada' && newStatus !== 'reuniao_agendada' && (lead.meetingHappened === null || lead.meetingHappened === undefined)) {
+    // Leaving the meeting status without confirmation — ask if the meeting actually happened
+    if (meetingKey && lead.funnelStatus === meetingKey && newStatus !== meetingKey && (lead.meetingHappened === null || lead.meetingHappened === undefined)) {
       setMeetingConfirm({ leadId: lead.id, newStatus, extraUpdates });
       return;
     }
