@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRM } from '@/contexts/CRMContext';
@@ -172,20 +173,13 @@ export function TeamFinancePage() {
 
   const [monthSel, setMonthSel] = useState<string>('');
 
-  // Default month: current month if present, otherwise the most recent
+  // Reset month when switching person (require explicit selection)
   useEffect(() => {
-    if (months.length === 0) {
-      setMonthSel('');
-      return;
-    }
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    setMonthSel((prev) =>
-      prev && months.includes(prev) ? prev : months.includes(currentMonth) ? currentMonth : months[0],
-    );
-  }, [months]);
+    setMonthSel('');
+  }, [selected]);
 
   const monthEntries = useMemo(
-    () => entries.filter((e) => e.month === monthSel),
+    () => (monthSel ? entries.filter((e) => e.month === monthSel) : []),
     [entries, monthSel],
   );
 
