@@ -155,16 +155,13 @@ export function TeamFinancePage() {
 
   const totals = useMemo(() => {
     let pago = 0,
-      pendente = 0,
-      mesAtual = 0;
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    entries.forEach((e) => {
+      pendente = 0;
+    monthEntries.forEach((e) => {
       if (e.paymentStatus === 'pago') pago += e.realValue;
       else if (e.paymentStatus === 'pendente') pendente += e.realValue;
-      if (e.month === currentMonth) mesAtual += e.realValue;
     });
-    return { pago, pendente, mesAtual };
-  }, [entries]);
+    return { pago, pendente, total: pago + pendente };
+  }, [monthEntries]);
 
   const months = useMemo(() => {
     const set = new Set<string>(entries.map((e) => e.month));
