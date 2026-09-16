@@ -110,7 +110,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
-  const showUsuarios = role === 'owner';
+  const showUsuarios = hasPageAccess('usuarios');
 
   const handleNavClick = () => {
     onNavigate?.();

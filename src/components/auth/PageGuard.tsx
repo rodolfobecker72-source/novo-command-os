@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface PageGuardProps {
@@ -8,6 +10,13 @@ interface PageGuardProps {
 
 export function PageGuard({ pageKey, children }: PageGuardProps) {
   const { hasPageAccess, isLoading } = useAuth();
+  const allowed = isLoading ? true : hasPageAccess(pageKey);
+
+  useEffect(() => {
+    if (!isLoading && !allowed) {
+      toast.error('Você não tem permissão para acessar esta página.');
+    }
+  }, [isLoading, allowed]);
 
   if (isLoading) {
     return (
@@ -17,8 +26,8 @@ export function PageGuard({ pageKey, children }: PageGuardProps) {
     );
   }
 
-  if (!hasPageAccess(pageKey)) {
-    return <Navigate to="/" replace />;
+  if (!allowed) {
+    return <Navigate to="/boas-vindas" replace />;
   }
 
   return <>{children}</>;
