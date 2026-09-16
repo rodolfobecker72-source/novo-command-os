@@ -870,6 +870,7 @@ export function ProspectionPage() {
                 const lead = leads.find(l => l.id === meetingConfirm.leadId);
                 if (!lead) { setMeetingConfirm(null); return; }
                 updateLead(lead.id, { ...(meetingConfirm.extraUpdates || {}), funnelStatus: meetingConfirm.newStatus, meetingHappened: false });
+                maybeAskQualify(lead, meetingConfirm.newStatus);
                 setMeetingConfirm(null);
               }}
             >
