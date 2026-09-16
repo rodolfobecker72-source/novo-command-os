@@ -292,17 +292,19 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
   }, [leads]);
 
   const reactivateLead = useCallback(async (id: string) => {
-    await updateLead(id, { funnelStatus: 'mapeado' as LeadFunnelStatus });
-  }, [updateLead]);
+    const first = [...statuses].sort((a, b) => a.order - b.order)[0];
+    await updateLead(id, { funnelStatus: (first?.key || 'mapeado') as LeadFunnelStatus });
+  }, [updateLead, statuses]);
 
   const migrateLeadToCRM = useCallback((id: string) => {
     const lead = leads.find(l => l.id === id);
-    if (!lead || lead.funnelStatus !== 'qualificado_crm') return null;
+    const qualified = statuses.find(s => s.role === 'qualified');
+    if (!lead || lead.funnelStatus !== (qualified?.key || 'qualificado_crm')) return null;
     return { clientName: lead.companyName };
-  }, [leads]);
+  }, [leads, statuses]);
 
   return (
-    <ProspectionContext.Provider value={{ leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM }}>
+    <ProspectionContext.Provider value={{ leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses }}>
       {children}
     </ProspectionContext.Provider>
   );
