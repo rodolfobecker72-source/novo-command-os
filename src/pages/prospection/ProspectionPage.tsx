@@ -15,7 +15,7 @@ import {
   ThermometerSun, ArrowUpRight, RotateCcw, Trash2, Edit, Eye,
   ChevronDown, Building2, User, Phone, Mail, MapPin, Briefcase,
   Clock, Flag, MessageSquare, X, Save, BarChart3, AlertTriangle,
-  TrendingUp, Activity, Calendar,
+  TrendingUp, Activity, Calendar, Settings2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
