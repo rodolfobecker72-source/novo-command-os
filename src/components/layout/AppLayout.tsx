@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { FeedbackButton } from '@/components/feedback/FeedbackButton';
+
 export function AppLayout() {
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,8 +29,6 @@ export function AppLayout() {
           <Outlet context={{ onOpenMobileMenu: () => setMobileOpen(true) }} />
         </ErrorBoundary>
       </main>
-
-      <FeedbackButton />
     </div>
   );
 }
