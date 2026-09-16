@@ -150,6 +150,10 @@ export function PatrimonioPage() {
       toast.error('Informe o nome do item.');
       return;
     }
+    if (form.needs_insurance && !form.insurance_expires_at) {
+      toast.error('Informe a data do fim da apólice do seguro.');
+      return;
+    }
     setSaving(true);
     const qty = Math.max(1, Number(form.quantity) || 1);
     const units = qty > 1 ? syncUnits(form.units, qty) : [];
@@ -158,6 +162,7 @@ export function PatrimonioPage() {
       value: Number(form.value) || 0,
       quantity: qty,
       units,
+      insurance_expires_at: form.needs_insurance && form.insurance_expires_at ? form.insurance_expires_at : null,
       workspace_id: workspace.id,
     };
     const query = editingId
@@ -305,16 +310,37 @@ export function PatrimonioPage() {
                   <Label htmlFor="reference_link">Link de referência</Label>
                   <Input id="reference_link" value={form.reference_link} onChange={(e) => setForm(f => ({ ...f, reference_link: e.target.value }))} placeholder="Ex: link da nota fiscal ou loja" />
                 </div>
-                <div className="sm:col-span-2 flex items-center gap-2 rounded-md border p-3 bg-muted/30">
-                  <Checkbox
-                    id="needs_insurance"
-                    checked={form.needs_insurance}
-                    onCheckedChange={(c) => setForm(f => ({ ...f, needs_insurance: c === true }))}
-                  />
-                  <Label htmlFor="needs_insurance" className="cursor-pointer flex items-center gap-2 font-normal">
-                    <ShieldCheck className="w-4 h-4 text-primary" />
-                    Necessita de seguro
-                  </Label>
+                <div className="sm:col-span-2 rounded-md border p-3 bg-muted/30 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="needs_insurance"
+                      checked={form.needs_insurance}
+                      onCheckedChange={(c) =>
+                        setForm(f => ({ ...f, needs_insurance: c === true, insurance_expires_at: c === true ? f.insurance_expires_at : '' }))
+                      }
+                    />
+                    <Label htmlFor="needs_insurance" className="cursor-pointer flex items-center gap-2 font-normal">
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      Equipamento segurado
+                    </Label>
+                  </div>
+                  {form.needs_insurance && (
+                    <div className="space-y-1 pl-6">
+                      <Label htmlFor="insurance_expires_at" className="text-xs text-muted-foreground">
+                        Data do fim da apólice *
+                      </Label>
+                      <Input
+                        id="insurance_expires_at"
+                        type="date"
+                        value={form.insurance_expires_at}
+                        onChange={(e) => setForm(f => ({ ...f, insurance_expires_at: e.target.value }))}
+                        className="sm:w-56"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        O gestor será lembrado da renovação quando o fim da apólice estiver próximo.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="sm:col-span-2 space-y-2 rounded-md border p-3 bg-muted/30">
                   <div className="flex items-center justify-between">
