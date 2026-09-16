@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { getAllPageKeys, isRoleRestricted } from '@/config/pages';
@@ -100,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           setWorkspace(wsData as Workspace | null);
-          console.log('[Auth] User data loaded successfully. Workspace:', (wsData as any)?.id);
         } else {
           setMembership(null);
           setWorkspace(null);
@@ -125,7 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[Auth] onAuthStateChange event:', event, '| initialLoad:', initialLoad, '| hasLoaded:', hasLoadedRef.current);
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
@@ -136,12 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If user data is already loaded, do NOT set isLoading=true again
           // This prevents the spinner flash on duplicate SIGNED_IN events (tab focus, session restore)
           if (hasLoadedRef.current) {
-            console.log('[Auth] SIGNED_IN but data already loaded — skipping reload');
             return;
           }
           // Prevent concurrent loads
           if (loadingUserDataRef.current) {
-            console.log('[Auth] SIGNED_IN but already loading — skipping');
             return;
           }
           loadingUserDataRef.current = true;
@@ -229,32 +225,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!membership) return false;
     // Check role-based restrictions first (e.g. vendedor cannot access Configurações pages)
     if (role && isRoleRestricted(pageKey, role)) return false;
-    // Owner and admin have access to everything
+    // Owner e admin acessam tudo que não estiver restrito acima (ver restrictedFrom em pages.ts)
     if (role === 'owner' || role === 'admin') return true;
     // If no specific permissions set, grant all access
     if (!membership.page_permissions || membership.page_permissions.length === 0) return true;
     return membership.page_permissions.includes(pageKey);
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        profile,
-        workspace,
-        membership,
-        role,
-        isLoading,
-        login,
-        signup,
-        logout,
-        hasPageAccess,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextType>(
+    () => ({
+      session,
+      user,
+      profile,
+      workspace,
+      membership,
+      role,
+      isLoading,
+      login,
+      signup,
+      logout,
+      hasPageAccess,
+    }),
+    // login/signup/logout/hasPageAccess dependem apenas de membership/role
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session, user, profile, workspace, membership, role, isLoading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

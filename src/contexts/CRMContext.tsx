@@ -347,7 +347,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (!force && lastLoadedWorkspaceRef.current === wsId) {
-      console.log('[CRM] Workspace unchanged, skipping reload');
       return;
     }
     setIsLoading(true);
@@ -401,7 +400,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_KANBAN_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data } = await supabase.from('kanban_columns').insert(defaults).select();
+        const { data, error } = await supabase.from('kanban_columns').insert(defaults).select();
+        if (error) {
+          console.error('[CRM] Falha ao criar colunas padrão do kanban:', error.message);
+          toast.error('Não foi possível criar as colunas padrão do CRM. Recarregue a página.');
+        }
         kanbanData = data || [];
       }
       setKanbanColumns(kanbanData.map(kanbanColumnFromDb));
@@ -411,7 +414,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_SERVICE_CATEGORIES.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data } = await supabase.from('service_categories').insert(defaults).select();
+        const { data, error } = await supabase.from('service_categories').insert(defaults).select();
+        if (error) {
+          console.error('[CRM] Falha ao criar categorias de serviço padrão:', error.message);
+          toast.error('Não foi possível criar as categorias de serviço padrão. Recarregue a página.');
+        }
         catData = data || [];
       }
       setServiceCategories(catData.map(serviceCategoryFromDb));
@@ -423,7 +430,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_PROJECT_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data } = await supabase.from('project_columns').insert(defaults).select();
+        const { data, error } = await supabase.from('project_columns').insert(defaults).select();
+        if (error) {
+          console.error('[CRM] Falha ao criar colunas padrão de projetos:', error.message);
+          toast.error('Não foi possível criar as colunas padrão de Projetos. Recarregue a página.');
+        }
         projColData = data || [];
       }
       setProjectColumns(projColData.map(projectColumnFromDb));
@@ -503,7 +514,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         toast.error('Nenhum workspace associado à sua conta.');
         return null;
       }
-      console.log('[CRM] Fallback workspace_id:', data.workspace_id);
       return data.workspace_id;
     } catch (e: any) {
       console.error('[CRM] Fallback exception:', e.message);
@@ -827,7 +837,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       return null;
     }
     try {
-      console.log('[CRM] addBudget: inserindo no banco com workspace_id:', wsId);
       const { data, error } = await supabase.from('budgets').insert({
         workspace_id: wsId,
         proposal_id: budgetData.proposalId,
@@ -855,7 +864,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         console.error('[CRM] addBudget: erro no insert:', error.message);
         throw error;
       }
-      console.log('[CRM] addBudget: sucesso, id:', data.id);
       const newBudget = budgetFromDb(data, []);
       setBudgets(prev => [...prev, newBudget]);
       return newBudget;
@@ -1075,10 +1083,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     const budget = budgets.find(b => b.id === budgetId);
     if (budget) {
       currentVersion = budget.currentVersion;
-      console.log('[CRM] addBudgetVersion: budget encontrado no state, currentVersion:', currentVersion);
     } else {
       // Budget recém-criado, state ainda não atualizou - buscar do DB
-      console.log('[CRM] addBudgetVersion: budget não encontrado no state, buscando do DB...');
       const { data: budgetData, error: fetchError } = await supabase
         .from('budgets').select('current_version')
         .eq('id', budgetId).maybeSingle();
@@ -1093,11 +1099,9 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         return;
       }
       currentVersion = budgetData.current_version ?? 0;
-      console.log('[CRM] addBudgetVersion: currentVersion do DB:', currentVersion);
     }
     const newVersionNum = currentVersion + 1;
     try {
-      console.log('[CRM] addBudgetVersion: inserindo versão', newVersionNum, 'para budget', budgetId);
       const { data, error } = await supabase.from('budget_versions').insert({
         workspace_id: wsId, budget_id: budgetId, version: newVersionNum,
         services: versionData.services as any, operational_costs: versionData.operationalCosts as any,
@@ -1113,7 +1117,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      console.log('[CRM] addBudgetVersion: versão criada, atualizando current_version...');
       const { error: cvError } = await supabase.from('budgets').update({ current_version: newVersionNum }).eq('id', budgetId);
       if (cvError) console.error('[CRM] addBudgetVersion: erro ao atualizar current_version:', cvError.message);
 
@@ -1124,7 +1127,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         }
         return b;
       }));
-      console.log('[CRM] addBudgetVersion: concluído com sucesso');
     } catch (e: any) {
       console.error('[CRM] addBudgetVersion: exceção:', e.message);
       toast.error('Erro ao adicionar versão: ' + e.message);
@@ -1775,6 +1777,9 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     projectCards, projectColumns, updateProjectCard, deleteProjectCard, archiveProjectCards, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
     getCRMCards, getCardsByStatus, moveCard,
   }), [
+    // workspaceId/session entram nas deps para evitar closures desatualizadas
+    // das funções (que não são useCallback) ao trocar de workspace ou sessão.
+    workspaceId, session,
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
     hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns,
   ]);

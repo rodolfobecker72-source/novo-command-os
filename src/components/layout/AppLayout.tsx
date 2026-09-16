@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import { ScrollToTop } from './ScrollToTop';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -12,6 +13,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ScrollToTop />
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar />}
 

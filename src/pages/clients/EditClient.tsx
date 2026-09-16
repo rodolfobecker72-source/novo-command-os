@@ -137,14 +137,11 @@ export function EditClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[EditClient] handleSubmit chamado', { clientId: client.id, formData, crmLoading });
 
     if (!validateForm()) {
-      console.log('[EditClient] validação falhou', errors);
       return;
     }
 
-    console.log('[EditClient] Chamando updateClient...');
     try {
       await updateClient(client.id, {
         companyName: formData.companyName,
@@ -165,7 +162,6 @@ export function EditClient() {
         stateRegistration: formData.stateRegistration,
         municipalRegistration: formData.municipalRegistration,
       });
-      console.log('[EditClient] updateClient concluído com sucesso');
       toast.success('Cliente atualizado com sucesso!');
       navigate('/clientes');
     } catch (err) {

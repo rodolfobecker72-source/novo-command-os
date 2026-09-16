@@ -761,7 +761,6 @@ export function FinancialPage() {
   // ======== Centers CRUD ========
   async function addRevenueCenter() {
     if (!newRevenueCenterName.trim()) return;
-    console.log('addRevenueCenter called, workspace:', workspace?.id, 'name:', newRevenueCenterName.trim());
     const { error } = await supabase.from('revenue_centers').insert({ workspace_id: workspace!.id, name: newRevenueCenterName.trim() });
     if (error) { console.error('Erro revenue_center insert:', error); toast.error('Erro ao criar centro de receita: ' + error.message); return; }
     toast.success('Centro de receita criado');
@@ -783,7 +782,6 @@ export function FinancialPage() {
 
   async function addCostCenter() {
     if (!newCostCenterName.trim()) return;
-    console.log('addCostCenter called, workspace:', workspace?.id, 'name:', newCostCenterName.trim());
     const { error } = await supabase.from('cost_centers').insert({ workspace_id: workspace!.id, name: newCostCenterName.trim() });
     if (error) { console.error('Erro cost_center insert:', error); toast.error('Erro ao criar centro de custo: ' + error.message); return; }
     toast.success('Centro de custo criado');

@@ -59,19 +59,30 @@ export function TeamFinancePage() {
 
   // Load workspace members (id + name)
   useEffect(() => {
-    if (!workspace) return;
+    if (!workspace?.id) return;
+    const workspaceId = workspace.id;
     (async () => {
-      const { data: memberData } = await supabase
+      const { data: memberData, error: memberError } = await supabase
         .from('workspace_members')
         .select('user_id')
-        .eq('workspace_id', workspace.id);
+        .eq('workspace_id', workspaceId);
+      if (memberError) {
+        console.error('[TeamFinance] Falha ao carregar membros:', memberError.message);
+        toast.error('Não foi possível carregar as pessoas do time.');
+        return;
+      }
       const ids = (memberData || []).map((m: any) => m.user_id);
       let list: { id: string; name: string }[] = [];
       if (ids.length > 0) {
-        const { data: profilesData } = await supabase
+        const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name')
           .in('id', ids);
+        if (profilesError) {
+          console.error('[TeamFinance] Falha ao carregar perfis:', profilesError.message);
+          toast.error('Não foi possível carregar os nomes do time.');
+          return;
+        }
         list = (profilesData || [])
           .filter((p: any) => p.name)
           .map((p: any) => ({ id: p.id, name: p.name }));
@@ -79,7 +90,7 @@ export function TeamFinancePage() {
       list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
       setPeople(list);
     })();
-  }, [workspace]);
+  }, [workspace?.id]);
 
   const peopleNames = useMemo(() => people.map((p) => p.name), [people]);
 

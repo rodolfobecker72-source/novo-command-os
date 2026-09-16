@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -304,8 +304,13 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     return { clientName: lead.companyName };
   }, [leads, statuses]);
 
+  const value = useMemo(
+    () => ({ leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses }),
+    [leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses]
+  );
+
   return (
-    <ProspectionContext.Provider value={{ leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses }}>
+    <ProspectionContext.Provider value={value}>
       {children}
     </ProspectionContext.Provider>
   );
