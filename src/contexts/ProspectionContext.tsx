@@ -304,8 +304,13 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     return { clientName: lead.companyName };
   }, [leads, statuses]);
 
+  const value = useMemo(
+    () => ({ leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses }),
+    [leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses]
+  );
+
   return (
-    <ProspectionContext.Provider value={{ leads, isLoading, addLead, updateLead, deleteLead, getLead, reactivateLead, migrateLeadToCRM, statuses, addStatus, updateStatus, deleteStatus, reorderStatuses }}>
+    <ProspectionContext.Provider value={value}>
       {children}
     </ProspectionContext.Provider>
   );
