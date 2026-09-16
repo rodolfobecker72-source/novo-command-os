@@ -50,15 +50,11 @@ interface Entry {
 export function TeamFinancePage() {
   const { workspace } = useAuth();
   const { budgets, clients, updateExecutionCost, updateExecution } = useCRM();
-  const {
-    enabled: teamFinanceEnabled,
-    loading: settingsLoading,
-    update: updateTeamFinance,
-  } = useTeamFinanceEnabled();
-  const [people, setPeople] = useState<string[]>([]);
+  const { accessMap, setMemberEnabled } = useTeamFinanceEnabled();
+  const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
   const [selected, setSelected] = useState<string>('');
 
-  // Load workspace member names
+  // Load workspace members (id + name)
   useEffect(() => {
     if (!workspace) return;
     (async () => {
@@ -67,21 +63,26 @@ export function TeamFinancePage() {
         .select('user_id')
         .eq('workspace_id', workspace.id);
       const ids = (memberData || []).map((m: any) => m.user_id);
-      let names: string[] = [];
+      let list: { id: string; name: string }[] = [];
       if (ids.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, name')
           .in('id', ids);
-        names = (profilesData || []).map((p: any) => p.name).filter(Boolean);
+        list = (profilesData || [])
+          .filter((p: any) => p.name)
+          .map((p: any) => ({ id: p.id, name: p.name }));
       }
-      setPeople(names);
+      list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      setPeople(list);
     })();
   }, [workspace]);
 
+  const peopleNames = useMemo(() => people.map((p) => p.name), [people]);
+
   // Suppliers found in executions (includes freelas)
   const suppliers = useMemo(() => {
-    const set = new Set<string>(people);
+    const set = new Set<string>(peopleNames);
     for (const b of budgets) {
       const ex = b.execution;
       if (!ex) continue;
