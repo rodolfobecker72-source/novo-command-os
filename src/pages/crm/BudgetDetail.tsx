@@ -1148,6 +1148,7 @@ export function BudgetDetail() {
           {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Info Card */}
+            {(activeTab === 'budget' || !(budget.status === 'aprovada' && budget.execution)) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1552,6 +1553,7 @@ export function BudgetDetail() {
                 </CardContent>
               </Card>
             </motion.div>
+            )}
 
             {/* Budget View */}
             {activeTab === 'budget' && (
