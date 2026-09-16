@@ -122,10 +122,9 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
   const handleCreate = async () => {
     if (!newLabel.trim()) { toast.error('Informe o nome do status'); return; }
     const order = newPosition === 'end' ? ordered.length : Number(newPosition);
-    await addStatus({ label: newLabel, color: newColor, role: newRole, order });
+    await addStatus({ label: newLabel, color: newColor, order });
     setNewLabel('');
     setNewColor('slate');
-    setNewRole(null);
     setNewPosition('end');
   };
 
