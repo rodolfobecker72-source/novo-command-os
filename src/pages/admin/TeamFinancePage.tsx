@@ -465,13 +465,12 @@ export function TeamFinancePage() {
                     </TableBody>
                   </Table>
                 </div>
-              </Card>
-            )}
+                </Card>
 
-            {entries.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                As alterações feitas aqui atualizam automaticamente a execução do projeto.
-              </p>
+                <p className="text-xs text-muted-foreground">
+                  As alterações feitas aqui atualizam automaticamente a execução do projeto.
+                </p>
+              </>
             )}
           </>
         )}
