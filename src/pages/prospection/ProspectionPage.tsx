@@ -250,6 +250,7 @@ export function ProspectionPage() {
   const [meetingsListOpen, setMeetingsListOpen] = useState<null | { title: string; leads: ProspectionLead[] }>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [meetingConfirm, setMeetingConfirm] = useState<{ leadId: string; newStatus: LeadFunnelStatus; extraUpdates?: Partial<ProspectionLead> } | null>(null);
+  const [qualifyConfirm, setQualifyConfirm] = useState<ProspectionLead | null>(null);
 
   // Open lead profile via ?lead=<id> URL param (e.g., from Welcome page alerts)
   const [searchParams, setSearchParams] = useSearchParams();
