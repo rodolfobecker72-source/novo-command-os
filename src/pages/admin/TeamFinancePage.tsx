@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCRM } from '@/contexts/CRMContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { Input } from '@/components/ui/input';
 import {
   Select,
