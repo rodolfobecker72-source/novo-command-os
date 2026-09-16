@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { TutorialButton } from '@/components/layout/TutorialButton';
+import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
 
 interface HeaderProps {
   title: string;
