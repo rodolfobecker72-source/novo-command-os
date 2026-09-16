@@ -6,8 +6,32 @@ import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import {
   ProspectionLead,
   LeadFunnelStatus,
+  LeadStatus,
+  DEFAULT_LEAD_STATUSES,
 } from '@/types/prospection';
 import { computeLeadTemperature } from '@/utils/leadTemperature';
+
+function statusFromDb(row: any): LeadStatus {
+  return {
+    id: row.id,
+    key: row.key,
+    label: row.label,
+    color: row.color,
+    order: row.order,
+    role: row.role ?? null,
+    isDefault: !!row.is_default,
+  };
+}
+
+function slugifyStatusKey(label: string): string {
+  return label
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40) || `status_${Date.now()}`;
+}
 
 
 // ============= DB mapping helpers =============
