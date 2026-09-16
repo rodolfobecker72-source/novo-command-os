@@ -135,6 +135,7 @@ export function PatrimonioPage() {
       assigned_to: asset.assigned_to,
       category: (asset.category as AssetCategory) || 'equipamento',
       needs_insurance: !!asset.needs_insurance,
+      insurance_expires_at: asset.insurance_expires_at || '',
       quantity: Number(asset.quantity) || 1,
       units: syncUnits(Array.isArray(asset.units) ? (asset.units as AssetUnit[]) : [], Number(asset.quantity) || 1),
       is_active: asset.is_active !== false,
