@@ -873,7 +873,7 @@ export function FinancialPage() {
           <TabsTrigger value="painel" className="text-xs sm:text-sm whitespace-nowrap">Painel Financeiro</TabsTrigger>
           <TabsTrigger value="fluxo" className="text-xs sm:text-sm whitespace-nowrap">Fluxo de Caixa</TabsTrigger>
           <TabsTrigger value="projetos" className="text-xs sm:text-sm whitespace-nowrap">Projetos/Mês</TabsTrigger>
-          <TabsTrigger value="cartoes" className="text-xs sm:text-sm whitespace-nowrap">Cartão de Crédito</TabsTrigger>
+          
           <TabsTrigger value="config" className="text-xs sm:text-sm whitespace-nowrap">Configurações</TabsTrigger>
         </TabsList>
 
@@ -1096,48 +1096,8 @@ export function FinancialPage() {
                   </div>
                 )}
 
-                {entryForm.type === 'despesa' && creditCards.length > 0 && (
-                  <div className="flex items-center justify-between p-3 rounded-md border">
-                    <div className="flex items-center gap-2">
-                      <CreditCardIcon className="w-4 h-4 text-muted-foreground" />
-                      <Label htmlFor="credit-card-toggle" className="cursor-pointer">Compra no Cartão de Crédito</Label>
-                    </div>
-                    <Switch id="credit-card-toggle" checked={entryForm.is_credit_card} onCheckedChange={v => setEntryForm(f => ({ ...f, is_credit_card: v, is_future_payment: v ? true : f.is_future_payment }))} />
-                  </div>
-                )}
 
-                {entryForm.is_credit_card && entryForm.type === 'despesa' && (
-                  <div className="space-y-4 p-3 rounded-md border bg-muted/30">
-                    <div>
-                      <Label>Cartão</Label>
-                      <Select value={entryForm.credit_card_id} onValueChange={v => setEntryForm(f => ({ ...f, credit_card_id: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Selecionar cartão" /></SelectTrigger>
-                        <SelectContent>
-                          {creditCards.filter(c => c.is_active).map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name} •••• {c.last_digits}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Valor da Parcela (R$)</Label>
-                        <Input type="number" min="0" step="0.01" value={entryForm.installment_value} onChange={e => setEntryForm(f => ({ ...f, installment_value: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label>Nº de Parcelas</Label>
-                        <Input type="number" min="1" max="48" value={entryForm.installments} onChange={e => setEntryForm(f => ({ ...f, installments: e.target.value }))} />
-                      </div>
-                    </div>
-                    {Number(entryForm.installment_value) > 0 && Number(entryForm.installments) > 0 && (
-                      <p className="text-sm font-medium">
-                        Total: {currencyFmt(Number(entryForm.installment_value) * Number(entryForm.installments))} ({entryForm.installments}x de {currencyFmt(Number(entryForm.installment_value))})
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {entryForm.type === 'despesa' && !entryForm.is_credit_card && (
+                {entryForm.type === 'despesa' && (
                   <div className="flex items-center justify-between p-3 rounded-md border">
                     <div className="flex items-center gap-2">
                       <Repeat className="w-4 h-4 text-muted-foreground" />
@@ -1181,7 +1141,7 @@ export function FinancialPage() {
                   </div>
                 )}
 
-                {entryForm.type === 'despesa' && !entryForm.is_credit_card && !entryForm.is_recurring && (
+                {entryForm.type === 'despesa' && !entryForm.is_recurring && (
                   <div className="flex items-center justify-between p-3 rounded-md border">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
@@ -1247,14 +1207,11 @@ export function FinancialPage() {
                 <Table className="min-w-[800px]">
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-16">ID</TableHead>
                       <TableHead>Projeto</TableHead>
                       <TableHead>Cliente</TableHead>
-                      <TableHead>Serviços</TableHead>
+                      <TableHead className="text-center">NF</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="text-right">Custo Real</TableHead>
-                      <TableHead className="text-right">NF</TableHead>
-                      <TableHead className="text-center">Status NF</TableHead>
-                      <TableHead className="text-right">Margem</TableHead>
                       <TableHead className="text-center">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1275,21 +1232,9 @@ export function FinancialPage() {
                       return (
                         <React.Fragment key={p.id}>
                           <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedProject(expandedProject === p.id ? null : p.id)}>
-                            <TableCell className="font-medium">{p.proposalId} - {p.projectName}</TableCell>
+                            <TableCell className="text-muted-foreground">{p.proposalId}</TableCell>
+                            <TableCell className="font-medium text-primary">{p.projectName}</TableCell>
                             <TableCell>{p.clientName}</TableCell>
-                            <TableCell>
-                              <div className="space-y-1">
-                                {p.services.map((s, i) => (
-                                  <div key={i} className="flex items-center gap-1.5">
-                                    {s.categoryLabel && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold uppercase">{s.categoryLabel}</Badge>}
-                                    <span className="text-xs">{s.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-medium">{currencyFmt(p.totalValue)}</TableCell>
-                            <TableCell className="text-right">{currencyFmt(p.totalRealCost)}</TableCell>
-                            <TableCell className="text-right">{currencyFmt(p.nfCost)}</TableCell>
                             <TableCell className="text-center">
                               {p.nfUrl ? (
                                 <a
@@ -1309,7 +1254,7 @@ export function FinancialPage() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="text-right"><span className={p.margin >= 0 ? 'text-green-600' : 'text-destructive'}>{currencyFmt(p.margin)} ({p.marginPercent.toFixed(1)}%)</span></TableCell>
+                            <TableCell className="text-right font-bold">{currencyFmt(p.totalValue)}</TableCell>
                             <TableCell className="text-center">
                               <div className="flex justify-center gap-1">
                                 <Button
@@ -1326,7 +1271,7 @@ export function FinancialPage() {
                           </TableRow>
                           {expandedProject === p.id && (
                             <TableRow>
-                              <TableCell colSpan={9} className="bg-muted/30 p-0">
+                              <TableCell colSpan={6} className="bg-muted/30 p-0">
                                 <div className="p-4 space-y-3">
                                   <h4 className="text-sm font-semibold">Composição do Investimento</h4>
                                   <Table>
@@ -1393,6 +1338,10 @@ export function FinancialPage() {
                     })}
                   </TableBody>
                 </Table>
+                <div className="flex items-center justify-between border-t px-4 py-3 text-sm">
+                  <span className="font-medium">{monthlyProjects.length} projetos</span>
+                  <span className="font-bold">Total: {currencyFmt(monthlyProjects.reduce((s, p) => s + p.totalValue, 0))}</span>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -1633,190 +1582,6 @@ export function FinancialPage() {
         </TabsContent>
 
 
-        {/* ===================== CARTÃO DE CRÉDITO ===================== */}
-        <TabsContent value="cartoes" className="space-y-6">
-          {creditCards.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                Nenhum cartão cadastrado. Adicione cartões em Configurações.
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <CreditCardIcon className="w-5 h-5" /> Faturas de Cartão de Crédito
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {Object.keys(cardInvoices).length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma despesa de cartão lançada.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {creditCards.filter(c => cardInvoices[c.id]).map(card => {
-                      const invoiceMonths = Object.keys(cardInvoices[card.id]).sort();
-                      return (
-                        <div key={card.id} className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <CreditCardIcon className="w-4 h-4 text-muted-foreground" />
-                            <h4 className="font-semibold text-sm">{card.name} •••• {card.last_digits}</h4>
-                            <Badge variant="outline" className="text-xs">{card.brand}</Badge>
-                          </div>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Mês</TableHead>
-                                <TableHead className="text-right">Total Fatura</TableHead>
-                                <TableHead className="text-right">Pago</TableHead>
-                                <TableHead className="text-right">Pendente</TableHead>
-                                <TableHead className="text-center">Ações</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {invoiceMonths.map(m => {
-                                const inv = cardInvoices[card.id][m];
-                                const invoiceKey = `${card.id}-${m}`;
-                                const isExpanded = expandedInvoice === invoiceKey;
-                                return (
-                                  <React.Fragment key={m}>
-                                    <TableRow
-                                      className="cursor-pointer hover:bg-muted/50"
-                                      onClick={() => setExpandedInvoice(isExpanded ? null : invoiceKey)}
-                                    >
-                                      <TableCell className="font-medium">
-                                        <div className="flex items-center gap-2">
-                                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                          {m !== 'sem-data' ? format(new Date(m + '-01T12:00:00'), 'MMMM yyyy', { locale: ptBR }) : 'Sem data'}
-                                          <Badge variant="secondary" className="text-xs">{inv.entries.length} item(ns)</Badge>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="text-right">{currencyFmt(inv.total)}</TableCell>
-                                      <TableCell className="text-right text-green-600">{currencyFmt(inv.paid)}</TableCell>
-                                      <TableCell className={cn("text-right font-medium", inv.pending > 0 ? 'text-orange-500' : 'text-green-600')}>
-                                        {currencyFmt(inv.pending)}
-                                      </TableCell>
-                                      <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                                        {inv.pending > 0 ? (
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="text-xs"
-                                            onClick={() => {
-                                              setInvoicePayTarget({ cardId: card.id, month: m, entries: inv.entries, total: inv.pending });
-                                              setInvoicePayForm({ account_id: card.account_id || '', date: new Date() });
-                                              setInvoicePayDialog(true);
-                                            }}
-                                          >
-                                            <Check className="w-3 h-3 mr-1" /> Pagar Fatura
-                                          </Button>
-                                        ) : (
-                                          <Badge variant="default" className="text-xs bg-green-600"><Check className="w-3 h-3 mr-1" /> Paga</Badge>
-                                        )}
-                                      </TableCell>
-                                    </TableRow>
-                                    {isExpanded && (
-                                      <TableRow>
-                                        <TableCell colSpan={5} className="p-0">
-                                          <div className="bg-muted/30 border-t">
-                                            <Table>
-                                              <TableHeader>
-                                                <TableRow>
-                                                  <TableHead className="text-xs pl-10">Descrição</TableHead>
-                                                  <TableHead className="text-xs">Data Compra</TableHead>
-                                                  <TableHead className="text-xs">Vencimento</TableHead>
-                                                  <TableHead className="text-xs text-right">Valor</TableHead>
-                                                  <TableHead className="text-xs text-center">Status</TableHead>
-                                                </TableRow>
-                                              </TableHeader>
-                                              <TableBody>
-                                                {inv.entries.map(entry => (
-                                                  <TableRow key={entry.id} className="text-xs">
-                                                    <TableCell className="py-1.5 pl-10">{entry.description}</TableCell>
-                                                    <TableCell className="py-1.5">{entry.date ? format(new Date(entry.date + 'T12:00:00'), 'dd/MM/yy') : '—'}</TableCell>
-                                                    <TableCell className="py-1.5">{(entry as any).payment_due_date ? format(new Date((entry as any).payment_due_date + 'T12:00:00'), 'dd/MM/yy') : '—'}</TableCell>
-                                                    <TableCell className="py-1.5 text-right">{currencyFmt(Number(entry.value))}</TableCell>
-                                                    <TableCell className="py-1.5 text-center">
-                                                      {(entry as any).is_paid ? (
-                                                        <Badge variant="default" className="text-xs bg-green-600">Pago</Badge>
-                                                      ) : (
-                                                        <Badge variant="outline" className="text-xs text-orange-500 border-orange-500">Pendente</Badge>
-                                                      )}
-                                                    </TableCell>
-                                                  </TableRow>
-                                                ))}
-                                              </TableBody>
-                                            </Table>
-                                          </div>
-                                        </TableCell>
-                                      </TableRow>
-                                    )}
-                                  </React.Fragment>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Invoice Pay Dialog */}
-          <Dialog open={invoicePayDialog} onOpenChange={setInvoicePayDialog}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <CreditCardIcon className="w-5 h-5" /> Pagar Fatura do Cartão
-                </DialogTitle>
-              </DialogHeader>
-              {invoicePayTarget && (
-                <div className="space-y-4">
-                  <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
-                    <p className="font-medium">
-                      {creditCards.find(c => c.id === invoicePayTarget.cardId)?.name} — {invoicePayTarget.month !== 'sem-data' ? format(new Date(invoicePayTarget.month + '-01T12:00:00'), 'MMMM yyyy', { locale: ptBR }) : 'Sem data'}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {invoicePayTarget.entries.filter(e => !(e as any).is_paid).length} item(ns) pendente(s)
-                    </p>
-                    <p className="text-lg font-bold text-orange-500">{currencyFmt(invoicePayTarget.total)}</p>
-                  </div>
-
-                  <div className="max-h-40 overflow-y-auto border rounded-md">
-                    <Table>
-                      <TableBody>
-                        {invoicePayTarget.entries.filter(e => !(e as any).is_paid).map(e => (
-                          <TableRow key={e.id}>
-                            <TableCell className="text-xs py-1.5">{e.description}</TableCell>
-                            <TableCell className="text-xs text-right py-1.5 text-destructive">{currencyFmt(Number(e.value))}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  <div>
-                    <Label>Conta para Débito *</Label>
-                    <Select value={invoicePayForm.account_id} onValueChange={v => setInvoicePayForm(f => ({ ...f, account_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder="Selecionar conta" /></SelectTrigger>
-                      <SelectContent>
-                        {accounts.filter(a => a.is_active).map(a => (
-                          <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button onClick={payCardInvoice} className="w-full">
-                    <Check className="w-4 h-4 mr-2" /> Confirmar Pagamento da Fatura
-                  </Button>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
 
 
         {/* ===================== CONFIGURAÇÕES ===================== */}
@@ -1882,81 +1647,6 @@ export function FinancialPage() {
             )}
           </div>
 
-          {/* Cartões de Crédito */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Cartões de Crédito</h2>
-              <Dialog open={cardDialog} onOpenChange={setCardDialog}>
-                <DialogTrigger asChild>
-                  <Button onClick={openNewCard} size="sm"><Plus className="w-4 h-4 mr-1" /> Novo Cartão</Button>
-                </DialogTrigger>
-                <DialogContent className="max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle>{editingCard ? 'Editar Cartão' : 'Novo Cartão'}</DialogTitle></DialogHeader>
-                  <div className="space-y-4">
-                    <div><Label>Nome / Apelido</Label><Input value={cardForm.name} onChange={e => setCardForm(f => ({ ...f, name: e.target.value }))} placeholder="Ex: Cartão Empresarial" /></div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><Label>Últimos 4 dígitos</Label><Input value={cardForm.last_digits} onChange={e => setCardForm(f => ({ ...f, last_digits: e.target.value.replace(/\D/g, '').slice(0, 4) }))} placeholder="0000" maxLength={4} /></div>
-                      <div>
-                        <Label>Bandeira</Label>
-                        <Select value={cardForm.brand} onValueChange={v => setCardForm(f => ({ ...f, brand: v }))}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{CARD_BRANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div><Label>Limite</Label><Input type="number" value={cardForm.credit_limit} onChange={e => setCardForm(f => ({ ...f, credit_limit: e.target.value }))} placeholder="0,00" /></div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><Label>Dia de Fechamento</Label><Input type="number" min={1} max={31} value={cardForm.closing_day} onChange={e => setCardForm(f => ({ ...f, closing_day: e.target.value }))} /></div>
-                      <div><Label>Dia de Vencimento</Label><Input type="number" min={1} max={31} value={cardForm.due_day} onChange={e => setCardForm(f => ({ ...f, due_day: e.target.value }))} /></div>
-                    </div>
-                    <div>
-                      <Label>Conta Vinculada</Label>
-                      <Select value={cardForm.account_id} onValueChange={v => setCardForm(f => ({ ...f, account_id: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
-                        <SelectContent>
-                          {accounts.filter(a => a.is_active).map(a => <SelectItem key={a.id} value={a.id}>{a.name} — {a.bank}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button onClick={saveCard} className="w-full">Salvar</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {creditCards.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground"><Wallet className="w-10 h-10 mx-auto mb-2 opacity-50" />Nenhum cartão cadastrado.</CardContent></Card>
-            ) : (
-              <Card>
-                <CardContent className="p-0 overflow-x-auto">
-                  <Table className="min-w-[600px]">
-                    <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Bandeira</TableHead><TableHead>Final</TableHead><TableHead>Conta Vinculada</TableHead><TableHead className="hidden sm:table-cell">Fechamento</TableHead><TableHead className="hidden sm:table-cell">Vencimento</TableHead><TableHead>Limite</TableHead><TableHead>Status</TableHead><TableHead className="text-center">Ações</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {creditCards.map(card => (
-                        <TableRow key={card.id}>
-                          <TableCell className="font-medium">{card.name}</TableCell>
-                          <TableCell>{card.brand}</TableCell>
-                          <TableCell>•••• {card.last_digits || '—'}</TableCell>
-                          <TableCell>{accounts.find(a => a.id === card.account_id)?.name || '—'}</TableCell>
-                          <TableCell className="hidden sm:table-cell">Dia {card.closing_day}</TableCell>
-                          <TableCell className="hidden sm:table-cell">Dia {card.due_day}</TableCell>
-                          <TableCell>{currencyFmt(card.credit_limit)}</TableCell>
-                          <TableCell><Badge variant={card.is_active ? 'default' : 'secondary'}>{card.is_active ? 'Ativo' : 'Inativo'}</Badge></TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center gap-1">
-                              <Button size="sm" variant="ghost" onClick={() => toggleCard(card.id, card.is_active)}>{card.is_active ? 'Desativar' : 'Ativar'}</Button>
-                              <Button size="sm" variant="ghost" onClick={() => openEditCard(card)}><Pencil className="w-4 h-4" /></Button>
-                              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteCard(card.id)}><Trash2 className="w-4 h-4" /></Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </div>
 
           {/* Centros de Receita e Custo */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
