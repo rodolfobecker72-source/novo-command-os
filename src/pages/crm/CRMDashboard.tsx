@@ -3,10 +3,10 @@ import { useCRM } from '@/contexts/CRMContext';
 import { useMonthlyGoals } from '@/hooks/useMonthlyGoals';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { formatCurrency } from '@/types/crm';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -87,18 +87,6 @@ export function CRMDashboard() {
     });
   }, [filtered, sortedColumns]);
 
-  // Follow-up needed
-  const followUps = useMemo(() => {
-    const now = new Date();
-    return filtered
-      .filter(b => b.status === 'proposta_enviada' || b.status === 'fazer_followup')
-      .map(b => {
-        const client = clientMap[b.clientId];
-        const daysSince = Math.floor((now.getTime() - new Date(b.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
-        return { id: b.id, proposalId: b.proposalId, projectName: b.projectName, clientName: client?.companyName || '—', daysSince, status: b.status };
-      })
-      .sort((a, b) => b.daysSince - a.daysSince);
-  }, [filtered, clientMap]);
 
   // Execution forecast
   const executionForecast = useMemo(() => {
@@ -231,49 +219,6 @@ export function CRMDashboard() {
             </CardContent>
           </Card>
 
-          {/* Follow-up */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <Card>
-              <CardHeader className="pb-1 pt-4 px-4">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
-                  Follow-up Necessário
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                {followUps.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-10 text-center">Nenhuma proposta pendente</p>
-                ) : (
-                  <div className="max-h-64 overflow-auto -mx-1 px-1">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-xs">Projeto</TableHead>
-                          <TableHead className="text-xs">Cliente</TableHead>
-                          <TableHead className="text-xs text-right">Dias</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {followUps.map(f => (
-                          <TableRow key={f.id}>
-                            <TableCell className="text-xs font-medium py-2 max-w-[180px] truncate">
-                              {f.proposalId} - {f.projectName}
-                            </TableCell>
-                            <TableCell className="text-xs py-2">{f.clientName}</TableCell>
-                            <TableCell className="text-right py-2">
-                              <Badge variant={f.daysSince > 7 ? 'destructive' : f.daysSince > 3 ? 'secondary' : 'outline'} className="text-[10px] px-1.5">
-                                {f.daysSince}d
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
       </div>
