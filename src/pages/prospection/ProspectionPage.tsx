@@ -15,7 +15,7 @@ import {
   ThermometerSun, ArrowUpRight, RotateCcw, Trash2, Edit, Eye,
   ChevronDown, Building2, User, Phone, Mail, MapPin, Briefcase,
   Clock, Flag, MessageSquare, X, Save, BarChart3, AlertTriangle,
-  TrendingUp, Activity, Calendar,
+  TrendingUp, Activity, Calendar, Settings2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,11 +38,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMonthlyGoals } from '@/hooks/useMonthlyGoals';
 import {
   ProspectionLead, LeadOriginType, LeadSegment, LeadTemperature,
-  LeadFunnelStatus, LeadPriority, AcquisitionType,
+  LeadFunnelStatus, LeadPriority, AcquisitionType, LeadStatus,
   LEAD_ORIGIN_LABELS, LEAD_SEGMENT_LABELS, LEAD_TEMPERATURE_LABELS,
   LEAD_FUNNEL_STATUS_LABELS, LEAD_PRIORITY_LABELS, ACQUISITION_TYPE_LABELS,
-  FUNNEL_STATUS_ORDER,
+  FUNNEL_STATUS_ORDER, getStatusColor,
 } from '@/types/prospection';
+import { ManageLeadStatusesDialog } from '@/components/prospection/ManageLeadStatusesDialog';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -79,21 +80,6 @@ function PriorityBadge({ priority }: { priority: LeadPriority }) {
   );
 }
 
-function FunnelStatusBadge({ status }: { status: LeadFunnelStatus }) {
-  const colorMap: Record<LeadFunnelStatus, string> = {
-    mapeado: 'bg-muted text-muted-foreground',
-    contato_realizado: 'bg-primary/10 text-primary border-primary/20',
-    reuniao_agendada: 'bg-warning/15 text-warning border-warning/20',
-    qualificado_crm: 'bg-success/20 text-success border-success/30',
-    perdido: 'bg-destructive/15 text-destructive border-destructive/20',
-    nutricao: 'bg-primary/5 text-muted-foreground border-primary/10',
-  };
-  return (
-    <Badge variant="outline" className={`${colorMap[status]} text-xs`}>
-      {LEAD_FUNNEL_STATUS_LABELS[status]}
-    </Badge>
-  );
-}
 
 const emptyLead: Omit<ProspectionLead, 'id' | 'createdAt' | 'updatedAt'> = {
   companyName: '',
@@ -145,12 +131,31 @@ function DraggableLeadCard({ lead, children }: { lead: ProspectionLead; children
 }
 
 export function ProspectionPage() {
-  const { leads, addLead, updateLead, deleteLead, reactivateLead } = useProspection();
+  const { leads, addLead, updateLead, deleteLead, reactivateLead, statuses } = useProspection();
   const { addClient, clients } = useCRM();
   const { getMeetingsGoalForMonth } = useMonthlyGoals();
   const isLeadMigrated = (lead: ProspectionLead) =>
     clients.some(c => c.companyName.trim().toLowerCase() === lead.companyName.trim().toLowerCase());
   const auth = useAuth();
+
+  // Status do funil (personalizáveis por workspace)
+  const [manageStatusOpen, setManageStatusOpen] = useState(false);
+  const orderedStatuses = useMemo(() => [...statuses].sort((a, b) => a.order - b.order), [statuses]);
+  const meetingKey = orderedStatuses.find(s => s.role === 'meeting')?.key || null;
+  const qualifiedKey = orderedStatuses.find(s => s.role === 'qualified')?.key || null;
+  const firstStatusKey = orderedStatuses[0]?.key || 'mapeado';
+  const statusLabel = (key: LeadFunnelStatus) =>
+    orderedStatuses.find(s => s.key === key)?.label || LEAD_FUNNEL_STATUS_LABELS[key] || key;
+
+  const FunnelStatusBadge = ({ status }: { status: LeadFunnelStatus }) => {
+    const s = orderedStatuses.find(x => x.key === status);
+    const color = getStatusColor(s?.color || 'slate');
+    return (
+      <Badge variant="outline" className={`${color.badge} text-xs`}>
+        {s?.label || LEAD_FUNNEL_STATUS_LABELS[status] || status}
+      </Badge>
+    );
+  };
 
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const changeLeadStatus = (lead: ProspectionLead, newStatus: LeadFunnelStatus, extraUpdates: Partial<ProspectionLead> = {}) => {
@@ -159,13 +164,13 @@ export function ProspectionPage() {
       return;
     }
     const updates: Partial<ProspectionLead> = { ...extraUpdates, funnelStatus: newStatus };
-    // Entering "reunião agendada" — mark schedule time and reset confirmation
-    if (newStatus === 'reuniao_agendada' && lead.funnelStatus !== 'reuniao_agendada') {
+    // Entering the meeting status — mark schedule time and reset confirmation
+    if (meetingKey && newStatus === meetingKey && lead.funnelStatus !== meetingKey) {
       updates.meetingScheduledAt = new Date().toISOString();
       updates.meetingHappened = null;
     }
-    // Leaving "reunião agendada" without confirmation — ask if the meeting actually happened
-    if (lead.funnelStatus === 'reuniao_agendada' && newStatus !== 'reuniao_agendada' && (lead.meetingHappened === null || lead.meetingHappened === undefined)) {
+    // Leaving the meeting status without confirmation — ask if the meeting actually happened
+    if (meetingKey && lead.funnelStatus === meetingKey && newStatus !== meetingKey && (lead.meetingHappened === null || lead.meetingHappened === undefined)) {
       setMeetingConfirm({ leadId: lead.id, newStatus, extraUpdates });
       return;
     }
@@ -342,21 +347,21 @@ export function ProspectionPage() {
   // Metrics
   const metrics = useMemo(() => {
     const total = filteredLeads.length;
-    const active = filteredLeads.filter(l => !['perdido', 'qualificado_crm'].includes(l.funnelStatus)).length;
-    const meetings = filteredLeads.filter(l => l.funnelStatus === 'reuniao_agendada').length;
-    const lost = filteredLeads.filter(l => l.funnelStatus === 'perdido').length;
+    const active = filteredLeads.filter(l => l.funnelStatus !== qualifiedKey).length;
+    const meetings = meetingKey ? filteredLeads.filter(l => l.funnelStatus === meetingKey).length : 0;
+    const lost = 0;
     const volume = filteredLeads.reduce((sum, l) => sum + (l.estimatedPotential || 0), 0);
 
-    const mapped = filteredLeads.filter(l => l.funnelStatus === 'mapeado').length;
+    const mapped = filteredLeads.filter(l => l.funnelStatus === firstStatusKey).length;
     const meetingsTotal = meetings;
-    const qualifiedCRM = filteredLeads.filter(l => l.funnelStatus === 'qualificado_crm').length;
+    const qualifiedCRM = qualifiedKey ? filteredLeads.filter(l => l.funnelStatus === qualifiedKey).length : 0;
 
     const convMappedToMeeting = total > 0 ? ((meetingsTotal / Math.max(mapped + meetingsTotal, 1)) * 100) : 0;
     const convMeetingToCRM = meetingsTotal > 0 ? ((qualifiedCRM / Math.max(meetingsTotal + qualifiedCRM, 1)) * 100) : 0;
-    const lossRate = total > 0 ? ((lost / total) * 100) : 0;
+    const lossRate = 0;
 
     return { total, active, meetings, lost, volume, convMappedToMeeting, convMeetingToCRM, lossRate };
-  }, [filteredLeads]);
+  }, [filteredLeads, qualifiedKey, meetingKey, firstStatusKey]);
 
   const dashboardCards = [
     { label: 'Total Leads', value: metrics.total, icon: Users, color: 'bg-primary/10 text-primary' },
@@ -369,7 +374,7 @@ export function ProspectionPage() {
   // Open create dialog
   const openCreate = () => {
     setEditingLead(null);
-    setFormData(emptyLead);
+    setFormData({ ...emptyLead, funnelStatus: firstStatusKey });
     setDialogOpen(true);
   };
 
@@ -462,7 +467,7 @@ export function ProspectionPage() {
       score: 0,
     });
     if (newClient) {
-      changeLeadStatus(lead, 'qualificado_crm');
+      if (qualifiedKey) changeLeadStatus(lead, qualifiedKey);
       toast.success(`"${lead.companyName}" migrado para o CRM como cliente!`);
     }
   };
@@ -472,10 +477,8 @@ export function ProspectionPage() {
     toast.success(`"${lead.companyName}" reativado!`);
   };
 
-  // Kanban columns (nutricao shown separately)
-  const kanbanStatuses: LeadFunnelStatus[] = [
-    'mapeado', 'contato_realizado', 'reuniao_agendada', 'qualificado_crm', 'nutricao',
-  ];
+  // Colunas do kanban seguem os status cadastrados
+  const kanbanStatuses: LeadFunnelStatus[] = orderedStatuses.map(s => s.key);
 
 
   const uniqueResponsibles = useMemo(() => {
@@ -542,10 +545,17 @@ export function ProspectionPage() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
         </div>
-        <Button onClick={openCreate} size="default" className="gap-2 rounded-xl shadow-sm w-full sm:w-auto">
-          <Plus className="w-4 h-4" /> Novo Lead
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setManageStatusOpen(true)} size="default" className="gap-2 rounded-xl w-full sm:w-auto">
+            <Settings2 className="w-4 h-4" /> Gerenciar Status
+          </Button>
+          <Button onClick={openCreate} size="default" className="gap-2 rounded-xl shadow-sm w-full sm:w-auto">
+            <Plus className="w-4 h-4" /> Novo Lead
+          </Button>
+        </div>
       </motion.div>
+
+      <ManageLeadStatusesDialog open={manageStatusOpen} onOpenChange={setManageStatusOpen} />
 
       {/* Tab Switcher */}
       <div className="flex gap-2">
@@ -704,7 +714,7 @@ export function ProspectionPage() {
                         </TableCell>
                         <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1 justify-end">
-                            {lead.funnelStatus === 'qualificado_crm' && (
+                            {!!qualifiedKey && lead.funnelStatus === qualifiedKey && (
                               <Button size="sm" variant="default" className={`gap-1 text-xs h-7 ${isLeadMigrated(lead) ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`} onClick={() => handleMigrateToCRM(lead)}>
                                 <ArrowUpRight className="w-3 h-3" /> {isLeadMigrated(lead) ? 'CRM ✓' : 'CRM'}
                               </Button>
@@ -771,7 +781,7 @@ export function ProspectionPage() {
                         </div>
                       )}
                       <div className="flex items-center justify-end gap-1 pt-1 border-t border-border/40" onClick={e => e.stopPropagation()}>
-                        {lead.funnelStatus === 'qualificado_crm' && (
+                        {!!qualifiedKey && lead.funnelStatus === qualifiedKey && (
                           <Button size="sm" variant="default" className={`gap-1 text-xs h-7 ${isLeadMigrated(lead) ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`} onClick={() => handleMigrateToCRM(lead)}>
                             <ArrowUpRight className="w-3 h-3" /> {isLeadMigrated(lead) ? 'CRM ✓' : 'CRM'}
                           </Button>
@@ -861,7 +871,7 @@ export function ProspectionPage() {
                                   <Clock className="w-3 h-3 inline mr-1" />{lead.nextAction}
                                 </p>
                               )}
-                              {status === 'qualificado_crm' && (
+                              {!!qualifiedKey && status === qualifiedKey && (
                                 <Button size="sm" className={`w-full gap-1 text-xs h-7 mt-1 ${isLeadMigrated(lead) ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`} onClick={e => { e.stopPropagation(); handleMigrateToCRM(lead); }}>
                                   <ArrowUpRight className="w-3 h-3" /> {isLeadMigrated(lead) ? 'Migrado ao CRM ✓' : 'Migrar para CRM'}
                                 </Button>
@@ -901,12 +911,9 @@ export function ProspectionPage() {
 
       {/* Funil */}
       {activeTab === 'funil' && (() => {
-        const funnelStages: { key: LeadFunnelStatus; label: string; color: string }[] = [
-          { key: 'mapeado', label: 'Mapeado', color: '#94a3b8' },
-          { key: 'contato_realizado', label: 'Contato Realizado', color: '#3b82f6' },
-          { key: 'reuniao_agendada', label: 'Reunião Agendada', color: '#f59e0b' },
-          { key: 'qualificado_crm', label: 'Qualificado p/ CRM', color: '#10b981' },
-        ];
+        const funnelStages: { key: LeadFunnelStatus; label: string; color: string }[] = orderedStatuses
+          .filter(s => s.key !== 'nutricao')
+          .map(s => ({ key: s.key, label: s.label, color: getStatusColor(s.color).hex }));
 
         const yearNum = Number(funnelYear);
         let periodStart: Date | null = null;
@@ -941,7 +948,7 @@ export function ProspectionPage() {
         // that were marked as "realizada" without a scheduling timestamp;
         // also keeps leads currently in "reuniao_agendada" regardless of timestamps.
         const meetingsInPeriod = funnelLeads.filter(l => {
-          if (l.funnelStatus === 'reuniao_agendada') return true;
+          if (meetingKey && l.funnelStatus === meetingKey) return true;
           const hasHappenedFlag = l.meetingHappened === true || l.meetingHappened === false;
           if (!l.meetingScheduledAt && !hasHappenedFlag) return false;
           if (!periodStart || !periodEnd) return true;
@@ -1062,7 +1069,7 @@ export function ProspectionPage() {
                             >
                               {s.label}
                             </text>
-                            {s.key === 'reuniao_agendada' && (
+                            {meetingKey && s.key === meetingKey && (
                               <text
                                 x={cx}
                                 y={y1 + stageHeight / 2 + 34}
@@ -1613,7 +1620,7 @@ export function ProspectionPage() {
               <Select value={formData.funnelStatus} onValueChange={(v: LeadFunnelStatus) => setFormData(p => ({ ...p, funnelStatus: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(LEAD_FUNNEL_STATUS_LABELS).filter(([k]) => k !== 'perdido').map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  {orderedStatuses.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -1716,7 +1723,7 @@ export function ProspectionPage() {
                   <div><span className="text-muted-foreground text-xs">Setor:</span><p>{LEAD_SEGMENT_LABELS[detailLead.segment]}</p></div>
                   <div><span className="text-muted-foreground text-xs">Tipo de Aquisição:</span><p>{ACQUISITION_TYPE_LABELS[detailLead.acquisitionType]}</p></div>
                   <div><span className="text-muted-foreground text-xs">Temperatura:</span><p>{LEAD_TEMPERATURE_LABELS[detailLead.temperature]}</p></div>
-                  <div><span className="text-muted-foreground text-xs">Status do Funil:</span><p>{LEAD_FUNNEL_STATUS_LABELS[detailLead.funnelStatus]}</p></div>
+                  <div><span className="text-muted-foreground text-xs">Status do Funil:</span><p>{statusLabel(detailLead.funnelStatus)}</p></div>
                   <div><span className="text-muted-foreground text-xs">Prioridade:</span><p>{LEAD_PRIORITY_LABELS[detailLead.priority]}</p></div>
                   <div><span className="text-muted-foreground text-xs">Potencial:</span><p className="font-semibold">R$ {detailLead.estimatedPotential.toLocaleString('pt-BR')}</p></div>
                   <div><span className="text-muted-foreground text-xs">Resp. Prospecção:</span><p>{detailLead.prospectionResponsible || '-'}</p></div>
@@ -1740,7 +1747,7 @@ export function ProspectionPage() {
                   <Button variant="outline" className="gap-1" onClick={() => { setDetailLead(null); openEdit(detailLead); }}>
                     <Edit className="w-4 h-4" /> Editar
                   </Button>
-                  {detailLead.funnelStatus === 'qualificado_crm' && (
+                  {!!qualifiedKey && detailLead.funnelStatus === qualifiedKey && (
                     <Button className={`gap-1 ${isLeadMigrated(detailLead) ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`} onClick={() => { handleMigrateToCRM(detailLead); setDetailLead(null); }}>
                       <ArrowUpRight className="w-4 h-4" /> {isLeadMigrated(detailLead) ? 'Migrado ao CRM ✓' : 'Migrar para CRM'}
                     </Button>
