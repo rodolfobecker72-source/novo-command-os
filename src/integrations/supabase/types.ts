@@ -162,6 +162,7 @@ export type Database = {
           hero_asset_number: string
           id: string
           inactive_reason: string
+          insurance_expires_at: string | null
           is_active: boolean
           name: string
           needs_insurance: boolean
@@ -182,6 +183,7 @@ export type Database = {
           hero_asset_number?: string
           id?: string
           inactive_reason?: string
+          insurance_expires_at?: string | null
           is_active?: boolean
           name?: string
           needs_insurance?: boolean
@@ -202,6 +204,7 @@ export type Database = {
           hero_asset_number?: string
           id?: string
           inactive_reason?: string
+          insurance_expires_at?: string | null
           is_active?: boolean
           name?: string
           needs_insurance?: boolean

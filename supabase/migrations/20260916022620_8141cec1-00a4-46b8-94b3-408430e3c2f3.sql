@@ -1,0 +1,1 @@
+ALTER TABLE public.assets ADD COLUMN insurance_expires_at date;
