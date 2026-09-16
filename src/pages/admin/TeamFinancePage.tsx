@@ -268,11 +268,26 @@ export function TeamFinancePage() {
                 <SelectValue placeholder="Selecione uma pessoa" />
               </SelectTrigger>
               <SelectContent className="z-[200]">
-                {suppliers.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
+                {people.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Pessoas do time</SelectLabel>
+                    {people.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+                {freelas.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Freelas</SelectLabel>
+                    {freelas.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
               </SelectContent>
             </Select>
           </div>
