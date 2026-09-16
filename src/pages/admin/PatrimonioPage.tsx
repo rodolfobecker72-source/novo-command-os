@@ -41,6 +41,7 @@ interface Asset {
   assigned_to: string;
   category: AssetCategory;
   needs_insurance: boolean;
+  insurance_expires_at: string | null;
   quantity: number;
   units: AssetUnit[];
   is_active: boolean;
@@ -65,6 +66,7 @@ const emptyForm = {
   assigned_to: '',
   category: 'equipamento' as AssetCategory,
   needs_insurance: false,
+  insurance_expires_at: '',
   quantity: 1,
   units: [] as AssetUnit[],
   is_active: true,
