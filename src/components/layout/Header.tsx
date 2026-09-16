@@ -30,6 +30,7 @@ export function Header({ title, subtitle }: HeaderProps) {
   const { profile, logout, role } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const { enabled: teamFinanceEnabled } = useTeamFinanceEnabled();
 
   let onOpenMobileMenu: (() => void) | undefined;
   try {
