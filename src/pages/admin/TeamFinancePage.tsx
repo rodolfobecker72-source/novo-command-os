@@ -263,10 +263,10 @@ export function TeamFinancePage() {
                 <SelectValue placeholder="Selecione uma pessoa" />
               </SelectTrigger>
               <SelectContent className="z-[200]">
-                {people.length > 0 && (
+                {peopleNames.length > 0 && (
                   <SelectGroup>
                     <SelectLabel>Pessoas do time</SelectLabel>
-                    {people.map((s) => (
+                    {peopleNames.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
