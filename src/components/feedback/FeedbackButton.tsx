@@ -31,13 +31,18 @@ const TYPES = [
 const MAX_FILES = 5;
 const MAX_SIZE = 5 * 1024 * 1024;
 
-export function FeedbackButton() {
+interface FeedbackDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   const { user, profile, workspace } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [open, setOpen] = useState(false);
+  const setOpen = onOpenChange;
   const [type, setType] = useState('sugestao');
   const [rating, setRating] = useState(0);
   const [message, setMessage] = useState('');
@@ -114,18 +119,7 @@ export function FeedbackButton() {
   };
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Reportar erro, sugestão ou avaliação"
-        title="Reports, sugestões e avaliações"
-        className="fixed bottom-5 right-5 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-      >
-        <AlertCircle className="w-6 h-6" />
-      </button>
-
-      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Reports, sugestões e avaliações</DialogTitle>
@@ -232,6 +226,5 @@ export function FeedbackButton() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
   );
 }

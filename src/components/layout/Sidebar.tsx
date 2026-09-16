@@ -1,7 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
+import { FeedbackDialog } from '@/components/feedback/FeedbackButton';
 import {
+  AlertCircle,
   Users,
   LayoutGrid,
   UserCog,
@@ -106,6 +108,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     .filter((group) => group.items.length > 0);
 
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const showUsuarios = role === 'owner';
 
@@ -189,6 +192,14 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <span className="text-sm font-medium">Usuários</span>
           </NavLink>
         )}
+        <button
+          type="button"
+          onClick={() => { handleNavClick(); setFeedbackOpen(true); }}
+          className="nav-link w-full"
+        >
+          <AlertCircle className="w-5 h-5" />
+          <span className="text-sm font-medium">Reports</span>
+        </button>
         <NavLink
           to="/sobre"
           onClick={handleNavClick}
@@ -222,6 +233,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         </div>
 
         <ProfileEditDialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen} />
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
       </div>
     </aside>
   );
