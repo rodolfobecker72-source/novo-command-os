@@ -23,6 +23,9 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency, PAYMENT_STATUS_LABELS, PaymentStatus } from '@/types/crm';
 import { Wallet, CheckCircle2, Clock, Users } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
 
 type Source =
   | { kind: 'service'; serviceId: string; costId: string; isExtra: boolean }
