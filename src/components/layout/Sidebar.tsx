@@ -1,7 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
+import { FeedbackDialog } from '@/components/feedback/FeedbackButton';
 import {
+  AlertCircle,
   Users,
   LayoutGrid,
   UserCog,
