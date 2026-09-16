@@ -223,6 +223,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     try {
       const target = statuses.find(s => s.id === id);
       if (!target) return;
+      if (target.isDefault) { toast.error('Status padrão não pode ser excluído'); return; }
       const { error: moveErr } = await supabase
         .from('prospection_leads')
         .update({ funnel_status: moveToKey })
