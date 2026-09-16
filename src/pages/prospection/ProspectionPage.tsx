@@ -882,10 +882,35 @@ export function ProspectionPage() {
                 const lead = leads.find(l => l.id === meetingConfirm.leadId);
                 if (!lead) { setMeetingConfirm(null); return; }
                 updateLead(lead.id, { ...(meetingConfirm.extraUpdates || {}), funnelStatus: meetingConfirm.newStatus, meetingHappened: true });
+                maybeAskQualify(lead, meetingConfirm.newStatus);
                 setMeetingConfirm(null);
               }}
             >
               Sim, aconteceu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cadastrar como cliente ao qualificar para CRM */}
+      <Dialog open={!!qualifyConfirm} onOpenChange={(open) => { if (!open) setQualifyConfirm(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cadastrar como cliente?</DialogTitle>
+            <DialogDescription>
+              {qualifyConfirm ? `Deseja cadastrar "${qualifyConfirm.companyName}" como cliente no CRM agora?` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setQualifyConfirm(null)}>Agora não</Button>
+            <Button
+              onClick={async () => {
+                const lead = qualifyConfirm;
+                setQualifyConfirm(null);
+                if (lead) await handleMigrateToCRM(lead);
+              }}
+            >
+              Sim, cadastrar
             </Button>
           </DialogFooter>
         </DialogContent>
