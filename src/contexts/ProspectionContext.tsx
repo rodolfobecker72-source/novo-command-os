@@ -179,7 +179,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     onChange: () => { load(true); loadStatuses(); },
   });
 
-  const addStatus = useCallback(async (data: { label: string; color: string; role: LeadStatus['role']; order: number }) => {
+  const addStatus = useCallback(async (data: { label: string; color: string; role?: LeadStatus['role']; order: number }) => {
     if (!workspaceId) return;
     try {
       let key = slugifyStatusKey(data.label);
