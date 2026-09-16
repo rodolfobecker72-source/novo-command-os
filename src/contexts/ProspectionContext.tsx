@@ -191,7 +191,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
         label: data.label.trim(),
         color: data.color,
         order: insertOrder,
-        role: data.role,
+        role: data.role ?? null,
         is_default: false,
       });
       if (error) throw error;
