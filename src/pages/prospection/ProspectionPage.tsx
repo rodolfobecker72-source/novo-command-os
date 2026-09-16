@@ -159,7 +159,17 @@ export function ProspectionPage() {
       return;
     }
     updateLead(lead.id, updates);
+    maybeAskQualify(lead, newStatus);
   };
+
+  // Ao entrar em "Qualificado para CRM", perguntar se deve cadastrar como cliente
+  const maybeAskQualify = (lead: ProspectionLead, newStatus: LeadFunnelStatus) => {
+    if (!qualifiedKey || newStatus !== qualifiedKey) return;
+    if (lead.funnelStatus === qualifiedKey) return;
+    if (isLeadMigrated(lead)) return;
+    setQualifyConfirm(lead);
+  };
+
 
   const handleKanbanDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
