@@ -1616,7 +1616,7 @@ export function ProspectionPage() {
               <Select value={formData.funnelStatus} onValueChange={(v: LeadFunnelStatus) => setFormData(p => ({ ...p, funnelStatus: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(LEAD_FUNNEL_STATUS_LABELS).filter(([k]) => k !== 'perdido').map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  {orderedStatuses.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
