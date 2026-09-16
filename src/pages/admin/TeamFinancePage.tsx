@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -91,6 +93,12 @@ export function TeamFinancePage() {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [budgets, people]);
+
+  // Team members first, then freelas (suppliers that are not workspace members)
+  const freelas = useMemo(() => {
+    const teamSet = new Set(people);
+    return suppliers.filter((s) => !teamSet.has(s));
+  }, [suppliers, people]);
 
   const entries = useMemo<Entry[]>(() => {
     if (!selected) return [];
@@ -260,11 +268,26 @@ export function TeamFinancePage() {
                 <SelectValue placeholder="Selecione uma pessoa" />
               </SelectTrigger>
               <SelectContent className="z-[200]">
-                {suppliers.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
+                {people.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Pessoas do time</SelectLabel>
+                    {people.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+                {freelas.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Freelas</SelectLabel>
+                    {freelas.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
               </SelectContent>
             </Select>
           </div>
