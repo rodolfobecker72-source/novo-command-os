@@ -102,7 +102,7 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
 
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('slate');
-  const [newRole, setNewRole] = useState<LeadStatusRole | null>(null);
+  
   const [newPosition, setNewPosition] = useState<string>('end');
   const [deleting, setDeleting] = useState<LeadStatus | null>(null);
   const [moveTo, setMoveTo] = useState<string>('');
