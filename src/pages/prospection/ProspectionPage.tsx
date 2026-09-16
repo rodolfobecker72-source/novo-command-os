@@ -431,7 +431,9 @@ export function ProspectionPage() {
       score: 0,
     });
     if (newClient) {
-      if (qualifiedKey) changeLeadStatus(lead, qualifiedKey);
+      if (qualifiedKey && lead.funnelStatus !== qualifiedKey) {
+        updateLead(lead.id, { funnelStatus: qualifiedKey });
+      }
       toast.success(`"${lead.companyName}" migrado para o CRM como cliente!`);
     }
   };
