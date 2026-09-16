@@ -47,6 +47,11 @@ interface Entry {
 export function TeamFinancePage() {
   const { workspace } = useAuth();
   const { budgets, clients, updateExecutionCost, updateExecution } = useCRM();
+  const {
+    enabled: teamFinanceEnabled,
+    loading: settingsLoading,
+    update: updateTeamFinance,
+  } = useTeamFinanceEnabled();
   const [people, setPeople] = useState<string[]>([]);
   const [selected, setSelected] = useState<string>('');
 
