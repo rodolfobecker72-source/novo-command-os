@@ -158,7 +158,7 @@ export function ManageLeadStatusesDialog({ open, onOpenChange }: { open: boolean
                     count={countFor(s.key)}
                     onLabel={v => updateStatus(s.id, { label: v })}
                     onColor={v => updateStatus(s.id, { color: v })}
-                    onRole={v => updateStatus(s.id, { role: v })}
+                    
                     onDelete={() => {
                       if (ordered.length <= 1) { toast.error('É preciso manter ao menos um status'); return; }
                       setDeleting(s);
