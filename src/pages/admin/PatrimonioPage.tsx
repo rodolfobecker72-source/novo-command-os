@@ -18,7 +18,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Plus, Search, Pencil, Trash2, Package, Building2, ExternalLink, Loader2, DollarSign, Hash, ShieldCheck, Eye, PowerOff,
+  Plus, Search, Pencil, Trash2, Package, Building2, ExternalLink, Loader2, DollarSign, Hash, ShieldCheck, Eye, PowerOff, AlertTriangle,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Header } from '@/components/layout/Header';
@@ -41,6 +41,7 @@ interface Asset {
   assigned_to: string;
   category: AssetCategory;
   needs_insurance: boolean;
+  insurance_expires_at: string | null;
   quantity: number;
   units: AssetUnit[];
   is_active: boolean;
@@ -65,6 +66,7 @@ const emptyForm = {
   assigned_to: '',
   category: 'equipamento' as AssetCategory,
   needs_insurance: false,
+  insurance_expires_at: '',
   quantity: 1,
   units: [] as AssetUnit[],
   is_active: true,
@@ -133,6 +135,7 @@ export function PatrimonioPage() {
       assigned_to: asset.assigned_to,
       category: (asset.category as AssetCategory) || 'equipamento',
       needs_insurance: !!asset.needs_insurance,
+      insurance_expires_at: asset.insurance_expires_at || '',
       quantity: Number(asset.quantity) || 1,
       units: syncUnits(Array.isArray(asset.units) ? (asset.units as AssetUnit[]) : [], Number(asset.quantity) || 1),
       is_active: asset.is_active !== false,
@@ -147,6 +150,10 @@ export function PatrimonioPage() {
       toast.error('Informe o nome do item.');
       return;
     }
+    if (form.needs_insurance && !form.insurance_expires_at) {
+      toast.error('Informe a data do fim da apólice do seguro.');
+      return;
+    }
     setSaving(true);
     const qty = Math.max(1, Number(form.quantity) || 1);
     const units = qty > 1 ? syncUnits(form.units, qty) : [];
@@ -155,6 +162,7 @@ export function PatrimonioPage() {
       value: Number(form.value) || 0,
       quantity: qty,
       units,
+      insurance_expires_at: form.needs_insurance && form.insurance_expires_at ? form.insurance_expires_at : null,
       workspace_id: workspace.id,
     };
     const query = editingId
@@ -212,6 +220,21 @@ export function PatrimonioPage() {
     equipamentos: assets.filter(a => a.category === 'equipamento').reduce((s, a) => s + (Number(a.quantity) || 1), 0),
     estruturas: assets.filter(a => a.category === 'estrutura').reduce((s, a) => s + (Number(a.quantity) || 1), 0),
   }), [assets]);
+
+  const insuranceAlerts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const limit = new Date(today);
+    limit.setDate(limit.getDate() + 30);
+    return assets
+      .filter(a => a.needs_insurance && a.insurance_expires_at)
+      .map(a => {
+        const exp = new Date(`${a.insurance_expires_at}T12:00:00`);
+        return { asset: a, exp, expired: exp < today, expiringSoon: !exp || (exp >= today && exp <= limit) };
+      })
+      .filter(x => x.expired || x.expiringSoon)
+      .sort((a, b) => a.exp.getTime() - b.exp.getTime());
+  }, [assets]);
 
   return (
     <div>
@@ -302,16 +325,37 @@ export function PatrimonioPage() {
                   <Label htmlFor="reference_link">Link de referência</Label>
                   <Input id="reference_link" value={form.reference_link} onChange={(e) => setForm(f => ({ ...f, reference_link: e.target.value }))} placeholder="Ex: link da nota fiscal ou loja" />
                 </div>
-                <div className="sm:col-span-2 flex items-center gap-2 rounded-md border p-3 bg-muted/30">
-                  <Checkbox
-                    id="needs_insurance"
-                    checked={form.needs_insurance}
-                    onCheckedChange={(c) => setForm(f => ({ ...f, needs_insurance: c === true }))}
-                  />
-                  <Label htmlFor="needs_insurance" className="cursor-pointer flex items-center gap-2 font-normal">
-                    <ShieldCheck className="w-4 h-4 text-primary" />
-                    Necessita de seguro
-                  </Label>
+                <div className="sm:col-span-2 rounded-md border p-3 bg-muted/30 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="needs_insurance"
+                      checked={form.needs_insurance}
+                      onCheckedChange={(c) =>
+                        setForm(f => ({ ...f, needs_insurance: c === true, insurance_expires_at: c === true ? f.insurance_expires_at : '' }))
+                      }
+                    />
+                    <Label htmlFor="needs_insurance" className="cursor-pointer flex items-center gap-2 font-normal">
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      Equipamento segurado
+                    </Label>
+                  </div>
+                  {form.needs_insurance && (
+                    <div className="space-y-1 pl-6">
+                      <Label htmlFor="insurance_expires_at" className="text-xs text-muted-foreground">
+                        Data do fim da apólice *
+                      </Label>
+                      <Input
+                        id="insurance_expires_at"
+                        type="date"
+                        value={form.insurance_expires_at}
+                        onChange={(e) => setForm(f => ({ ...f, insurance_expires_at: e.target.value }))}
+                        className="sm:w-56"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        O gestor será lembrado da renovação quando o fim da apólice estiver próximo.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="sm:col-span-2 space-y-2 rounded-md border p-3 bg-muted/30">
                   <div className="flex items-center justify-between">
@@ -382,6 +426,27 @@ export function PatrimonioPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {insuranceAlerts.length > 0 && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-4 h-4" />
+              Renovação de seguro
+            </p>
+            {insuranceAlerts.map(({ asset, exp, expired }) => (
+              <div key={asset.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span>{asset.name}</span>
+                <Badge variant={expired ? 'destructive' : 'secondary'}>
+                  {expired
+                    ? `Apólice vencida em ${exp.toLocaleDateString('pt-BR')}`
+                    : `Apólice vence em ${exp.toLocaleDateString('pt-BR')}`}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
