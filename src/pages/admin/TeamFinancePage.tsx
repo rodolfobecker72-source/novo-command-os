@@ -153,16 +153,6 @@ export function TeamFinancePage() {
     });
   }, [budgets, clients, selected]);
 
-  const totals = useMemo(() => {
-    let pago = 0,
-      pendente = 0;
-    monthEntries.forEach((e) => {
-      if (e.paymentStatus === 'pago') pago += e.realValue;
-      else if (e.paymentStatus === 'pendente') pendente += e.realValue;
-    });
-    return { pago, pendente, total: pago + pendente };
-  }, [monthEntries]);
-
   const months = useMemo(() => {
     const set = new Set<string>(entries.map((e) => e.month));
     return Array.from(set).sort((a, b) => b.localeCompare(a));
@@ -179,6 +169,16 @@ export function TeamFinancePage() {
     () => (monthSel ? entries.filter((e) => e.month === monthSel) : []),
     [entries, monthSel],
   );
+
+  const totals = useMemo(() => {
+    let pago = 0,
+      pendente = 0;
+    monthEntries.forEach((e) => {
+      if (e.paymentStatus === 'pago') pago += e.realValue;
+      else if (e.paymentStatus === 'pendente') pendente += e.realValue;
+    });
+    return { pago, pendente, total: pago + pendente };
+  }, [monthEntries]);
 
   const formatMonth = (m: string) => {
     if (!m || m === '—') return 'Sem mês';
