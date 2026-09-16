@@ -288,56 +288,70 @@ export function TeamFinancePage() {
           <Card className="p-8 text-center text-muted-foreground">
             Selecione uma pessoa do time para ver o financeiro dela.
           </Card>
+        ) : entries.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">
+            Nenhum trabalho apontado a esta pessoa ainda.
+          </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Card className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                  <CheckCircle2 className="w-4 h-4 text-success" /> Total Recebido
+            <Card className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <CalendarDays className="w-4 h-4 text-primary" /> Mês
                 </div>
-                <div className="text-2xl font-bold mt-1 text-success">
-                  {formatCurrency(totals.pago)}
-                </div>
-              </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                  <Clock className="w-4 h-4 text-warning" /> Pendente
-                </div>
-                <div className="text-2xl font-bold mt-1 text-warning">
-                  {formatCurrency(totals.pendente)}
-                </div>
-              </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                  <Wallet className="w-4 h-4 text-primary" /> Mês Atual
-                </div>
-                <div className="text-2xl font-bold mt-1">{formatCurrency(totals.mesAtual)}</div>
-              </Card>
-            </div>
+                <Select value={monthSel} onValueChange={setMonthSel}>
+                  <SelectTrigger className="sm:w-64 capitalize">
+                    <SelectValue placeholder="Selecione o mês" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[200]">
+                    {months.map((m) => (
+                      <SelectItem key={m} value={m} className="capitalize">
+                        {formatMonth(m)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </Card>
 
-            {entries.length === 0 ? (
+            {!monthSel ? (
               <Card className="p-8 text-center text-muted-foreground">
-                Nenhum trabalho apontado a esta pessoa ainda.
+                Selecione o mês para ver os lançamentos.
               </Card>
             ) : (
-              <Card className="overflow-hidden">
-                <div className="px-4 py-3 bg-muted/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b">
-                  <div className="flex items-center gap-2">
-                    <Select value={monthSel} onValueChange={setMonthSel}>
-                      <SelectTrigger className="w-56 capitalize">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[200]">
-                        {months.map((m) => (
-                          <SelectItem key={m} value={m} className="capitalize">
-                            {formatMonth(m)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {formatCurrency(monthEntries.reduce((s, e) => s + e.realValue, 0))}
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                      <CheckCircle2 className="w-4 h-4 text-success" /> Recebido no mês
+                    </div>
+                    <div className="text-2xl font-bold mt-1 text-success">
+                      {formatCurrency(totals.pago)}
+                    </div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                      <Clock className="w-4 h-4 text-warning" /> Pendente no mês
+                    </div>
+                    <div className="text-2xl font-bold mt-1 text-warning">
+                      {formatCurrency(totals.pendente)}
+                    </div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                      <Wallet className="w-4 h-4 text-primary" /> Total do mês
+                    </div>
+                    <div className="text-2xl font-bold mt-1">
+                      {formatCurrency(totals.total)}
+                    </div>
+                  </Card>
+                </div>
+
+                <Card className="overflow-hidden">
+                  <div className="px-4 py-3 bg-muted/40 flex items-center justify-between border-b">
+                    <h3 className="font-semibold capitalize">{formatMonth(monthSel)}</h3>
+                    <span className="text-sm font-semibold">
+                      {formatCurrency(totals.total)}
                   </span>
                 </div>
                 <div className="overflow-x-auto">
