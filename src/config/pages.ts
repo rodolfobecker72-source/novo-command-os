@@ -38,6 +38,7 @@ export const APP_PAGES: AppPage[] = [
   // Administrativo
   { key: 'financeiro', label: 'Financeiro', href: '/financeiro', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
   { key: 'patrimonio', label: 'Patrimônio', href: '/patrimonio', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
+  { key: 'financeiro-time', label: 'Financeiro do Time', href: '/financeiro-time', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
 
   // Sistema
   { key: 'usuarios', label: 'Usuários', href: '/usuarios', group: 'Sistema', restrictedFrom: ['admin', 'vendedor', 'visualizador', 'time_hero'] },
