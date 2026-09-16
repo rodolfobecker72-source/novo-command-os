@@ -2984,9 +2984,9 @@ export function BudgetDetail() {
                         <BarChart3 className="w-6 h-6 text-success" />
                       </div>
                       <div className="flex-1">
-                        <CardTitle>Planilha de Execução</CardTitle>
+                        <CardTitle>{budget.projectName}</CardTitle>
                         <CardDescription>
-                          Acompanhe os custos reais vs. orçados
+                          Planilha de Execução — Acompanhe os custos reais vs. orçados
                         </CardDescription>
                       </div>
                       {(() => {
