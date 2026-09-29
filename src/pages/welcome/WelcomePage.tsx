@@ -522,6 +522,8 @@ export function WelcomePage() {
             ]
           );
           allTasks.sort((a, b) => {
+            // Atrasadas primeiro
+            if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1;
             if (!a.dueDate && !b.dueDate) return 0;
             if (!a.dueDate) return 1;
             if (!b.dueDate) return -1;
@@ -529,6 +531,7 @@ export function WelcomePage() {
           });
           const totalNao = userActivities.reduce((s, u) => s + u.naoIniciado.length, 0);
           const totalAnd = userActivities.reduce((s, u) => s + u.emAndamento.length, 0);
+          const totalOverdue = allTasks.filter((a) => a.isOverdue).length;
           return (
             <Card>
               <CardHeader className="pb-3">
@@ -537,6 +540,11 @@ export function WelcomePage() {
                   Atividades operacionais
                 </CardTitle>
                 <div className="flex flex-wrap gap-1.5 mt-1">
+                  {totalOverdue > 0 && (
+                    <Badge className="text-[10px] py-0 px-1.5 bg-destructive text-destructive-foreground hover:bg-destructive">
+                      {totalOverdue} em atraso
+                    </Badge>
+                  )}
                   {totalNao > 0 && (
                     <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
                       {totalNao} não iniciado{totalNao > 1 ? 's' : ''}
