@@ -561,7 +561,7 @@ export function WelcomePage() {
                 <ul className="space-y-2">
                   {allTasks.map((a) => {
                     const styleCls = a.isOverdue
-                      ? 'border-destructive/30 bg-destructive/5'
+                      ? 'border-destructive/50 bg-destructive/10 dark:bg-destructive/15 ring-1 ring-destructive/30'
                       : a.status === 'emAndamento'
                         ? 'border-info/25 bg-info/[0.08]'
                         : 'border-border bg-muted/30';
@@ -577,7 +577,13 @@ export function WelcomePage() {
                         />
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium leading-snug break-words">{a.title}</p>
+                            <p className={`text-sm font-medium leading-snug break-words ${a.isOverdue ? 'text-destructive' : ''}`}>{a.title}</p>
+                            {a.isOverdue && (
+                              <Badge className="text-[10px] py-0 px-1.5 gap-1 bg-destructive text-destructive-foreground hover:bg-destructive">
+                                <AlertTriangle className="w-3 h-3" />
+                                Em atraso
+                              </Badge>
+                            )}
                             {a.status === 'emAndamento' ? (
                               <Badge className="text-[10px] py-0 px-1.5 bg-info/15 text-info hover:bg-info/20">
                                 Em andamento
