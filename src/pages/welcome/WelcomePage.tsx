@@ -522,6 +522,8 @@ export function WelcomePage() {
             ]
           );
           allTasks.sort((a, b) => {
+            // Atrasadas primeiro
+            if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1;
             if (!a.dueDate && !b.dueDate) return 0;
             if (!a.dueDate) return 1;
             if (!b.dueDate) return -1;
@@ -529,6 +531,7 @@ export function WelcomePage() {
           });
           const totalNao = userActivities.reduce((s, u) => s + u.naoIniciado.length, 0);
           const totalAnd = userActivities.reduce((s, u) => s + u.emAndamento.length, 0);
+          const totalOverdue = allTasks.filter((a) => a.isOverdue).length;
           return (
             <Card>
               <CardHeader className="pb-3">
@@ -537,6 +540,11 @@ export function WelcomePage() {
                   Atividades operacionais
                 </CardTitle>
                 <div className="flex flex-wrap gap-1.5 mt-1">
+                  {totalOverdue > 0 && (
+                    <Badge className="text-[10px] py-0 px-1.5 bg-destructive text-destructive-foreground hover:bg-destructive">
+                      {totalOverdue} em atraso
+                    </Badge>
+                  )}
                   {totalNao > 0 && (
                     <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
                       {totalNao} não iniciado{totalNao > 1 ? 's' : ''}
@@ -553,7 +561,7 @@ export function WelcomePage() {
                 <ul className="space-y-2">
                   {allTasks.map((a) => {
                     const styleCls = a.isOverdue
-                      ? 'border-destructive/30 bg-destructive/5'
+                      ? 'border-destructive/50 bg-destructive/10 dark:bg-destructive/15 ring-1 ring-destructive/30'
                       : a.status === 'emAndamento'
                         ? 'border-info/25 bg-info/[0.08]'
                         : 'border-border bg-muted/30';
@@ -569,7 +577,13 @@ export function WelcomePage() {
                         />
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium leading-snug break-words">{a.title}</p>
+                            <p className={`text-sm font-medium leading-snug break-words ${a.isOverdue ? 'text-destructive' : ''}`}>{a.title}</p>
+                            {a.isOverdue && (
+                              <Badge className="text-[10px] py-0 px-1.5 gap-1 bg-destructive text-destructive-foreground hover:bg-destructive">
+                                <AlertTriangle className="w-3 h-3" />
+                                Em atraso
+                              </Badge>
+                            )}
                             {a.status === 'emAndamento' ? (
                               <Badge className="text-[10px] py-0 px-1.5 bg-info/15 text-info hover:bg-info/20">
                                 Em andamento
