@@ -29,6 +29,7 @@ interface ActivityItem {
   projectName: string;
   projectCardId: string;
   isOverdue: boolean;
+  isToday: boolean;
   freelaName: string | null;
 }
 
@@ -224,6 +225,7 @@ export function WelcomePage() {
           projectName: cardMap.get(a.project_card_id) || 'Projeto',
           projectCardId: a.project_card_id,
           isOverdue: !!a.due_date && a.due_date < today,
+          isToday: !!a.due_date && a.due_date === today,
           freelaName: a.freela_name || null,
         };
         if (a.status === 'em_andamento') bucket.emAndamento.push(item);
@@ -562,9 +564,11 @@ export function WelcomePage() {
                   {allTasks.map((a) => {
                     const styleCls = a.isOverdue
                       ? 'border-destructive/50 bg-destructive/10 dark:bg-destructive/15 ring-1 ring-destructive/30'
-                      : a.status === 'emAndamento'
-                        ? 'border-info/25 bg-info/[0.08]'
-                        : 'border-border bg-muted/30';
+                      : a.isToday
+                        ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/25 ring-1 ring-amber-500/30'
+                        : a.status === 'emAndamento'
+                          ? 'border-info/25 bg-info/[0.08]'
+                          : 'border-border bg-muted/30';
                     return (
                       <li
                         key={a.id}
@@ -577,11 +581,16 @@ export function WelcomePage() {
                         />
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className={`text-sm font-medium leading-snug break-words ${a.isOverdue ? 'text-destructive' : ''}`}>{a.title}</p>
+                            <p className={`text-sm font-medium leading-snug break-words ${a.isOverdue ? 'text-destructive' : a.isToday ? 'text-amber-700 dark:text-amber-300' : ''}`}>{a.title}</p>
                             {a.isOverdue && (
                               <Badge className="text-[10px] py-0 px-1.5 gap-1 bg-destructive text-destructive-foreground hover:bg-destructive">
                                 <AlertTriangle className="w-3 h-3" />
                                 Em atraso
+                              </Badge>
+                            )}
+                            {a.isToday && !a.isOverdue && (
+                              <Badge className="text-[10px] py-0 px-1.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20">
+                                Hoje
                               </Badge>
                             )}
                             {a.status === 'emAndamento' ? (
@@ -602,8 +611,8 @@ export function WelcomePage() {
                             </p>
                           )}
                           {a.dueDate && (
-                            <p className={`text-xs tabular-nums ${a.isOverdue ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                              {a.isOverdue ? `Venceu em ${formatDateBR(a.dueDate)}` : formatDateBR(a.dueDate)}
+                            <p className={`text-xs tabular-nums ${a.isOverdue ? 'text-destructive font-semibold' : a.isToday ? 'text-amber-700 dark:text-amber-300 font-semibold' : 'text-muted-foreground'}`}>
+                              {a.isOverdue ? `Venceu em ${formatDateBR(a.dueDate)}` : a.isToday ? `Vence hoje, ${formatDateBR(a.dueDate)}` : formatDateBR(a.dueDate)}
                             </p>
                           )}
                         </div>
