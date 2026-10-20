@@ -28,10 +28,19 @@ import {
 } from '@/components/ui/card';
 import { ArrowLeft, Save, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { ClientContactsEditor, saveContactDrafts, type ContactDraft } from '@/components/client/ClientContactsEditor';
+import { syncPrimaryContact, useClientContacts } from '@/hooks/useClientContacts';
 
 export function EditClient() {
   const { id } = useParams<{ id: string }>();
   const { getClient, updateClient, isLoading: crmLoading } = useCRM();
+  const { workspace } = useAuth();
+  const { contacts: savedContacts } = useClientContacts(id);
+  const [extraContacts, setExtraContacts] = useState<ContactDraft[]>([]);
+  useEffect(() => {
+    setExtraContacts(savedContacts.filter((c) => !c.isPrimary).map((c) => ({ id: c.id, name: c.name, role: c.role, email: c.email, phone: c.phone })));
+  }, [savedContacts]);
   const navigate = useNavigate();
 
   const client = getClient(id || '');
@@ -162,6 +171,10 @@ export function EditClient() {
         stateRegistration: formData.stateRegistration,
         municipalRegistration: formData.municipalRegistration,
       });
+      if (workspace) {
+        await syncPrimaryContact(workspace.id, client.id, formData.responsiblePerson, formData.email.trim(), formData.phone.replace(/\D/g, ''));
+        await saveContactDrafts(workspace.id, client.id, extraContacts, savedContacts.filter((c) => !c.isPrimary).map((c) => c.id));
+      }
       toast.success('Cliente atualizado com sucesso!');
       navigate('/clientes');
     } catch (err) {
@@ -308,7 +321,7 @@ export function EditClient() {
 
                 {/* Responsible Person */}
                 <div className="space-y-2">
-                  <Label htmlFor="responsiblePerson">Pessoa Responsável *</Label>
+                  <Label htmlFor="responsiblePerson">Responsável principal *</Label>
                   <Input
                     id="responsiblePerson"
                     placeholder="Nome do contato principal"
@@ -361,6 +374,8 @@ export function EditClient() {
                     <p className="text-sm text-destructive">{errors.phone}</p>
                   )}
                 </div>
+
+                <ClientContactsEditor value={extraContacts} onChange={setExtraContacts} />
 
                 {/* Lead Origin */}
                 <div className="space-y-2">
