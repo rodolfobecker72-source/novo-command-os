@@ -33,7 +33,6 @@ export const APP_PAGES: AppPage[] = [
   { key: 'layout', label: 'Layout do PDF', href: '/configuracoes/layout', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
   { key: 'contrato', label: 'Minuta de Contrato', href: '/configuracoes/contrato', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
   { key: 'metas', label: 'Metas', href: '/configuracoes/metas', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
-  { key: 'score', label: 'Score', href: '/configuracoes/score', group: 'Configurações', restrictedFrom: ['time_hero'] },
   
   // Administrativo
   { key: 'financeiro', label: 'Financeiro', href: '/financeiro', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },

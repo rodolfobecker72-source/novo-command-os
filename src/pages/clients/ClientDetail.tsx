@@ -209,10 +209,6 @@ export function ClientDetail() {
                       <CardDescription>Dados do cliente</CardDescription>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <ScoreBadge score={scoreBreakdown.finalScore} size="lg" />
-                    <ClassificationBadge classification={scoreBreakdown.classification} size="sm" />
-                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -286,11 +282,6 @@ export function ClientDetail() {
                     </p>
                     <p className="text-xs text-muted-foreground">Cliente desde</p>
                   </div>
-                </div>
-
-                {/* Potential Badge */}
-                <div className="pt-4 border-t">
-                  <PotentialBadge badge={scoreBreakdown.potentialBadge} />
                 </div>
               </CardContent>
             </Card>
@@ -466,28 +457,6 @@ export function ClientDetail() {
             </Card>
           </motion.div>
         </div>
-
-        {/* Score History - Collapsible */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between mb-2">
-                <span className="flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  Histórico do Score ({clientScoreHistory.length} registro(s))
-                </span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <ScoreHistory history={clientScoreHistory} />
-            </CollapsibleContent>
-          </Collapsible>
-        </motion.div>
 
         {/* Projects Table */}
         <motion.div

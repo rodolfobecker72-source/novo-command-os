@@ -3642,7 +3642,6 @@ export function BudgetDetail() {
                   <div className="flex items-center justify-between gap-2">
                     <CardTitle className="text-base">Cliente</CardTitle>
                     <div className="flex items-center gap-2">
-                      <ScoreBadge score={client.score} />
                       <Button
                         variant="ghost"
                         size="sm"
