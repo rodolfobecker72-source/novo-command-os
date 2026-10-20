@@ -305,10 +305,26 @@ export function MediaCenterPage() {
     return list;
   }, [hardDrives, hdFilter, lowerSearch]);
 
+  // Projetos de cada HD em ordem alfabética crescente (índice original preservado)
+  const sortedProjectsByHd = useMemo(() => {
+    const map: Record<string, { project: HdProject; index: number }[]> = {};
+    hardDrives.forEach((hd) => {
+      map[hd.id] = hd.projects
+        .map((project, index) => ({ project, index }))
+        .sort((a, b) =>
+          (a.project.projectNumber || '').localeCompare(b.project.projectNumber || '', 'pt-BR', {
+            numeric: true,
+            sensitivity: 'base',
+          })
+        );
+    });
+    return map;
+  }, [hardDrives]);
+
   const allProjects = useMemo(() => {
     const items: { hdLabel: string; hdId: string; project: HdProject; index: number }[] = [];
     filteredHds.forEach((hd) => {
-      hd.projects.forEach((p, i) => {
+      (sortedProjectsByHd[hd.id] ?? []).forEach(({ project: p, index: i }) => {
         if (
           !search ||
           p.projectNumber.toLowerCase().includes(lowerSearch) ||
@@ -320,7 +336,7 @@ export function MediaCenterPage() {
       });
     });
     return items;
-  }, [filteredHds, lowerSearch]);
+  }, [filteredHds, lowerSearch, sortedProjectsByHd]);
 
   const capacityHds = useMemo(() => {
     const list = [...filteredHds];
@@ -548,7 +564,7 @@ export function MediaCenterPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {hd.projects.map((p, i) => (
+                          {(sortedProjectsByHd[hd.id] ?? []).map(({ project: p, index: i }) => (
                             <TableRow key={i}>
                               <TableCell className="text-sm font-medium">{p.projectNumber}</TableCell>
                               <TableCell className="text-sm">{p.clientName || "—"}</TableCell>
