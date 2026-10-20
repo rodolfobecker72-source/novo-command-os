@@ -575,6 +575,34 @@ export function ProspectionPage() {
                                   </div>
                                 </div>
                               <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-destructive"
+                                  onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-xs">{LEAD_ORIGIN_LABELS[lead.origin]}</Badge>
+                                <PriorityBadge priority={lead.priority} />
+                              </div>
+                              {lead.estimatedPotential > 0 && (
+                                <p className="text-xs font-semibold">R$ {lead.estimatedPotential.toLocaleString('pt-BR')}</p>
+                              )}
+                              {lead.nextAction && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  <Clock className="w-3 h-3 inline mr-1" />{lead.nextAction}
+                                </p>
+                              )}
+                              {!!qualifiedKey && status === qualifiedKey && (
+                                <Button size="sm" className={`w-full gap-1 text-xs h-7 mt-1 ${isLeadMigrated(lead) ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`} onClick={e => { e.stopPropagation(); handleMigrateToCRM(lead); }}>
+                                  <ArrowUpRight className="w-3 h-3" /> {isLeadMigrated(lead) ? 'Migrado ao CRM ✓' : 'Migrar para CRM'}
+                                </Button>
+                              )}
+                              <div className="flex items-center justify-end gap-1">
                                 {lead.phone ? (
                                   <Button
                                     size="icon"
@@ -605,33 +633,7 @@ export function ProspectionPage() {
                                     <Mail className="w-3.5 h-3.5" />
                                   </span>
                                 )}
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-6 w-6 text-destructive"
-                                  onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
                               </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs">{LEAD_ORIGIN_LABELS[lead.origin]}</Badge>
-                                <PriorityBadge priority={lead.priority} />
-                              </div>
-                              {lead.estimatedPotential > 0 && (
-                                <p className="text-xs font-semibold">R$ {lead.estimatedPotential.toLocaleString('pt-BR')}</p>
-                              )}
-                              {lead.nextAction && (
-                                <p className="text-xs text-muted-foreground truncate">
-                                  <Clock className="w-3 h-3 inline mr-1" />{lead.nextAction}
-                                </p>
-                              )}
-                              {!!qualifiedKey && status === qualifiedKey && (
-                                <Button size="sm" className={`w-full gap-1 text-xs h-7 mt-1 ${isLeadMigrated(lead) ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`} onClick={e => { e.stopPropagation(); handleMigrateToCRM(lead); }}>
-                                  <ArrowUpRight className="w-3 h-3" /> {isLeadMigrated(lead) ? 'Migrado ao CRM ✓' : 'Migrar para CRM'}
-                                </Button>
-                              )}
                             </CardContent>
                           </Card>
                         </DraggableLeadCard>
