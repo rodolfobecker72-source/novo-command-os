@@ -1733,12 +1733,20 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     } catch (e: any) { toast.error('Erro ao reordenar: ' + e.message); }
   };
   const getCRMCards = (): CRMCard[] => {
+    const wsContacts = clientContacts.filter(c => c.workspace_id === workspaceId);
+    const contactById = new Map(wsContacts.map(c => [c.id, c]));
+    const primaryByClient = new Map<string, { name: string; phone: string }>();
+    wsContacts.forEach(c => {
+      if (c.is_primary && !primaryByClient.has(c.client_id)) primaryByClient.set(c.client_id, c);
+    });
     return budgets.map(budget => {
       const client = getClient(budget.clientId);
       const currentVersionData = budget.versions.find(v => v.version === budget.currentVersion);
       const serviceTypes: ServiceType[] = currentVersionData?.services
         ? [...new Set(currentVersionData.services.map(s => s.serviceType))] : [budget.serviceType];
       const isRecurring = budget.isRecurring ?? false;
+      const contact = (budget.contactId ? contactById.get(budget.contactId) : undefined)
+        || primaryByClient.get(budget.clientId);
       return {
         id: budget.id, budgetId: budget.id,
         projectName: `${budget.proposalId} - ${budget.projectName}`,
@@ -1751,6 +1759,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         rejectionObservation: budget.rejectionObservation,
         createdAt: budget.createdAt.toISOString(),
         isRecurring,
+        contactName: contact?.name || client?.responsiblePerson || null,
+        contactPhone: contact?.phone || client?.phone || null,
       };
     });
   };
@@ -1788,7 +1798,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     // das funções (que não são useCallback) ao trocar de workspace ou sessão.
     workspaceId, session,
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
-    hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns,
+    hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns, clientContacts,
   ]);
 
   return <CRMContext.Provider value={value}>{children}</CRMContext.Provider>;
