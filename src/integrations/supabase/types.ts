@@ -313,6 +313,7 @@ export type Database = {
           approval_date: string | null
           approved_version: number | null
           client_id: string
+          contact_id: string | null
           contract_url: string | null
           created_at: string
           current_version: number
@@ -356,6 +357,7 @@ export type Database = {
           approval_date?: string | null
           approved_version?: number | null
           client_id: string
+          contact_id?: string | null
           contract_url?: string | null
           created_at?: string
           current_version?: number
@@ -399,6 +401,7 @@ export type Database = {
           approval_date?: string | null
           approved_version?: number | null
           client_id?: string
+          contact_id?: string | null
           contract_url?: string | null
           created_at?: string
           current_version?: number
@@ -439,6 +442,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "budgets_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "budgets_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -570,6 +580,63 @@ export type Database = {
           },
           {
             foreignKeyName: "cashflow_entries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_contacts: {
+        Row: {
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          is_primary: boolean
+          name: string
+          order: number
+          phone: string
+          role: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          order?: number
+          phone?: string
+          role?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          order?: number
+          phone?: string
+          role?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contacts_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
