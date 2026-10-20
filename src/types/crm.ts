@@ -378,7 +378,7 @@ export interface CRMCard {
   contactPhone?: string | null; // Telefone do responsável (para WhatsApp no card)
 }
 
-export /** Monta o link wa.me a partir de um telefone (aceita +55 ou só digits). */
+// Monta o link wa.me a partir de um telefone (aceita +55 ou só dígitos).
 export function waHref(phone: string): string {
   const digits = phone.replace(/\D/g, '');
   const withCountry = phone.trim().startsWith('+') ? digits : `55${digits}`;
