@@ -34,6 +34,7 @@ export function KanbanListRow({ card, hideValues }: Props) {
     transition,
   };
 
+  const hasValue = card.value !== undefined && card.value !== null && !hideValues;
   return (
     <div
       ref={setNodeRef}
@@ -106,24 +107,26 @@ export function KanbanListRow({ card, hideValues }: Props) {
           {formatCurrency(card.value)}
         </span>
       )}
-      {card.contactPhone ? (
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            window.open(waHref(card.contactPhone!), '_blank', 'noopener');
-          }}
-          className="text-success hover:text-success/80 transition-colors shrink-0"
-          title={`WhatsApp de ${card.contactName || 'responsável'}`}
-        >
-          <MessageCircle className="w-4 h-4" />
-        </button>
-      ) : (
-        <span title="Responsável sem WhatsApp cadastrado" className="text-muted-foreground/40 shrink-0">
-          <MessageCircle className="w-4 h-4" />
-        </span>
-      )}
+      <span className={`shrink-0 ${hasValue ? '' : 'ml-auto'}`}>
+        {card.contactPhone ? (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(waHref(card.contactPhone!), '_blank', 'noopener');
+            }}
+            className="text-success hover:text-success/80 transition-colors"
+            title={`WhatsApp de ${card.contactName || 'responsável'}`}
+          >
+            <MessageCircle className="w-4 h-4" />
+          </button>
+        ) : (
+          <span title="Responsável sem WhatsApp cadastrado" className="text-muted-foreground/40 inline-flex">
+            <MessageCircle className="w-4 h-4" />
+          </span>
+        )}
+      </span>
       <DuplicateBudgetDialog
         open={duplicateOpen}
         onOpenChange={setDuplicateOpen}
