@@ -340,6 +340,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [projectCards, setProjectCards] = useState<ProjectCard[]>([]);
   const [projectColumns, setProjectColumns] = useState<ProjectColumn[]>([]);
+  const [clientContacts, setClientContacts] = useState<{ id: string; client_id: string; workspace_id: string; name: string; phone: string; is_primary: boolean }[]>([]);
 
   const loadAll = useCallback(async (force = false) => {
     const wsId = workspaceIdRef.current;
@@ -357,11 +358,12 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }, 15000);
     try {
       const [
-        clientsRes, kanbanRes, catRes, objRes, projColRes,
+        clientsRes, contactsRes, kanbanRes, catRes, objRes, projColRes,
         budgetsRes, versionsRes, projectCardsRes,
         assetsRes, hdRes, legacyRes, scoreRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('workspace_id', wsId),
+        supabase.from('client_contacts').select('*').eq('workspace_id', wsId),
         supabase.from('kanban_columns').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('service_categories').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('service_objectives').select('*').eq('workspace_id', wsId).order('order'),
@@ -388,6 +390,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (hdRes.error) errors.push('HDs');
       if (legacyRes.error) errors.push('projetos legados');
       if (scoreRes.error) errors.push('histórico de score');
+      if (contactsRes.error) errors.push('responsáveis das empresas');
 
       if (errors.length > 0) {
         console.error('[CRM] Falha ao carregar:', errors.join(', '));
@@ -454,6 +457,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setHardDrives((hdRes.data || []).map(hardDriveFromDb));
       setLegacyProjects((legacyRes.data || []).map(legacyProjectFromDb));
       setScoreHistory((scoreRes.data || []).map(scoreHistoryFromDb));
+      setClientContacts(contactsRes.data || []);
     } catch (error) {
       console.error('Error loading CRM data:', error);
       if (!force) toast.error('Erro ao carregar dados do CRM');
@@ -1729,12 +1733,20 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     } catch (e: any) { toast.error('Erro ao reordenar: ' + e.message); }
   };
   const getCRMCards = (): CRMCard[] => {
+    const wsContacts = clientContacts.filter(c => c.workspace_id === workspaceId);
+    const contactById = new Map(wsContacts.map(c => [c.id, c]));
+    const primaryByClient = new Map<string, { name: string; phone: string }>();
+    wsContacts.forEach(c => {
+      if (c.is_primary && !primaryByClient.has(c.client_id)) primaryByClient.set(c.client_id, c);
+    });
     return budgets.map(budget => {
       const client = getClient(budget.clientId);
       const currentVersionData = budget.versions.find(v => v.version === budget.currentVersion);
       const serviceTypes: ServiceType[] = currentVersionData?.services
         ? [...new Set(currentVersionData.services.map(s => s.serviceType))] : [budget.serviceType];
       const isRecurring = budget.isRecurring ?? false;
+      const contact = (budget.contactId ? contactById.get(budget.contactId) : undefined)
+        || primaryByClient.get(budget.clientId);
       return {
         id: budget.id, budgetId: budget.id,
         projectName: `${budget.proposalId} - ${budget.projectName}`,
@@ -1747,6 +1759,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         rejectionObservation: budget.rejectionObservation,
         createdAt: budget.createdAt.toISOString(),
         isRecurring,
+        contactName: contact?.name || client?.responsiblePerson || null,
+        contactPhone: contact?.phone || client?.phone || null,
       };
     });
   };
@@ -1784,7 +1798,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     // das funções (que não são useCallback) ao trocar de workspace ou sessão.
     workspaceId, session,
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
-    hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns,
+    hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns, clientContacts,
   ]);
 
   return <CRMContext.Provider value={value}>{children}</CRMContext.Provider>;
