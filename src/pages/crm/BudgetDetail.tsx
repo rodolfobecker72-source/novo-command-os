@@ -36,6 +36,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TeamMemberSelect } from '@/components/crm/TeamMemberSelect';
+import { ContactSelect } from '@/components/crm/ContactSelect';
+import { useClientContacts } from '@/hooks/useClientContacts';
 import { SortableTableBody } from '@/components/crm/SortableTableBody';
 import { ServiceItemSelector } from '@/components/crm/ServiceItemSelector';
 import {
@@ -142,7 +144,21 @@ export function BudgetDetail() {
   const { getBudget, getClient, updateBudget, addBudgetVersion, approveBudget, updateBudgetVersion, deleteLastVersion, updateExecutionCost, updateExecution, addExtraCost, removeExtraCost, deleteBudget, finalizeExecution, addDeliveryLink, removeDeliveryLink, kanbanColumns, getObjectivesForCategory, getCategoryLabel, serviceCategories, getHDForBudget } = useCRM();
 
   const budget = getBudget(id || '');
-  const client = budget ? getClient(budget.clientId) : null;
+  const baseClient = budget ? getClient(budget.clientId) : null;
+  const { contacts: clientContacts } = useClientContacts(baseClient?.id);
+  const selectedContact = clientContacts.find((c) => c.id === budget?.contactId)
+    || clientContacts.find((c) => c.isPrimary) || null;
+  // Client data addressed to the proposal's responsible (used in screen and PDFs)
+  const client = useMemo(() => {
+    if (!baseClient) return null;
+    if (!selectedContact) return baseClient;
+    return {
+      ...baseClient,
+      responsiblePerson: selectedContact.name || baseClient.responsiblePerson,
+      email: selectedContact.email || baseClient.email,
+      phone: selectedContact.phone || baseClient.phone,
+    };
+  }, [baseClient, selectedContact]);
 
   const [newVersionOpen, setNewVersionOpen] = useState(false);
   const [newVersionReason, setNewVersionReason] = useState('');
@@ -3659,9 +3675,18 @@ export function BudgetDetail() {
                     </div>
                     <div>
                       <p className="font-medium">{client.responsiblePerson}</p>
-                      <p className="text-xs text-muted-foreground">Responsável</p>
+                      <p className="text-xs text-muted-foreground">Responsável pela proposta{selectedContact?.role ? ` · ${selectedContact.role}` : ''}</p>
                     </div>
                   </div>
+
+                  {role !== 'visualizador' && (
+                    <ContactSelect
+                      clientId={client.id}
+                      value={budget.contactId ?? selectedContact?.id ?? null}
+                      onChange={(cid) => { if (cid && cid !== budget.contactId) updateBudget(budget.id, { contactId: cid }); }}
+                      label="Trocar responsável"
+                    />
+                  )}
 
                   <a
                     href={`https://wa.me/55${client.phone.replace(/\D/g, '')}`}

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { ServiceItemSelector } from '@/components/crm/ServiceItemSelector';
 import { SortableTableBody } from '@/components/crm/SortableTableBody';
+import { ContactSelect } from '@/components/crm/ContactSelect';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import { Header } from '@/components/layout/Header';
@@ -125,6 +126,7 @@ export function NewBudget() {
     projectName: '',
     projectDescription: '',
     clientId: '',
+    contactId: null as string | null,
     paymentTerms: '',
     includesTax: true,
     includesLogistics: false,
@@ -394,6 +396,7 @@ export function NewBudget() {
         projectName: formData.projectName,
         projectDescription: formData.projectDescription,
         clientId: formData.clientId,
+        contactId: formData.contactId,
         serviceType: services[0]?.serviceType || '',
         objective: services[0]?.objective as any || '',
         description: services.map(s => `[${s.serviceType}] ${s.description}`).join('\n\n'),
@@ -696,7 +699,7 @@ export function NewBudget() {
                                   key={client.id}
                                   value={client.companyName}
                                   onSelect={() => {
-                                    setFormData({ ...formData, clientId: client.id });
+                                    setFormData({ ...formData, clientId: client.id, contactId: null });
                                     setClientOpen(false);
                                     setClientSearch('');
                                   }}
@@ -724,6 +727,14 @@ export function NewBudget() {
                       <p className="text-sm text-destructive">{errors.clientId}</p>
                     )}
                   </div>
+
+                  {formData.clientId && (
+                    <ContactSelect
+                      clientId={formData.clientId}
+                      value={formData.contactId}
+                      onChange={(cid) => setFormData((f) => ({ ...f, contactId: cid }))}
+                    />
+                  )}
 
                   {/* Proposal ID */}
                   <div className="space-y-2">
@@ -1625,6 +1636,7 @@ export function NewBudget() {
                       projectName: formData.projectName || 'Rascunho',
                       projectDescription: formData.projectDescription,
                       clientId: formData.clientId,
+                      contactId: formData.contactId,
                       serviceType: services[0]?.serviceType || '',
                       objective: services[0]?.objective as any || '',
                       description: services.map(s => `[${s.serviceType}] ${s.description}`).join('\n\n'),
