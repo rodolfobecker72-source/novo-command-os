@@ -209,10 +209,6 @@ export function ClientDetail() {
                       <CardDescription>Dados do cliente</CardDescription>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <ScoreBadge score={scoreBreakdown.finalScore} size="lg" />
-                    <ClassificationBadge classification={scoreBreakdown.classification} size="sm" />
-                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -286,11 +282,6 @@ export function ClientDetail() {
                     </p>
                     <p className="text-xs text-muted-foreground">Cliente desde</p>
                   </div>
-                </div>
-
-                {/* Potential Badge */}
-                <div className="pt-4 border-t">
-                  <PotentialBadge badge={scoreBreakdown.potentialBadge} />
                 </div>
               </CardContent>
             </Card>
@@ -399,95 +390,8 @@ export function ClientDetail() {
               </CardContent>
             </Card>
 
-            {/* Score Breakdown Card */}
-            <Card className="card-elevated mt-4">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-accent" />
-                  <CardTitle className="text-base">HERO Client Score</CardTitle>
-                </div>
-                <CardDescription>Composição do score do cliente</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-success/10 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Repeat className="w-4 h-4 text-success" />
-                      <span className="text-sm text-muted-foreground">Recorrência</span>
-                    </div>
-                    <p className="text-xl font-bold text-success">
-                      +{scoreBreakdown.recurrencePoints} pts
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {approvedProjects.length} projeto(s) aprovado(s)
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-accent/10 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="w-4 h-4 text-accent" />
-                      <span className="text-sm text-muted-foreground">Margem Real</span>
-                    </div>
-                    <p className="text-xl font-bold text-accent">
-                      +{scoreBreakdown.marginPoints} pts
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Média: {avgRealMargin.toFixed(1)}%
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-destructive/10 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <AlertTriangle className="w-4 h-4 text-destructive" />
-                      <span className="text-sm text-muted-foreground">Penalidade</span>
-                    </div>
-                    <p className="text-xl font-bold text-destructive">
-                      -{scoreBreakdown.commercialPenalty} pts
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {scoreBreakdown.lostProposalsCount} proposta(s) perdida(s)
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-primary/10 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Target className="w-4 h-4 text-primary" />
-                      <span className="text-sm text-muted-foreground">Score Final</span>
-                    </div>
-                    <p className="text-xl font-bold text-primary">
-                      {scoreBreakdown.finalScore} pts
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {scoreBreakdown.recurrencePoints} + {scoreBreakdown.marginPoints} - {scoreBreakdown.commercialPenalty}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </motion.div>
         </div>
-
-        {/* Score History - Collapsible */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between mb-2">
-                <span className="flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  Histórico do Score ({clientScoreHistory.length} registro(s))
-                </span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <ScoreHistory history={clientScoreHistory} />
-            </CollapsibleContent>
-          </Collapsible>
-        </motion.div>
 
         {/* Projects Table */}
         <motion.div

@@ -25,7 +25,6 @@ export const PAGE_TUTORIALS: PageTutorial[] = [
   { path: '/configuracoes/layout', title: 'Layout do PDF', description: 'Personalize logos, textos e seções das propostas em PDF.' },
   { path: '/configuracoes/contrato', title: 'Minuta de Contrato', description: 'Configure a minuta e os campos dinâmicos do contrato.' },
   { path: '/configuracoes/metas', title: 'Metas', description: 'Defina metas de faturamento e de reuniões por mês.' },
-  { path: '/configuracoes/score', title: 'Score', description: 'Ajuste os critérios de pontuação dos clientes.' },
   { path: '/financeiro', title: 'Financeiro', description: 'Fluxo de caixa, contas, cartões e acompanhamento de projetos.' },
   { path: '/patrimonio', title: 'Patrimônio', description: 'Controle dos equipamentos e bens da operação.' },
   { path: '/usuarios', title: 'Usuários', description: 'Cadastro de membros, permissões e redefinição de senha.' },

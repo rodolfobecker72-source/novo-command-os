@@ -188,17 +188,6 @@ export function ClientDashboard() {
                   className="pl-9"
                 />
               </div>
-              <Select value={scoreFilter} onValueChange={setScoreFilter}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Filtrar por score" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os scores</SelectItem>
-                  <SelectItem value="high">Alto (≥70)</SelectItem>
-                  <SelectItem value="medium">Médio (40-69)</SelectItem>
-                  <SelectItem value="low">Baixo (&lt;40)</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Desktop Table */}
@@ -210,7 +199,6 @@ export function ClientDashboard() {
                     <TableHead>Responsável</TableHead>
                     <TableHead>Contato</TableHead>
                     <TableHead>Origem</TableHead>
-                    <TableHead>Score</TableHead>
                     <TableHead>Projetos</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -250,9 +238,6 @@ export function ClientDashboard() {
                           <span className="text-sm text-muted-foreground">
                             {LEAD_ORIGIN_LABELS[client.leadOrigin]}
                           </span>
-                        </TableCell>
-                        <TableCell>
-                          <ScoreBadge score={client.score} />
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">
@@ -311,7 +296,6 @@ export function ClientDashboard() {
                         <p className="font-medium truncate">{client.companyName}</p>
                         <p className="text-xs text-muted-foreground truncate">{formatCNPJ(client.cnpj)}</p>
                       </div>
-                      <ScoreBadge score={client.score} />
                     </div>
                     <div className="text-sm space-y-1">
                       <p className="truncate"><span className="text-muted-foreground">Resp.:</span> {client.responsiblePerson}</p>

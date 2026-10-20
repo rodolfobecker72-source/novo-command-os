@@ -83,7 +83,6 @@ export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
                 )}
               </div>
             </div>
-            <ScoreBadge score={card.clientScore} size="sm" />
           </div>
 
           {/* Service Types - All Tags */}

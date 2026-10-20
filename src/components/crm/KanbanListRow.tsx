@@ -44,7 +44,6 @@ export function KanbanListRow({ card, hideValues }: Props) {
       className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors text-left cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
     >
       <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
-      <ScoreBadge score={card.clientScore} size="sm" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm truncate">{card.projectName}</span>
