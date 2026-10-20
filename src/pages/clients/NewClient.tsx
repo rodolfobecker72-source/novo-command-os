@@ -27,9 +27,14 @@ import {
 } from '@/components/ui/card';
 import { ArrowLeft, Save, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { ClientContactsEditor, saveContactDrafts, type ContactDraft } from '@/components/client/ClientContactsEditor';
+import { syncPrimaryContact, useClientContacts } from '@/hooks/useClientContacts';
 
 export function NewClient() {
   const { addClient, isLoading: crmLoading } = useCRM();
+  const { workspace } = useAuth();
+  const [extraContacts, setExtraContacts] = useState<ContactDraft[]>([]);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -120,6 +125,14 @@ export function NewClient() {
         municipalRegistration: formData.municipalRegistration,
       });
 
+      if (result && workspace) {
+        try {
+          await syncPrimaryContact(workspace.id, result.id, result.responsiblePerson, result.email, result.phone);
+          await saveContactDrafts(workspace.id, result.id, extraContacts, []);
+        } catch (err: any) {
+          toast.error('Empresa salva, mas houve erro ao salvar responsáveis: ' + err.message);
+        }
+      }
       if (result) {
         toast.success('Cliente cadastrado com sucesso!');
         navigate('/clientes');
@@ -268,7 +281,7 @@ export function NewClient() {
 
                 {/* Responsible Person */}
                 <div className="space-y-2">
-                  <Label htmlFor="responsiblePerson">Pessoa Responsável *</Label>
+                  <Label htmlFor="responsiblePerson">Responsável principal *</Label>
                   <Input
                     id="responsiblePerson"
                     placeholder="Nome do contato principal"
@@ -321,6 +334,8 @@ export function NewClient() {
                     <p className="text-sm text-destructive">{errors.phone}</p>
                   )}
                 </div>
+
+                <ClientContactsEditor value={extraContacts} onChange={setExtraContacts} />
 
                 {/* Lead Origin */}
                 <div className="space-y-2">

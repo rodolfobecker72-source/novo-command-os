@@ -144,6 +144,7 @@ function budgetFromDb(row: any, versions: BudgetVersion[]): Budget {
     rejectionObservation: row.rejection_observation || '',
     pdfReleased: row.pdf_released ?? false,
     isRecurring: row.is_recurring ?? false,
+    contactId: row.contact_id ?? null,
     hideNfInPdf: row.hide_nf_in_pdf ?? false,
     hideOperationalInPdf: row.hide_operational_in_pdf ?? false,
     hideNfObservationInPdf: row.hide_nf_observation_in_pdf ?? false,
@@ -858,6 +859,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         execution_end_date: budgetData.executionEndDate?.toISOString() || null,
         location: budgetData.location ?? '',
         drive_url: (budgetData as any).driveUrl || '',
+        contact_id: (budgetData as any).contactId || null,
         status: budgetData.status,
       }).select().single();
       if (error) {
@@ -995,6 +997,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (updates.rejectionObservation !== undefined) dbUpdates.rejection_observation = updates.rejectionObservation;
       if (updates.pdfReleased !== undefined) dbUpdates.pdf_released = updates.pdfReleased;
       if (updates.isRecurring !== undefined) dbUpdates.is_recurring = updates.isRecurring;
+      if (updates.contactId !== undefined) dbUpdates.contact_id = updates.contactId;
       if (updates.hideNfInPdf !== undefined) dbUpdates.hide_nf_in_pdf = updates.hideNfInPdf;
       if (updates.hideOperationalInPdf !== undefined) dbUpdates.hide_operational_in_pdf = updates.hideOperationalInPdf;
       if (updates.hideNfObservationInPdf !== undefined) dbUpdates.hide_nf_observation_in_pdf = updates.hideNfObservationInPdf;
