@@ -15,6 +15,7 @@ import {
   ArrowUpRight, RotateCcw, Trash2, Edit, Eye,
   ChevronDown, Building2, User, Phone, Mail, MapPin, Briefcase,
   Clock, Flag, MessageSquare, X, Save, BarChart3, AlertTriangle,
+  MessageCircle,
   TrendingUp, Activity, Calendar, Settings2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -289,6 +290,9 @@ export function ProspectionPage() {
   }, [auth.workspace?.id]);
   const memberName = (id?: string | null) => members.find(m => m.id === id)?.name || '';
   const memberPhoto = (id?: string | null) => members.find(m => m.id === id)?.photoUrl || null;
+  // Link do WhatsApp padronizado com código do país (55) quando não informado
+  const waHref = (phone: string) =>
+    `https://wa.me/${(phone.startsWith('+') ? phone.slice(1) : `55${phone}`).replace(/\D/g, '')}`;
 
   const ResponsibleAvatar = ({ userId, size = 'sm' }: { userId?: string | null; size?: 'sm' | 'md' }) => {
     const sizeCls = size === 'md' ? 'h-8 w-8 text-xs' : 'h-6 w-6 text-[10px]';
@@ -570,16 +574,46 @@ export function ProspectionPage() {
                                     <p className="text-xs text-muted-foreground truncate">{lead.contactName}</p>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-1 shrink-0">
+                              <div className="flex items-center gap-1 shrink-0">
+                                {lead.phone ? (
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-destructive"
-                                    onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
+                                    className="h-6 w-6 text-success hover:text-success hover:bg-success/10"
+                                    title="Abrir WhatsApp"
+                                    onClick={e => { e.stopPropagation(); window.open(waHref(lead.phone), '_blank', 'noopener'); }}
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <MessageCircle className="w-3.5 h-3.5" />
                                   </Button>
-                                </div>
+                                ) : (
+                                  <span title="WhatsApp não cadastrado" className="h-6 w-6 inline-flex items-center justify-center text-muted-foreground/40">
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                  </span>
+                                )}
+                                {lead.email ? (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-accent hover:text-accent hover:bg-accent/10"
+                                    title="Enviar e-mail"
+                                    onClick={e => { e.stopPropagation(); window.location.href = `mailto:${lead.email}`; }}
+                                  >
+                                    <Mail className="w-3.5 h-3.5" />
+                                  </Button>
+                                ) : (
+                                  <span title="E-mail não cadastrado" className="h-6 w-6 inline-flex items-center justify-center text-muted-foreground/40">
+                                    <Mail className="w-3.5 h-3.5" />
+                                  </span>
+                                )}
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-destructive"
+                                  onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="text-xs">{LEAD_ORIGIN_LABELS[lead.origin]}</Badge>
