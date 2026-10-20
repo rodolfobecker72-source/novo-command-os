@@ -340,6 +340,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [projectCards, setProjectCards] = useState<ProjectCard[]>([]);
   const [projectColumns, setProjectColumns] = useState<ProjectColumn[]>([]);
+  const [clientContacts, setClientContacts] = useState<{ id: string; client_id: string; workspace_id: string; name: string; phone: string; is_primary: boolean }[]>([]);
 
   const loadAll = useCallback(async (force = false) => {
     const wsId = workspaceIdRef.current;
@@ -357,11 +358,12 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }, 15000);
     try {
       const [
-        clientsRes, kanbanRes, catRes, objRes, projColRes,
+        clientsRes, contactsRes, kanbanRes, catRes, objRes, projColRes,
         budgetsRes, versionsRes, projectCardsRes,
         assetsRes, hdRes, legacyRes, scoreRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('workspace_id', wsId),
+        supabase.from('client_contacts').select('*').eq('workspace_id', wsId),
         supabase.from('kanban_columns').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('service_categories').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('service_objectives').select('*').eq('workspace_id', wsId).order('order'),
@@ -388,6 +390,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (hdRes.error) errors.push('HDs');
       if (legacyRes.error) errors.push('projetos legados');
       if (scoreRes.error) errors.push('histórico de score');
+      if (contactsRes.error) errors.push('responsáveis das empresas');
 
       if (errors.length > 0) {
         console.error('[CRM] Falha ao carregar:', errors.join(', '));
@@ -454,6 +457,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setHardDrives((hdRes.data || []).map(hardDriveFromDb));
       setLegacyProjects((legacyRes.data || []).map(legacyProjectFromDb));
       setScoreHistory((scoreRes.data || []).map(scoreHistoryFromDb));
+      setClientContacts(contactsRes.data || []);
     } catch (error) {
       console.error('Error loading CRM data:', error);
       if (!force) toast.error('Erro ao carregar dados do CRM');

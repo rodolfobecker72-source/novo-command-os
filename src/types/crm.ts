@@ -374,6 +374,15 @@ export interface CRMCard {
   rejectionObservation?: string;
   createdAt: string;
   isRecurring?: boolean;
+  contactName?: string | null; // Responsável da empresa escolhido na proposta
+  contactPhone?: string | null; // Telefone do responsável (para WhatsApp no card)
+}
+
+export /** Monta o link wa.me a partir de um telefone (aceita +55 ou só digits). */
+export function waHref(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  const withCountry = phone.trim().startsWith('+') ? digits : `55${digits}`;
+  return `https://wa.me/${withCountry}`;
 }
 
 // Utility functions
