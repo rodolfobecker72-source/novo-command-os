@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CRMCard, formatCurrency } from '@/types/crm';
+import { CRMCard, formatCurrency, waHref } from '@/types/crm';
 import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, GripVertical, Copy, AlertCircle, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
 
@@ -57,7 +57,7 @@ export function KanbanListRow({ card, hideValues }: Props) {
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">{card.clientName}</p>
+        <p className="text-xs text-muted-foreground truncate">{card.clientName}{card.contactName ? ` · ${card.contactName}` : ''}</p>
       </div>
       <div className="hidden md:flex items-center gap-1.5 flex-wrap">
         {card.serviceTypes.map((type) => (
@@ -104,6 +104,24 @@ export function KanbanListRow({ card, hideValues }: Props) {
       {card.value !== undefined && card.value !== null && !hideValues && (
         <span className="text-sm font-semibold text-accent whitespace-nowrap ml-auto min-w-[110px] text-right">
           {formatCurrency(card.value)}
+        </span>
+      )}
+      {card.contactPhone ? (
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(waHref(card.contactPhone!), '_blank', 'noopener');
+          }}
+          className="text-success hover:text-success/80 transition-colors shrink-0"
+          title={`WhatsApp de ${card.contactName || 'responsável'}`}
+        >
+          <MessageCircle className="w-4 h-4" />
+        </button>
+      ) : (
+        <span title="Responsável sem WhatsApp cadastrado" className="text-muted-foreground/40 shrink-0">
+          <MessageCircle className="w-4 h-4" />
         </span>
       )}
       <DuplicateBudgetDialog

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { CRMCard, formatCurrency } from '@/types/crm';
+import { CRMCard, formatCurrency, waHref } from '@/types/crm';
 import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { Badge } from '@/components/ui/badge';
-import { GripVertical, Film, Camera, Smartphone, FileText, Calendar, AlertCircle, Copy, Repeat } from 'lucide-react';
+import { GripVertical, Film, Camera, Smartphone, FileText, Calendar, AlertCircle, Copy, Repeat, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCRM } from '@/contexts/CRMContext';
 import { DuplicateBudgetDialog } from './DuplicateBudgetDialog';
@@ -71,10 +71,10 @@ export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-sm truncate">{card.projectName}</h4>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-xs text-muted-foreground truncate">
-                  {card.clientName}
-                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="text-xs text-muted-foreground truncate">
+                    {card.clientName}{card.contactName ? ` · ${card.contactName}` : ''}
+                  </p>
                 {card.isRecurring && (
                   <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide text-accent border border-accent/30 bg-accent/5 rounded px-1 py-0 leading-none h-4">
                     <Repeat className="w-2.5 h-2.5" />
@@ -122,10 +122,10 @@ export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
             </div>
           )}
 
-          {/* Value & Execution Month */}
-          <div className="flex items-center justify-between flex-wrap gap-1">
+          {/* Value, Execution Month & WhatsApp */}
+          <div className="flex items-center justify-end flex-wrap gap-1">
             {card.value && !hideValue && (
-              <span className="text-sm font-semibold text-accent">
+              <span className="text-sm font-semibold text-accent mr-auto">
                 {formatCurrency(card.value)}
               </span>
             )}
@@ -140,6 +140,23 @@ export function KanbanCard({ card, hideValue = false }: KanbanCardProps) {
                 Sem mês de execução
               </Badge>
             ) : null}
+            {card.contactPhone ? (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(waHref(card.contactPhone!), '_blank', 'noopener');
+                }}
+                className="text-success hover:text-success/80 transition-colors shrink-0"
+                title={`WhatsApp de ${card.contactName || 'responsável'}`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <span title="Responsável sem WhatsApp cadastrado" className="text-muted-foreground/40 shrink-0">
+                <MessageCircle className="w-3.5 h-3.5" />
+              </span>
+            )}
           </div>
 
           {/* Actions (visible on hover) */}
