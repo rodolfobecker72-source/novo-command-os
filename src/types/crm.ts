@@ -335,6 +335,7 @@ export interface Budget {
   rejectionObservation: string;
   pdfReleased: boolean;
   isRecurring?: boolean;
+  contactId?: string | null; // Responsável da empresa a quem a proposta é dirigida
   hideNfInPdf: boolean;
   hideOperationalInPdf: boolean;
   hideNfObservationInPdf: boolean;
