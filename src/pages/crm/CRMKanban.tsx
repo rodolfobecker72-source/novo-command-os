@@ -340,12 +340,12 @@ export function CRMKanban() {
               type="button"
               variant="outline"
               size="sm"
-              className="h-9"
+              className="h-9 px-2"
               onClick={() => setHideValues(v => !v)}
               title={hideValues ? 'Mostrar valores' : 'Ocultar valores'}
+              aria-label={hideValues ? 'Mostrar valores' : 'Ocultar valores'}
             >
               {hideValues ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span className="hidden md:inline ml-1">{hideValues ? 'Mostrar valores' : 'Ocultar valores'}</span>
             </Button>
             <Button
               type="button"
