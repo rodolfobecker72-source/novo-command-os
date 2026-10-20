@@ -308,7 +308,7 @@ export function MediaCenterPage() {
   const allProjects = useMemo(() => {
     const items: { hdLabel: string; hdId: string; project: HdProject; index: number }[] = [];
     filteredHds.forEach((hd) => {
-      hd.projects.forEach((p, i) => {
+      (sortedProjectsByHd[hd.id] ?? []).forEach(({ project: p, index: i }) => {
         if (
           !search ||
           p.projectNumber.toLowerCase().includes(lowerSearch) ||
@@ -320,7 +320,7 @@ export function MediaCenterPage() {
       });
     });
     return items;
-  }, [filteredHds, lowerSearch]);
+  }, [filteredHds, lowerSearch, sortedProjectsByHd]);
 
   const capacityHds = useMemo(() => {
     const list = [...filteredHds];
@@ -548,7 +548,7 @@ export function MediaCenterPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {hd.projects.map((p, i) => (
+                          {(sortedProjectsByHd[hd.id] ?? []).map(({ project: p, index: i }) => (
                             <TableRow key={i}>
                               <TableCell className="text-sm font-medium">{p.projectNumber}</TableCell>
                               <TableCell className="text-sm">{p.clientName || "—"}</TableCell>
