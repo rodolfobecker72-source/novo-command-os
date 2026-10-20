@@ -305,6 +305,22 @@ export function MediaCenterPage() {
     return list;
   }, [hardDrives, hdFilter, lowerSearch]);
 
+  // Projetos de cada HD em ordem alfabética crescente (índice original preservado)
+  const sortedProjectsByHd = useMemo(() => {
+    const map: Record<string, { project: HdProject; index: number }[]> = {};
+    hardDrives.forEach((hd) => {
+      map[hd.id] = hd.projects
+        .map((project, index) => ({ project, index }))
+        .sort((a, b) =>
+          (a.project.projectNumber || '').localeCompare(b.project.projectNumber || '', 'pt-BR', {
+            numeric: true,
+            sensitivity: 'base',
+          })
+        );
+    });
+    return map;
+  }, [hardDrives]);
+
   const allProjects = useMemo(() => {
     const items: { hdLabel: string; hdId: string; project: HdProject; index: number }[] = [];
     filteredHds.forEach((hd) => {
