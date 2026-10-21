@@ -752,7 +752,7 @@ export async function buildFinalPdfBlob(doc: jsPDF, layoutSettings?: PDFLayoutSe
   await append(doc.output('arraybuffer'));
   if (back) await append(await fetchPdfBytes(back));
   const bytes = await out.save();
-  return new Blob([bytes], { type: 'application/pdf' });
+  return new Blob([bytes as BlobPart], { type: 'application/pdf' });
 }
 
 export async function saveWithCustomPages(doc: jsPDF, layoutSettings: PDFLayoutSettings | null | undefined, fileName: string) {
