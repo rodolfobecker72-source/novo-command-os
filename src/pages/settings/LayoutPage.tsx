@@ -25,14 +25,6 @@ interface LayoutData {
   sectionOperationalTitle: string;
   sectionInvestmentTitle: string;
   sectionTotalTitle: string;
-  sectionTermsTitle: string;
-  termsCompanyLabel: string;
-  termsCompanyItems: string;
-  termsClientLabel: string;
-  termsClientItems: string;
-  termsGeneralLabel: string;
-  termsGeneralItems: string;
-  termsApprovalText: string;
   validityText: string;
   coverPdfUrl: string;
   backPdfUrl: string;
@@ -51,14 +43,6 @@ const DEFAULTS: LayoutData = {
   sectionOperationalTitle: 'DESPESAS OPERACIONAIS',
   sectionInvestmentTitle: 'COMPOSIÇÃO DO INVESTIMENTO',
   sectionTotalTitle: 'INVESTIMENTO TOTAL',
-  sectionTermsTitle: 'TERMOS E CONDIÇÕES',
-  termsCompanyLabel: 'Responsabilidades da HERO:',
-  termsCompanyItems: '• Executar os serviços descritos com qualidade profissional\n• Fornecer equipe técnica qualificada\n• Cumprir os prazos acordados\n• Realizar até 2 rodadas de revisão',
-  termsClientLabel: 'Responsabilidades do Cliente:',
-  termsClientItems: '• Fornecer acesso às locações e informações necessárias\n• Aprovar materiais dentro dos prazos combinados\n• Efetuar pagamentos conforme condições acordadas',
-  termsGeneralLabel: 'Condições Gerais:',
-  termsGeneralItems: '• Proposta válida por 30 dias\n• Alterações de escopo podem gerar custos adicionais\n• Cancelamento após início sujeito a cobrança proporcional',
-  termsApprovalText: 'A aprovação desta proposta implica na aceitação dos termos acima.',
   validityText: 'Validade: 30 dias',
   coverPdfUrl: '',
   backPdfUrl: '',
@@ -113,14 +97,6 @@ export function LayoutPage() {
           sectionOperationalTitle: d.section_operational_title || DEFAULTS.sectionOperationalTitle,
           sectionInvestmentTitle: d.section_investment_title || DEFAULTS.sectionInvestmentTitle,
           sectionTotalTitle: d.section_total_title || DEFAULTS.sectionTotalTitle,
-          sectionTermsTitle: d.section_terms_title || DEFAULTS.sectionTermsTitle,
-          termsCompanyLabel: d.terms_company_label || DEFAULTS.termsCompanyLabel,
-          termsCompanyItems: d.terms_company_items || DEFAULTS.termsCompanyItems,
-          termsClientLabel: d.terms_client_label || DEFAULTS.termsClientLabel,
-          termsClientItems: d.terms_client_items || DEFAULTS.termsClientItems,
-          termsGeneralLabel: d.terms_general_label || DEFAULTS.termsGeneralLabel,
-          termsGeneralItems: d.terms_general_items || DEFAULTS.termsGeneralItems,
-          termsApprovalText: d.terms_approval_text || DEFAULTS.termsApprovalText,
           validityText: d.validity_text || DEFAULTS.validityText,
           coverPdfUrl: d.cover_pdf_url || '',
           backPdfUrl: d.back_pdf_url || '',
@@ -203,14 +179,6 @@ export function LayoutPage() {
         section_operational_title: data.sectionOperationalTitle,
         section_investment_title: data.sectionInvestmentTitle,
         section_total_title: data.sectionTotalTitle,
-        section_terms_title: data.sectionTermsTitle,
-        terms_company_label: data.termsCompanyLabel,
-        terms_company_items: data.termsCompanyItems,
-        terms_client_label: data.termsClientLabel,
-        terms_client_items: data.termsClientItems,
-        terms_general_label: data.termsGeneralLabel,
-        terms_general_items: data.termsGeneralItems,
-        terms_approval_text: data.termsApprovalText,
         validity_text: data.validityText,
       };
 
@@ -384,72 +352,6 @@ export function LayoutPage() {
           </CardContent>
         </Card>
 
-        {/* Terms & Conditions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Termos e Condições</CardTitle>
-            <CardDescription>Configure os textos da última página do documento.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="terms-title">
-                <AccordionTrigger className="text-sm">Título da seção</AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <Input value={data.sectionTermsTitle} onChange={e => update('sectionTermsTitle', e.target.value)} />
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="terms-company">
-                <AccordionTrigger className="text-sm">Bloco 1 — Responsabilidades da Empresa</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Rótulo</Label>
-                    <Input value={data.termsCompanyLabel} onChange={e => update('termsCompanyLabel', e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Itens (um por linha)</Label>
-                    <Textarea rows={5} value={data.termsCompanyItems} onChange={e => update('termsCompanyItems', e.target.value)} />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="terms-client">
-                <AccordionTrigger className="text-sm">Bloco 2 — Responsabilidades do Cliente</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Rótulo</Label>
-                    <Input value={data.termsClientLabel} onChange={e => update('termsClientLabel', e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Itens (um por linha)</Label>
-                    <Textarea rows={4} value={data.termsClientItems} onChange={e => update('termsClientItems', e.target.value)} />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="terms-general">
-                <AccordionTrigger className="text-sm">Bloco 3 — Condições Gerais</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Rótulo</Label>
-                    <Input value={data.termsGeneralLabel} onChange={e => update('termsGeneralLabel', e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Itens (um por linha)</Label>
-                    <Textarea rows={4} value={data.termsGeneralItems} onChange={e => update('termsGeneralItems', e.target.value)} />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="terms-approval">
-                <AccordionTrigger className="text-sm">Texto de Aprovação</AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <Textarea rows={2} value={data.termsApprovalText} onChange={e => update('termsApprovalText', e.target.value)} />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
 
         {/* Save Button */}
         <div className="flex justify-end">
