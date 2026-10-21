@@ -1885,7 +1885,9 @@ export type Database = {
       }
       workspace_layout: {
         Row: {
+          back_pdf_url: string | null
           company_name: string
+          cover_pdf_url: string | null
           created_at: string
           email: string
           id: string
@@ -1912,7 +1914,9 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          back_pdf_url?: string | null
           company_name?: string
+          cover_pdf_url?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -1939,7 +1943,9 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          back_pdf_url?: string | null
           company_name?: string
+          cover_pdf_url?: string | null
           created_at?: string
           email?: string
           id?: string
