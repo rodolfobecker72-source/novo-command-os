@@ -5,4 +5,4 @@
 - [x] Cadastro de empresa direto em /clientes, sem passar pela Gestão de Leads
 - [x] Central de Mídias: projetos em ordem alfabética crescente dentro de cada HD
 - [ ] Publicar o app com o filtro corrigido + ícones — aguardando o usuário clicar em Publicar (deploy recusado no chat; correções só entram no ar no próximo publish)
-- [x] Remover 'Termos e Condições' do Layout da Proposta e do PDF gerado (pedido 20/10/2026 22:11)
+- [x] Remover "Termos e Condições" do Layout da Proposta e do PDF gerado (pedido 20/10/2026 22:11)
