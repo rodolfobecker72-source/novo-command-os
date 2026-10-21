@@ -30,14 +30,6 @@ export interface PDFLayoutSettings {
   sectionOperationalTitle?: string;
   sectionInvestmentTitle?: string;
   sectionTotalTitle?: string;
-  sectionTermsTitle?: string;
-  termsCompanyLabel?: string;
-  termsCompanyItems?: string;
-  termsClientLabel?: string;
-  termsClientItems?: string;
-  termsGeneralLabel?: string;
-  termsGeneralItems?: string;
-  termsApprovalText?: string;
   validityText?: string;
   coverPdfUrl?: string;
   backPdfUrl?: string;
@@ -122,14 +114,6 @@ export async function generateProposalPDF({
     operational: layoutSettings?.sectionOperationalTitle || 'DESPESAS OPERACIONAIS',
     investment: layoutSettings?.sectionInvestmentTitle || 'COMPOSIÇÃO DO INVESTIMENTO',
     total: layoutSettings?.sectionTotalTitle || 'INVESTIMENTO TOTAL',
-    terms: layoutSettings?.sectionTermsTitle || 'TERMOS E CONDIÇÕES',
-    termsCompanyLabel: layoutSettings?.termsCompanyLabel || 'Responsabilidades da HERO:',
-    termsCompanyItems: layoutSettings?.termsCompanyItems || '• Executar os serviços descritos com qualidade profissional\n• Fornecer equipe técnica qualificada\n• Cumprir os prazos acordados\n• Realizar até 2 rodadas de revisão',
-    termsClientLabel: layoutSettings?.termsClientLabel || 'Responsabilidades do Cliente:',
-    termsClientItems: layoutSettings?.termsClientItems || '• Fornecer acesso às locações e informações necessárias\n• Aprovar materiais dentro dos prazos combinados\n• Efetuar pagamentos conforme condições acordadas',
-    termsGeneralLabel: layoutSettings?.termsGeneralLabel || 'Condições Gerais:',
-    termsGeneralItems: layoutSettings?.termsGeneralItems || '• Proposta válida por 30 dias\n• Alterações de escopo podem gerar custos adicionais\n• Cancelamento após início sujeito a cobrança proporcional',
-    termsApproval: layoutSettings?.termsApprovalText || 'A aprovação desta proposta implica na aceitação dos termos acima.',
     validity: layoutSettings?.validityText || 'Validade: 30 dias',
   };
   
@@ -638,78 +622,6 @@ export async function generateProposalPDF({
   addHeader();
   addFooter();
 
-  // ============================================
-  // PAGE 3: Terms and Conditions
-  // ============================================
-  
-  doc.addPage();
-  y = contentStartY;
-  
-  doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
-  setColor(black);
-  doc.text(t.terms, margin, y);
-  y += 12;
-
-  // Helper to render a terms block
-  const renderTermsBlock = (label: string, itemsText: string) => {
-    doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
-    setColor(darkGray);
-    doc.text(label, margin, y);
-    y += 7;
-    
-    doc.setFont('helvetica', 'normal');
-    setColor(gray);
-    
-    const items = itemsText.split('\n').filter(line => line.trim());
-    items.forEach((item) => {
-      const lines = doc.splitTextToSize(item, contentWidth) as string[];
-      lines.forEach(line => {
-        ensureSpace(6);
-        doc.text(line, margin, y);
-        y += 6;
-      });
-    });
-    y += 8;
-  };
-
-  renderTermsBlock(t.termsCompanyLabel, t.termsCompanyItems);
-  renderTermsBlock(t.termsClientLabel, t.termsClientItems);
-  renderTermsBlock(t.termsGeneralLabel, t.termsGeneralItems);
-
-  y += 12;
-  
-  // Approval text
-  ensureSpace(30);
-  doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'normal');
-  setColor(darkGray);
-  const approvalLines = doc.splitTextToSize(t.termsApproval, contentWidth) as string[];
-  approvalLines.forEach(line => {
-    doc.text(line, margin, y);
-    y += 6;
-  });
-  
-  y += 25;
-  
-  // Signature lines
-  const signatureWidth = 70;
-  const gap = 20;
-  
-  doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
-  doc.setLineWidth(0.5);
-  
-  doc.line(margin, y, margin + signatureWidth, y);
-  doc.setFontSize(smallSize);
-  setColor(gray);
-  doc.text('Responsável', margin, y + 5);
-  
-  doc.line(margin + signatureWidth + gap, y, margin + signatureWidth + gap + signatureWidth, y);
-  doc.text('Data', margin + signatureWidth + gap, y + 5);
-
-  addHeader();
-  addFooter();
 
   // Save
   if (!skipSave) {
