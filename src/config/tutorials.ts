@@ -22,7 +22,7 @@ export const PAGE_TUTORIALS: PageTutorial[] = [
   { path: '/categorias', title: 'Categorias de Serviço', description: 'Crie, edite e reordene as categorias usadas nos orçamentos.' },
   { path: '/itens-servico', title: 'Itens de Serviço', description: 'Gerencie o catálogo de itens e sua ordenação.' },
   { path: '/configuracoes/regras-comerciais', title: 'Regras Comerciais', description: 'Defina margens, impostos e condições de pagamento padrão.' },
-  { path: '/configuracoes/layout', title: 'Layout do PDF', description: 'Personalize logos, textos e seções das propostas em PDF.' },
+  { path: '/configuracoes/layout', title: 'Layout da Proposta', description: 'Personalize logos, textos e seções das propostas em PDF.' },
   { path: '/configuracoes/contrato', title: 'Minuta de Contrato', description: 'Configure a minuta e os campos dinâmicos do contrato.' },
   { path: '/configuracoes/metas', title: 'Metas', description: 'Defina metas de faturamento e de reuniões por mês.' },
   { path: '/financeiro', title: 'Financeiro', description: 'Fluxo de caixa, contas, cartões e acompanhamento de projetos.' },

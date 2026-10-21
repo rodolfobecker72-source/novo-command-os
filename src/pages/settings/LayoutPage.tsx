@@ -234,7 +234,7 @@ export function LayoutPage() {
   if (loading) {
     return (
       <div className="flex-1">
-        <Header title="Layout do PDF" subtitle="Configurações de identidade visual para documentos" />
+        <Header title="Layout da Proposta" subtitle="Configurações de identidade visual para documentos" />
         <div className="p-6 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
@@ -244,7 +244,7 @@ export function LayoutPage() {
 
   return (
     <div className="flex-1">
-      <Header title="Layout do PDF" subtitle="Configurações de identidade visual para documentos" />
+      <Header title="Layout da Proposta" subtitle="Configurações de identidade visual para documentos" />
 
       <div className="p-4 md:p-6 max-w-2xl space-y-4 md:space-y-6">
         {/* Logo Upload */}
