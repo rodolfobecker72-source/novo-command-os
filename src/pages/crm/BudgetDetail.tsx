@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/contexts/AuthContext';
-import { generateProposalPDF } from '@/utils/pdfGenerator';
+import { generateProposalPDF, buildFinalPdfBlob } from '@/utils/pdfGenerator';
 import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { generateFinancialReportPDF } from '@/utils/financialReportPDF';
 import { generateContractPDF } from '@/utils/contractPDF';
@@ -884,6 +884,8 @@ export function BudgetDetail() {
           termsGeneralItems: d.terms_general_items || undefined,
           termsApprovalText: d.terms_approval_text || undefined,
           validityText: d.validity_text || undefined,
+          coverPdfUrl: d.cover_pdf_url || undefined,
+          backPdfUrl: d.back_pdf_url || undefined,
         };
       }
     } catch (err) {
@@ -946,7 +948,7 @@ export function BudgetDetail() {
         objectiveLabels: (() => { const map: Record<string, Record<string, string>> = {}; const objectives = getObjectivesForCategory ? serviceCategories.flatMap(c => (getObjectivesForCategory(c.key) || []).map(o => ({ ...o, categoryKey: c.key }))) : []; objectives.forEach(o => { if (!map[o.categoryKey]) map[o.categoryKey] = {}; map[o.categoryKey][o.value] = o.label; }); return map; })(),
         skipSave: true,
       });
-      const url = URL.createObjectURL(doc.output('blob'));
+      const url = URL.createObjectURL(await buildFinalPdfBlob(doc, layoutSettings));
       setPdfPreviewUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return url;

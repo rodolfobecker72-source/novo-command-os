@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Upload, Save, Trash2, ImageIcon } from 'lucide-react';
+import { Upload, Save, Trash2, ImageIcon, FileText } from 'lucide-react';
 
 interface LayoutData {
   logoUrl: string;
@@ -34,6 +34,8 @@ interface LayoutData {
   termsGeneralItems: string;
   termsApprovalText: string;
   validityText: string;
+  coverPdfUrl: string;
+  backPdfUrl: string;
 }
 
 const DEFAULTS: LayoutData = {
@@ -58,6 +60,8 @@ const DEFAULTS: LayoutData = {
   termsGeneralItems: '• Proposta válida por 30 dias\n• Alterações de escopo podem gerar custos adicionais\n• Cancelamento após início sujeito a cobrança proporcional',
   termsApprovalText: 'A aprovação desta proposta implica na aceitação dos termos acima.',
   validityText: 'Validade: 30 dias',
+  coverPdfUrl: '',
+  backPdfUrl: '',
 };
 
 export function LayoutPage() {
@@ -118,6 +122,8 @@ export function LayoutPage() {
           termsGeneralItems: d.terms_general_items || DEFAULTS.termsGeneralItems,
           termsApprovalText: d.terms_approval_text || DEFAULTS.termsApprovalText,
           validityText: d.validity_text || DEFAULTS.validityText,
+          coverPdfUrl: d.cover_pdf_url || '',
+          backPdfUrl: d.back_pdf_url || '',
         });
       }
     } catch (err) {
@@ -156,6 +162,27 @@ export function LayoutPage() {
     }
   };
 
+  const [pdfUploading, setPdfUploading] = useState<'cover' | 'back' | null>(null);
+  const handleCustomPdfUpload = async (kind: 'cover' | 'back', file?: File) => {
+    if (!file || !workspace) return;
+    if (file.type !== 'application/pdf') { toast.error('Selecione um arquivo PDF'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('O PDF deve ter no máximo 10 MB'); return; }
+    setPdfUploading(kind);
+    try {
+      const filePath = `${workspace.id}/${kind}.pdf`;
+      const { error } = await supabase.storage.from('logos').upload(filePath, file, { upsert: true, contentType: 'application/pdf' });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from('logos').getPublicUrl(filePath);
+      update(kind === 'cover' ? 'coverPdfUrl' : 'backPdfUrl', `${pub.publicUrl}?t=${Date.now()}`);
+      toast.success('PDF enviado! Clique em Salvar para aplicar.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao enviar PDF');
+    } finally {
+      setPdfUploading(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!workspace) return;
     setSaving(true);
@@ -163,6 +190,8 @@ export function LayoutPage() {
       const payload = {
         workspace_id: workspace.id,
         logo_url: data.logoUrl,
+        cover_pdf_url: data.coverPdfUrl || null,
+        back_pdf_url: data.backPdfUrl || null,
         company_name: data.companyName,
         website: data.website,
         email: data.email,
@@ -219,6 +248,43 @@ export function LayoutPage() {
 
       <div className="p-4 md:p-6 max-w-2xl space-y-4 md:space-y-6">
         {/* Logo Upload */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Páginas personalizadas</CardTitle>
+            <CardDescription>Envie um PDF para ser a primeira página (capa) e outro para a última página. As páginas da proposta ficam no meio.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {([['cover', 'Primeira página (capa)', 'coverPdfUrl'], ['back', 'Última página', 'backPdfUrl']] as const).map(([kind, label, field]) => (
+              <div key={kind} className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-md border p-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{label}</p>
+                    {data[field] ? (
+                      <a href={data[field]} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Ver PDF enviado</a>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Nenhum arquivo</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <label>
+                    <input type="file" accept="application/pdf" className="hidden" onChange={(e) => { handleCustomPdfUpload(kind, e.target.files?.[0]); e.target.value = ''; }} />
+                    <Button variant="outline" size="sm" asChild disabled={pdfUploading === kind}>
+                      <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />{pdfUploading === kind ? 'Enviando...' : data[field] ? 'Trocar' : 'Enviar PDF'}</span>
+                    </Button>
+                  </label>
+                  {data[field] && (
+                    <Button variant="ghost" size="sm" onClick={() => update(field, '')} className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Cabeçalho do Documento</CardTitle>

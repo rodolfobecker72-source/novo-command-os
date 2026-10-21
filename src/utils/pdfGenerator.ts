@@ -39,6 +39,8 @@ export interface PDFLayoutSettings {
   termsGeneralItems?: string;
   termsApprovalText?: string;
   validityText?: string;
+  coverPdfUrl?: string;
+  backPdfUrl?: string;
 }
 
 interface PDFGeneratorParams {
@@ -713,7 +715,51 @@ export async function generateProposalPDF({
   if (!skipSave) {
     const safeProjectName = budget.projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
     const fileName = `${budget.proposalId}_${safeProjectName}_V${version.version}.pdf`;
-    doc.save(fileName);
+    await saveWithCustomPages(doc, layoutSettings, fileName);
   }
   return doc;
+}
+
+async function fetchPdfBytes(url: string): Promise<ArrayBuffer | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(String(res.status));
+    return await res.arrayBuffer();
+  } catch (err) {
+    console.warn('Não foi possível carregar página personalizada:', err);
+    return null;
+  }
+}
+
+/** Mescla capa (início) e contracapa (fim) enviadas pelo usuário com o PDF gerado. */
+export async function buildFinalPdfBlob(doc: jsPDF, layoutSettings?: PDFLayoutSettings | null): Promise<Blob> {
+  const cover = layoutSettings?.coverPdfUrl;
+  const back = layoutSettings?.backPdfUrl;
+  if (!cover && !back) return doc.output('blob');
+  const { PDFDocument } = await import('pdf-lib');
+  const out = await PDFDocument.create();
+  const append = async (bytes: ArrayBuffer | null) => {
+    if (!bytes) return;
+    try {
+      const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const pages = await out.copyPages(src, src.getPageIndices());
+      pages.forEach(pg => out.addPage(pg));
+    } catch (err) {
+      console.warn('PDF personalizado inválido:', err);
+    }
+  };
+  if (cover) await append(await fetchPdfBytes(cover));
+  await append(doc.output('arraybuffer'));
+  if (back) await append(await fetchPdfBytes(back));
+  const bytes = await out.save();
+  return new Blob([bytes as BlobPart], { type: 'application/pdf' });
+}
+
+export async function saveWithCustomPages(doc: jsPDF, layoutSettings: PDFLayoutSettings | null | undefined, fileName: string) {
+  if (!layoutSettings?.coverPdfUrl && !layoutSettings?.backPdfUrl) { doc.save(fileName); return; }
+  const blob = await buildFinalPdfBlob(doc, layoutSettings);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
