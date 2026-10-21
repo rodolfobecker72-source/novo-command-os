@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { formatCurrency, formatCNPJ, formatPhone, BudgetVersion, ServiceItem, Budget, Client } from '@/types/crm';
-import { generateProposalPDF, PDFLayoutSettings } from '@/utils/pdfGenerator';
+import { generateProposalPDF, PDFLayoutSettings, saveWithCustomPages } from '@/utils/pdfGenerator';
 
 interface ContractPDFParams {
   template: string;
@@ -354,5 +354,5 @@ export async function generateContractPDF(params: ContractPDFParams) {
 
   const safeProjectName = budget.projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
   const fileName = `Contrato_Proposta_${budget.proposalId}_${safeProjectName}.pdf`;
-  doc.save(fileName);
+  await saveWithCustomPages(doc, layoutSettings, fileName);
 }

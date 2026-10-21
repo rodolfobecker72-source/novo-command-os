@@ -34,6 +34,8 @@ interface LayoutData {
   termsGeneralItems: string;
   termsApprovalText: string;
   validityText: string;
+  coverPdfUrl: string;
+  backPdfUrl: string;
 }
 
 const DEFAULTS: LayoutData = {
@@ -58,6 +60,8 @@ const DEFAULTS: LayoutData = {
   termsGeneralItems: '• Proposta válida por 30 dias\n• Alterações de escopo podem gerar custos adicionais\n• Cancelamento após início sujeito a cobrança proporcional',
   termsApprovalText: 'A aprovação desta proposta implica na aceitação dos termos acima.',
   validityText: 'Validade: 30 dias',
+  coverPdfUrl: '',
+  backPdfUrl: '',
 };
 
 export function LayoutPage() {
@@ -118,6 +122,8 @@ export function LayoutPage() {
           termsGeneralItems: d.terms_general_items || DEFAULTS.termsGeneralItems,
           termsApprovalText: d.terms_approval_text || DEFAULTS.termsApprovalText,
           validityText: d.validity_text || DEFAULTS.validityText,
+          coverPdfUrl: d.cover_pdf_url || '',
+          backPdfUrl: d.back_pdf_url || '',
         });
       }
     } catch (err) {
@@ -156,6 +162,27 @@ export function LayoutPage() {
     }
   };
 
+  const [pdfUploading, setPdfUploading] = useState<'cover' | 'back' | null>(null);
+  const handleCustomPdfUpload = async (kind: 'cover' | 'back', file?: File) => {
+    if (!file || !workspace) return;
+    if (file.type !== 'application/pdf') { toast.error('Selecione um arquivo PDF'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('O PDF deve ter no máximo 10 MB'); return; }
+    setPdfUploading(kind);
+    try {
+      const filePath = `${workspace.id}/${kind}.pdf`;
+      const { error } = await supabase.storage.from('logos').upload(filePath, file, { upsert: true, contentType: 'application/pdf' });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from('logos').getPublicUrl(filePath);
+      update(kind === 'cover' ? 'coverPdfUrl' : 'backPdfUrl', `${pub.publicUrl}?t=${Date.now()}`);
+      toast.success('PDF enviado! Clique em Salvar para aplicar.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao enviar PDF');
+    } finally {
+      setPdfUploading(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!workspace) return;
     setSaving(true);
@@ -163,6 +190,8 @@ export function LayoutPage() {
       const payload = {
         workspace_id: workspace.id,
         logo_url: data.logoUrl,
+        cover_pdf_url: data.coverPdfUrl || null,
+        back_pdf_url: data.backPdfUrl || null,
         company_name: data.companyName,
         website: data.website,
         email: data.email,
