@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -273,7 +273,47 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
         setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [open, projectCardId, workspaceId, reloadNonce]);
+  }, [open, projectCardId, workspaceId]);
+
+  // Silent refresh on realtime changes: no loading state, no field resets.
+  const activeIdRef = useRef<string | null>(null);
+  useEffect(() => { activeIdRef.current = activeId as any; }, [activeId]);
+  useEffect(() => {
+    if (!reloadNonce || !open || !projectCardId) return;
+    const t = setTimeout(async () => {
+      if (activeIdRef.current) return;
+      const [{ data: acts }, { data: card }] = await Promise.all([
+        supabase.from('project_activities').select('*').eq('project_card_id', projectCardId).order('order', { ascending: true }),
+        supabase.from('project_cards').select('material_link, material_links, comments').eq('id', projectCardId).maybeSingle(),
+      ]);
+      if (activeIdRef.current) return;
+      if (acts) {
+        setActivities(acts.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          status: d.status as ActivityStatus,
+          order: d.order,
+          assignedToUserIds: Array.isArray(d.assigned_to_user_ids) && d.assigned_to_user_ids.length > 0
+            ? d.assigned_to_user_ids
+            : (d.assigned_to_user_id ? [d.assigned_to_user_id] : []),
+          dueDate: d.due_date ?? null,
+          endDate: d.end_date ?? null,
+          isDelivery: !!d.is_delivery,
+          isCaptacao: !!d.is_captacao,
+          freelaName: d.freela_name ?? null,
+        })));
+      }
+      if (card) {
+        const rawLinks = (card as any).material_links;
+        const legacy = (card as any).material_link || '';
+        setDriveLinks(Array.isArray(rawLinks) && rawLinks.length > 0
+          ? rawLinks.filter((l: any) => typeof l === 'string' && l.trim())
+          : (legacy ? [legacy] : []));
+        if (Array.isArray((card as any).comments)) setComments((card as any).comments);
+      }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [reloadNonce, open, projectCardId]);
 
   const handlePostComment = async () => {
     const text = newComment.trim();
