@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { resolveTheme } from './pdfTheme';
 import {
   Budget,
   Client,
@@ -52,10 +53,10 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   const contentStartY = 28;
   const footerTopY = pageHeight - 28;
 
-  const black = [0, 0, 0] as [number, number, number];
-  const darkGray = [80, 80, 80] as [number, number, number];
+  const black = __th.text;
+  const darkGray = __th.secondary;
   const gray = [128, 128, 128] as [number, number, number];
-  const lightGray = [200, 200, 200] as [number, number, number];
+  const lightGray = __th.accent;
   const green = [22, 101, 52] as [number, number, number];
   const red = [185, 28, 28] as [number, number, number];
 
@@ -111,7 +112,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
       doc.addImage(footerLogoData.base64, 'PNG', pageWidth / 2 - fLogoW / 2, pageHeight - 20, fLogoW, fLogoH);
     }
     doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(lightGray);
     const footerParts: string[] = [];
     if (layoutSettings?.companyName) footerParts.push(layoutSettings.companyName.toUpperCase());
@@ -139,7 +140,8 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   addHeader();
 
   doc.setFontSize(titleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('RELATÓRIO FINANCEIRO', margin, headerY + 4);
 
@@ -148,7 +150,8 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   // Project identifier
   const projectIdentifier = `${budget.proposalId} - ${budget.projectName}`;
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(darkGray);
   const identifierLines = doc.splitTextToSize(projectIdentifier, contentWidth - 50);
   doc.text(identifierLines, margin, y);
@@ -159,13 +162,14 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
 
   // CLIENT BLOCK
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('CLIENTE', margin, y);
   y += 8;
 
   doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(darkGray);
   doc.text(`Empresa: ${client.companyName}`, margin, y);
   y += 6;
@@ -186,7 +190,8 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   // CONSOLIDAÇÃO FINANCEIRA
   // ============================================
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('CONSOLIDAÇÃO FINANCEIRA', margin, y);
   y += 12;
@@ -198,11 +203,11 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   const drawRow = (label: string, value: string, opts?: { bold?: boolean; color?: [number, number, number]; labelColor?: [number, number, number] }) => {
     ensureSpace(8);
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', opts?.bold ? 'bold' : 'normal');
+    doc.setFont(__th.font, opts?.bold ? 'bold' : 'normal');
     setColor(opts?.labelColor || darkGray);
     doc.text(label, margin, y);
     setColor(opts?.color || darkGray);
-    doc.setFont('helvetica', opts?.bold ? 'bold' : 'normal');
+    doc.setFont(__th.font, opts?.bold ? 'bold' : 'normal');
     doc.text(value, pageWidth - margin, y, { align: 'right' });
     y += 7;
   };
@@ -215,7 +220,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
 
   // Custos Reais por Entrega
   doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('CUSTOS REAIS POR ENTREGA', margin, y);
   y += 8;
@@ -239,7 +244,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
           if (cost.realValue > 0) {
             ensureSpace(6);
             doc.setFontSize(smallSize);
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(__th.font, 'normal');
             setColor(gray);
             const costDesc = cost.description || 'Item';
             doc.text(`    • ${costDesc}`, margin, y);
@@ -254,7 +259,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
           if (cost.realValue > 0) {
             ensureSpace(6);
             doc.setFontSize(smallSize);
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(__th.font, 'normal');
             setColor(gray);
             doc.text(`    • ${cost.description || 'Custo extra'} (extra)`, margin, y);
             doc.text(formatCurrency(cost.realValue || 0), pageWidth - margin, y, { align: 'right' });
@@ -281,7 +286,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
         if (cost.realValue > 0) {
           ensureSpace(6);
           doc.setFontSize(smallSize);
-          doc.setFont('helvetica', 'normal');
+          doc.setFont(__th.font, 'normal');
           setColor(gray);
           doc.text(`    • ${cost.description || 'Operacional'}`, margin, y);
           doc.text(formatCurrency(cost.realValue || 0), pageWidth - margin, y, { align: 'right' });
@@ -294,7 +299,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
         if (cost.realValue > 0) {
           ensureSpace(6);
           doc.setFontSize(smallSize);
-          doc.setFont('helvetica', 'normal');
+          doc.setFont(__th.font, 'normal');
           setColor(gray);
           doc.text(`    • ${cost.description || 'Extra'} (extra)`, margin, y);
           doc.text(formatCurrency(cost.realValue || 0), pageWidth - margin, y, { align: 'right' });
@@ -327,10 +332,12 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   const margemColor = margemReais >= 0 ? green : red;
 
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('MARGEM REAL', margin, y);
   doc.setFontSize(titleSize);
+  doc.setTextColor(...__th.primary);
   setColor(margemColor);
   doc.text(`${formatCurrency(margemReais)} (${margemPercent.toFixed(1)}%)`, pageWidth - margin, y, { align: 'right' });
 
@@ -341,7 +348,8 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   // ============================================
   ensureSpace(60);
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('RESUMO', margin, y);
   y += 10;
@@ -351,7 +359,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   const col2X = pageWidth - margin;
 
   doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('Item', col1X, y);
   doc.text('Valor', col2X, y, { align: 'right' });
@@ -359,7 +367,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   drawLine(y);
   y += 6;
 
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(darkGray);
 
   const summaryRows = [
@@ -377,7 +385,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   drawLine(y);
   y += 6;
 
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(__th.font, 'bold');
   setColor(margemColor);
   doc.text('= Margem Real', col1X, y);
   doc.text(`${formatCurrency(margemReais)} (${margemPercent.toFixed(1)}%)`, col2X, y, { align: 'right' });

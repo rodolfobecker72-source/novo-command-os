@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { resolveTheme } from './pdfTheme';
 import {
   BudgetVersion,
   Budget,
@@ -31,6 +32,7 @@ export interface PDFLayoutSettings {
   sectionInvestmentTitle?: string;
   sectionTotalTitle?: string;
   validityText?: string;
+  brandTheme?: import('./pdfTheme').BrandTheme | null;
   coverPdfUrl?: string;
   backPdfUrl?: string;
 }
@@ -85,6 +87,7 @@ export async function generateProposalPDF({
   const catLookup = catLabels || {};
   const objLookup = objLabels || {};
   const doc = existingDoc || new jsPDF();
+  const __th = resolveTheme(layoutSettings?.brandTheme);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   
@@ -94,10 +97,10 @@ export async function generateProposalPDF({
   const contentStartY = 28;
   const footerTopY = pageHeight - 28;
   
-  const black = [0, 0, 0] as [number, number, number];
-  const darkGray = [80, 80, 80] as [number, number, number];
+  const black = __th.text;
+  const darkGray = __th.secondary;
   const gray = [128, 128, 128] as [number, number, number];
-  const lightGray = [200, 200, 200] as [number, number, number];
+  const lightGray = __th.accent;
   
   const titleSize = 14;
   const subtitleSize = 12;
@@ -169,7 +172,7 @@ export async function generateProposalPDF({
       doc.addImage(footerLogoData.base64, 'PNG', pageWidth / 2 - fLogoW / 2, pageHeight - 20, fLogoW, fLogoH);
     }
     doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(lightGray);
     const footerParts: string[] = [];
     if (layoutSettings?.companyName) footerParts.push(layoutSettings.companyName.toUpperCase());
@@ -205,10 +208,10 @@ export async function generateProposalPDF({
 
   // Company info top-left (first page only)
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(__th.font, 'bold');
   setColor(darkGray);
   doc.text('HERO AUDIOVISUAL LTDA', margin, headerY - 2);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(gray);
   doc.text('CNPJ: 38.204.599/0001-58', margin, headerY + 2);
   doc.text('Rua Ver. Célso Henrique Borsato, 426', margin, headerY + 6);
@@ -219,13 +222,15 @@ export async function generateProposalPDF({
   y += 8;
 
   doc.setFontSize(titleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text(t.pdfTitle, margin, y);
   y += 8;
 
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(darkGray);
   const identifierLines = doc.splitTextToSize(projectIdentifier, contentWidth) as string[];
   doc.text(identifierLines, margin, y);
@@ -236,7 +241,7 @@ export async function generateProposalPDF({
   ensureSpace(clientBlockHeight);
 
   doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(darkGray);
 
   doc.text(`Empresa: ${client.companyName}`, margin, y);
@@ -262,18 +267,19 @@ export async function generateProposalPDF({
   ensureSpace(projectBlockHeight);
 
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text(t.briefing, margin, y);
   y += 8;
   
   doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(darkGray);
   
   if (budget.projectDescription) {
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(darkGray);
     const briefLines = doc.splitTextToSize(budget.projectDescription, contentWidth) as string[];
     briefLines.forEach((line: string, idx: number) => {
@@ -342,7 +348,8 @@ export async function generateProposalPDF({
   const preToDistribute = totalProductionCost + preMarginValue + (hideNf ? preNfValue : 0) + (hideOp ? preOpTotal : 0);
 
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text(t.services, margin, y);
   y += 10;
@@ -356,7 +363,7 @@ export async function generateProposalPDF({
 
     // Split description with correct font metrics
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     const descLines = service.description ? doc.splitTextToSize(service.description, contentWidth) as string[] : [];
     const estimatedHeight = 6 + 6 + descLines.length * 5 + 10 + service.costs.length * 8 + 20;
     
@@ -367,13 +374,13 @@ export async function generateProposalPDF({
     }
     
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text(`${serviceIndex + 1}. ${catLookup[service.serviceType] || SERVICE_TYPE_LABELS[service.serviceType] || service.serviceType}`, margin, y);
     y += 6;
     
     doc.setFontSize(smallSize);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(gray);
     doc.text(`Objetivo: ${objectiveLabel}`, margin, y);
     y += 6;
@@ -399,12 +406,12 @@ export async function generateProposalPDF({
     
     if (descLines.length > 0) {
       doc.setFontSize(normalSize);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(__th.font, 'normal');
       setColor(darkGray);
       descLines.forEach((line: string, idx: number) => {
         ensureSpace(6);
         doc.setFontSize(normalSize);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(__th.font, 'normal');
         setColor(darkGray);
         if (idx < descLines.length - 1) {
           doc.text(line, margin, y, { align: 'justify', maxWidth: contentWidth });
@@ -422,14 +429,14 @@ export async function generateProposalPDF({
       
       ensureSpace(12);
       doc.setFontSize(smallSize);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(__th.font, 'bold');
       setColor(black);
       doc.text('#', col1, y);
       doc.text('Descrição', col2, y);
       y += 2;
       y += 4;
       
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(__th.font, 'normal');
       setColor(darkGray);
       
       service.costs.forEach((cost, costIndex) => {
@@ -437,7 +444,7 @@ export async function generateProposalPDF({
         const itemHeight = costDescLines.length * 5 + 3;
         ensureSpace(itemHeight);
         doc.setFontSize(smallSize);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(__th.font, 'normal');
         setColor(darkGray);
         
         doc.text(`${costIndex + 1}`, col1, y);
@@ -449,7 +456,7 @@ export async function generateProposalPDF({
     ensureSpace(16);
     y += 2;
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text(`Subtotal: ${formatCurrency(serviceDisplayValue)}`, pageWidth - margin, y, { align: 'right' });
     y += 16;
@@ -471,7 +478,8 @@ export async function generateProposalPDF({
     y += 6;
     
     doc.setFontSize(subtitleSize);
-    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...__th.primary);
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text(t.operational, margin, y);
     y += 10;
@@ -480,7 +488,7 @@ export async function generateProposalPDF({
     const opCol2 = margin + 10;
     
     doc.setFontSize(smallSize);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text('#', opCol1, y);
     doc.text('Descrição', opCol2, y);
@@ -491,7 +499,7 @@ export async function generateProposalPDF({
     doc.line(margin, y, pageWidth - margin, y);
     y += 5;
     
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(darkGray);
     
     operationalCostItems.forEach((cost, costIndex) => {
@@ -499,7 +507,7 @@ export async function generateProposalPDF({
       const itemHeight = costDescLines.length * 5 + 3;
       ensureSpace(itemHeight);
       doc.setFontSize(smallSize);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(__th.font, 'normal');
       setColor(darkGray);
       
       doc.text(`${costIndex + 1}`, opCol1, y);
@@ -511,7 +519,7 @@ export async function generateProposalPDF({
     y += 4;
     
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text(`Subtotal: ${formatCurrency(operationalTotal)}`, pageWidth - margin, y, { align: 'right' });
     y += 8;
@@ -525,7 +533,8 @@ export async function generateProposalPDF({
   ensureSpace(investmentBlockHeight);
 
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text(t.investment, margin, y);
   y += 10;
@@ -541,7 +550,7 @@ export async function generateProposalPDF({
   const totalToDistribute = totalProductionCost + marginValue + (hideNf ? nfValue : 0) + (hideOp ? operationalTotal : 0);
 
   doc.setFontSize(normalSize);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(darkGray);
 
   version.services.forEach((service, idx) => {
@@ -573,11 +582,13 @@ export async function generateProposalPDF({
 
   // TOTAL
   doc.setFontSize(subtitleSize);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...__th.primary);
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text(t.total, margin, y);
   
   doc.setFontSize(titleSize);
+  doc.setTextColor(...__th.primary);
   doc.text(formatCurrency(totalProjectValue), pageWidth - margin, y, { align: 'right' });
 
   // Observação sobre faturamento / Nota Fiscal
@@ -588,7 +599,7 @@ export async function generateProposalPDF({
     const obsBody = `A emissão de Nota Fiscal é obrigatória para esta proposta. Os valores apresentados já consideram a tributação incidente sobre o serviço prestado, de acordo com a alíquota vigente da ${companyName}.`;
 
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     const bodyLines = doc.splitTextToSize(obsBody, contentWidth - 10) as string[];
     const boxPadding = 5;
     const titleLineH = 6;
@@ -598,18 +609,18 @@ export async function generateProposalPDF({
     ensureSpace(boxHeight + 4);
 
     doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.setFillColor(248, 248, 248);
+    doc.setFillColor(...__th.highlightBg);
     doc.setLineWidth(0.5);
     doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, 'FD');
 
     let ty = y + boxPadding + 4;
     doc.setFontSize(normalSize);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text(obsTitle, margin + boxPadding, ty);
     ty += titleLineH + 3;
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(darkGray);
     bodyLines.forEach((line) => {
       doc.text(line, margin + boxPadding, ty);
