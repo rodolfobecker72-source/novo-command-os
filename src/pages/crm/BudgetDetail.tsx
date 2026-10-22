@@ -879,6 +879,9 @@ export function BudgetDetail() {
           coverPdfUrl: d.cover_pdf_url || undefined,
           backPdfUrl: d.back_pdf_url || undefined,
           brandTheme: d.brand_theme || null,
+          companyCnpj: d.company_cnpj || '',
+          companyAddress: d.company_address || '',
+          companyCityLine: d.company_city_line || '',
         };
       }
     } catch (err) {

@@ -1888,6 +1888,9 @@ export type Database = {
           back_pdf_url: string | null
           brand_md_url: string | null
           brand_theme: Json | null
+          company_address: string | null
+          company_city_line: string | null
+          company_cnpj: string | null
           company_name: string
           cover_pdf_url: string | null
           created_at: string
@@ -1919,6 +1922,9 @@ export type Database = {
           back_pdf_url?: string | null
           brand_md_url?: string | null
           brand_theme?: Json | null
+          company_address?: string | null
+          company_city_line?: string | null
+          company_cnpj?: string | null
           company_name?: string
           cover_pdf_url?: string | null
           created_at?: string
@@ -1950,6 +1956,9 @@ export type Database = {
           back_pdf_url?: string | null
           brand_md_url?: string | null
           brand_theme?: Json | null
+          company_address?: string | null
+          company_city_line?: string | null
+          company_cnpj?: string | null
           company_name?: string
           cover_pdf_url?: string | null
           created_at?: string
