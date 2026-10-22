@@ -1,0 +1,1 @@
+- PDF colors/fonts come from `resolveTheme(layoutSettings.brandTheme)` in src/utils/pdfTheme.ts; never hardcode them in generators — keeps workspace brand identity applied to every document.
