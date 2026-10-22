@@ -80,6 +80,10 @@ interface Props {
   /** 'page' renders full-screen content (no modal) with a back button. */
   variant?: 'dialog' | 'page';
   onBack?: () => void;
+  /** Current project status + available columns; when provided a status selector is shown. */
+  projectStatus?: string;
+  statusOptions?: { key: string; label: string; color: string }[];
+  onStatusChange?: (status: string) => void;
 }
 
 const COLUMNS: { key: ActivityStatus; label: string; dotClass: string; chipClass: string; colBg: string; cardBg: string; cardBorder: string; addText: string }[] = [
