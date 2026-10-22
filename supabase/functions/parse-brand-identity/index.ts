@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       system:
         "Você extrai a identidade visual de um manual de marca em Markdown para aplicar em documentos PDF. Retorne cores em hex #RRGGBB. primary = cor principal da marca (títulos). secondary = cor secundária (subtítulos/textos de apoio, legível sobre branco). accent = cor de linhas e bordas. text = cor do texto corrido (escura, legível sobre branco). highlightBg = fundo claro para destaques de tabela. fontFamily = sans, serif ou mono conforme a tipografia principal. Use null quando o manual não informar.",
       messages: [{ role: "user", content: markdown }],
-      experimental_output: Output.object({ schema: ThemeSchema }),
+      output: Output.object({ schema: ThemeSchema }),
       abortSignal: req.signal,
       providerOptions: {
         openai: {
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     let out: z.infer<typeof ThemeSchema>;
     try {
       await result.consumeStream();
-      out = await result.experimental_output;
+      out = await result.output;
     } catch (e) {
       const status = (e as any)?.statusCode ?? (e as any)?.cause?.statusCode;
       if (status === 402) return json({ error: "Créditos de IA esgotados. Adicione créditos em Configurações > Planos." }, 402);
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     theme.fontFamily = out.fontFamily ?? null;
     return json({ theme });
   } catch (e) {
-    console.error(e);
+    console.error("parse-brand-identity error", String(e), (e as any)?.responseBody ?? "");
     return json({ error: "Erro ao processar identidade visual" }, 500);
   }
 });
