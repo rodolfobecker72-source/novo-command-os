@@ -22,6 +22,13 @@
       "when": 1792630231822,
       "tag": "0002_brand_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792630583685,
+      "tag": "0003_company_address_fields",
+      "breakpoints": true
     }
   ]
 }
