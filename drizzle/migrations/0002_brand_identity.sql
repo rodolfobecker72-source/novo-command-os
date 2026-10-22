@@ -1,0 +1,1 @@
+ALTER TABLE public.workspace_layout ADD COLUMN IF NOT EXISTS brand_md_url text, ADD COLUMN IF NOT EXISTS brand_theme jsonb;

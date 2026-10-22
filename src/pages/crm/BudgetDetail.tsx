@@ -878,6 +878,7 @@ export function BudgetDetail() {
           validityText: d.validity_text || undefined,
           coverPdfUrl: d.cover_pdf_url || undefined,
           backPdfUrl: d.back_pdf_url || undefined,
+          brandTheme: d.brand_theme || null,
         };
       }
     } catch (err) {

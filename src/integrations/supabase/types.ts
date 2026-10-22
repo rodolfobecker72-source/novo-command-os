@@ -1886,6 +1886,8 @@ export type Database = {
       workspace_layout: {
         Row: {
           back_pdf_url: string | null
+          brand_md_url: string | null
+          brand_theme: Json | null
           company_name: string
           cover_pdf_url: string | null
           created_at: string
@@ -1915,6 +1917,8 @@ export type Database = {
         }
         Insert: {
           back_pdf_url?: string | null
+          brand_md_url?: string | null
+          brand_theme?: Json | null
           company_name?: string
           cover_pdf_url?: string | null
           created_at?: string
@@ -1944,6 +1948,8 @@ export type Database = {
         }
         Update: {
           back_pdf_url?: string | null
+          brand_md_url?: string | null
+          brand_theme?: Json | null
           company_name?: string
           cover_pdf_url?: string | null
           created_at?: string

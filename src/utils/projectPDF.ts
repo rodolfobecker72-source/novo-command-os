@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { resolveTheme } from './pdfTheme';
 import { Budget, Client, ServiceItem, DELIVERY_TYPE_LABELS, DeliveryType } from '@/types/crm';
 import { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { format } from 'date-fns';
@@ -32,6 +33,7 @@ interface ProjectPDFParams {
 
 export async function generateProjectPDF({ budget, client, layoutSettings }: ProjectPDFParams) {
   const doc = new jsPDF();
+  const __th = resolveTheme(layoutSettings?.brandTheme);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -40,10 +42,10 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
   const contentStartY = 28;
   const footerTopY = pageHeight - 28;
 
-  const black = [0, 0, 0] as [number, number, number];
-  const darkGray = [80, 80, 80] as [number, number, number];
+  const black = __th.text;
+  const darkGray = __th.secondary;
   const gray = [128, 128, 128] as [number, number, number];
-  const lightGray = [200, 200, 200] as [number, number, number];
+  const lightGray = __th.accent;
   const accentBlue = [59, 130, 246] as [number, number, number];
 
   let logoData: { base64: string; width: number; height: number } | null = null;
@@ -81,7 +83,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
       doc.addImage(footerLogoData.base64, 'PNG', pageWidth / 2 - fW / 2, pageHeight - 20, fW, fH);
     }
     doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(lightGray);
     const parts: string[] = [];
     if (layoutSettings?.companyName) parts.push(layoutSettings.companyName.toUpperCase());
@@ -104,7 +106,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
   const drawSectionTitle = (title: string) => {
     ensureSpace(16);
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(black);
     doc.text(title, margin, y);
     y += 8;
@@ -113,11 +115,11 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
   const drawLabelValue = (label: string, value: string) => {
     ensureSpace(8);
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(__th.font, 'bold');
     setColor(gray);
     const labelWidth = doc.getTextWidth(label + '  ');
     doc.text(label, margin, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(darkGray);
     const maxValueWidth = contentWidth - labelWidth;
     const valueLines = doc.splitTextToSize(value, maxValueWidth) as string[];
@@ -138,7 +140,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
 
   // Title
   doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(__th.font, 'bold');
   setColor(black);
   doc.text('FICHA DO PROJETO', margin, headerY + 4);
 
@@ -146,7 +148,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
 
   // Project identifier
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(__th.font, 'bold');
   setColor(darkGray);
   const identifier = `${budget.proposalId} - ${budget.projectName}`;
   const idLines = doc.splitTextToSize(identifier, contentWidth - 50);
@@ -154,7 +156,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
   y += idLines.length * 6 + 4;
 
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(__th.font, 'normal');
   setColor(gray);
   doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, margin, y);
   y += 10;
@@ -196,7 +198,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
     drawSectionTitle('BRIEFING DO PROJETO');
     ensureSpace(20);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     setColor(darkGray);
     const descLines = doc.splitTextToSize(budget.projectDescription, contentWidth) as string[];
     for (const line of descLines) {
@@ -233,12 +235,12 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
       ensureSpace(blockHeight);
 
       // Service card background
-      doc.setFillColor(245, 247, 250);
+      doc.setFillColor(...__th.highlightBg);
       doc.roundedRect(margin, y - 2, contentWidth, 0.1, 2, 2, 'F'); // measure first
 
       // Service number + name
       doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(__th.font, 'bold');
       setColor(accentBlue);
       const svcTitle = `${i + 1}. ${svc.serviceType}${svc.objective ? ` — ${svc.objective}` : ''}`;
       const svcTitleLines = doc.splitTextToSize(svcTitle, contentWidth);
@@ -248,7 +250,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
       // Description
       if (svc.description) {
         doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(__th.font, 'normal');
         setColor(darkGray);
         const svcDescLines = doc.splitTextToSize(svc.description, contentWidth - 4) as string[];
         for (const line of svcDescLines) {
@@ -278,7 +280,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
         }
         if (deliveryDate) {
           doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
+          doc.setFont(__th.font, 'bold');
           setColor(accentBlue);
           doc.text(`Data de Entrega: ${format(deliveryDate, 'dd/MM/yyyy')}`, margin + 2, y);
           y += 5;
@@ -286,7 +288,7 @@ export async function generateProjectPDF({ budget, client, layoutSettings }: Pro
       } else if (!svc.deliveryType) {
         ensureSpace(8);
         doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
+        doc.setFont(__th.font, 'italic');
         setColor(gray);
         doc.text('Data de entrega não definida', margin + 2, y);
         y += 5;

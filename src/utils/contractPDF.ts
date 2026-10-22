@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { resolveTheme } from './pdfTheme';
 import { formatCurrency, formatCNPJ, formatPhone, BudgetVersion, ServiceItem, Budget, Client } from '@/types/crm';
 import { generateProposalPDF, PDFLayoutSettings, saveWithCustomPages } from '@/utils/pdfGenerator';
 
@@ -203,6 +204,7 @@ export async function generateContractPDF(params: ContractPDFParams) {
 
   const blocks = buildContractBlocks(text);
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const __th = resolveTheme(layoutSettings?.brandTheme);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -212,7 +214,7 @@ export async function generateContractPDF(params: ContractPDFParams) {
   const headerY = 15;
   const contentStartY = 28;
   const footerTopY = pageHeight - 28;
-  const lightGray = [200, 200, 200] as [number, number, number];
+  const lightGray = __th.accent;
 
   let logoData: { base64: string; width: number; height: number } | null = null;
   const headerLogoUrl = layoutSettings?.logoUrl || '/images/hero-logo-black.png';
@@ -248,7 +250,7 @@ export async function generateContractPDF(params: ContractPDFParams) {
     }
 
     doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(__th.font, 'normal');
     doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
 
     const footerParts: string[] = [];
@@ -267,7 +269,7 @@ export async function generateContractPDF(params: ContractPDFParams) {
   let currentPageHasBodyContent = false;
 
   const applyBodyStyle = () => {
-    doc.setFont('helvetica', currentFont);
+    doc.setFont(__th.font, currentFont);
     doc.setFontSize(normalSize);
     doc.setTextColor(0, 0, 0);
   };
