@@ -210,12 +210,15 @@ export async function generateProposalPDF({
   doc.setFontSize(8);
   doc.setFont(__th.font, 'bold');
   setColor(darkGray);
-  doc.text('HERO AUDIOVISUAL LTDA', margin, headerY - 2);
+  if (layoutSettings?.companyName) doc.text(layoutSettings.companyName.toUpperCase(), margin, headerY - 2);
   doc.setFont(__th.font, 'normal');
   setColor(gray);
-  doc.text('CNPJ: 38.204.599/0001-58', margin, headerY + 2);
-  doc.text('Rua Ver. Célso Henrique Borsato, 426', margin, headerY + 6);
-  doc.text('Santa Rita do Sapucaí, MG - CEP 37538-736', margin, headerY + 10);
+  const infoLines = [
+    layoutSettings?.companyCnpj ? `CNPJ: ${layoutSettings.companyCnpj}` : '',
+    layoutSettings?.companyAddress || '',
+    layoutSettings?.companyCityLine || '',
+  ].filter(Boolean);
+  infoLines.forEach((line, i) => doc.text(line, margin, headerY + 2 + i * 4));
 
   y = headerY + 18;
   drawLine(y);

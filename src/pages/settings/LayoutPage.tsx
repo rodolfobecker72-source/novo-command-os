@@ -30,6 +30,9 @@ interface LayoutData {
   coverPdfUrl: string;
   backPdfUrl: string;
   brandMdUrl: string;
+  companyCnpj: string;
+  companyAddress: string;
+  companyCityLine: string;
 }
 
 const DEFAULTS: LayoutData = {
@@ -49,6 +52,9 @@ const DEFAULTS: LayoutData = {
   coverPdfUrl: '',
   backPdfUrl: '',
   brandMdUrl: '',
+  companyCnpj: '',
+  companyAddress: '',
+  companyCityLine: '',
 };
 
 export function LayoutPage() {
@@ -106,6 +112,9 @@ export function LayoutPage() {
           coverPdfUrl: d.cover_pdf_url || '',
           backPdfUrl: d.back_pdf_url || '',
           brandMdUrl: d.brand_md_url || '',
+          companyCnpj: d.company_cnpj || '',
+          companyAddress: d.company_address || '',
+          companyCityLine: d.company_city_line || '',
         });
         setBrandTheme(d.brand_theme || null);
       }
@@ -204,6 +213,9 @@ export function LayoutPage() {
         cover_pdf_url: data.coverPdfUrl || null,
         back_pdf_url: data.backPdfUrl || null,
         brand_md_url: data.brandMdUrl || null,
+        company_cnpj: data.companyCnpj || null,
+        company_address: data.companyAddress || null,
+        company_city_line: data.companyCityLine || null,
         brand_theme: (brandTheme as any) || null,
         company_name: data.companyName,
         website: data.website,
@@ -384,13 +396,25 @@ export function LayoutPage() {
         {/* Footer */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Informações do Rodapé</CardTitle>
-            <CardDescription>Dados exibidos no rodapé de todos os PDFs gerados.</CardDescription>
+            <CardTitle className="text-lg">Dados da Empresa</CardTitle>
+            <CardDescription>Nome, CNPJ e endereço exibidos no topo da proposta, além de site e e-mail no rodapé.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Nome da Produtora</Label>
               <Input value={data.companyName} onChange={e => update('companyName', e.target.value)} placeholder="Ex: Minha Produtora Audiovisual" />
+            </div>
+            <div className="space-y-2">
+              <Label>CNPJ</Label>
+              <Input value={data.companyCnpj} onChange={e => update('companyCnpj', e.target.value)} placeholder="00.000.000/0000-00" />
+            </div>
+            <div className="space-y-2">
+              <Label>Endereço (rua e número)</Label>
+              <Input value={data.companyAddress} onChange={e => update('companyAddress', e.target.value)} placeholder="Rua Exemplo, 123" />
+            </div>
+            <div className="space-y-2">
+              <Label>Cidade / UF / CEP</Label>
+              <Input value={data.companyCityLine} onChange={e => update('companyCityLine', e.target.value)} placeholder="Cidade, UF - CEP 00000-000" />
             </div>
             <div className="space-y-2">
               <Label>Site</Label>
