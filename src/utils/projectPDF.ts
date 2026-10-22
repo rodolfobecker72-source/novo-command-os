@@ -33,6 +33,7 @@ interface ProjectPDFParams {
 
 export async function generateProjectPDF({ budget, client, layoutSettings }: ProjectPDFParams) {
   const doc = new jsPDF();
+  const __th = resolveTheme(layoutSettings?.brandTheme);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;

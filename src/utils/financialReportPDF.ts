@@ -44,6 +44,7 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   const catLookup = catLabels || {};
   const objLookup = objLabels || {};
   const doc = new jsPDF();
+  const __th = resolveTheme(layoutSettings?.brandTheme);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
