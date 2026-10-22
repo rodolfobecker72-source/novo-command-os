@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Upload, Save, Trash2, ImageIcon, FileText } from 'lucide-react';
+import { Upload, Save, Trash2, ImageIcon, FileText, Palette } from 'lucide-react';
+import type { BrandTheme } from '@/utils/pdfTheme';
 
 interface LayoutData {
   logoUrl: string;
@@ -28,6 +29,7 @@ interface LayoutData {
   validityText: string;
   coverPdfUrl: string;
   backPdfUrl: string;
+  brandMdUrl: string;
 }
 
 const DEFAULTS: LayoutData = {
@@ -46,6 +48,7 @@ const DEFAULTS: LayoutData = {
   validityText: 'Validade: 30 dias',
   coverPdfUrl: '',
   backPdfUrl: '',
+  brandMdUrl: '',
 };
 
 export function LayoutPage() {
@@ -57,6 +60,8 @@ export function LayoutPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
+  const [brandTheme, setBrandTheme] = useState<BrandTheme | null>(null);
+  const [brandBusy, setBrandBusy] = useState(false);
 
   useEffect(() => {
     if (!workspace) return;
@@ -100,7 +105,9 @@ export function LayoutPage() {
           validityText: d.validity_text || DEFAULTS.validityText,
           coverPdfUrl: d.cover_pdf_url || '',
           backPdfUrl: d.back_pdf_url || '',
+          brandMdUrl: d.brand_md_url || '',
         });
+        setBrandTheme(d.brand_theme || null);
       }
     } catch (err) {
       console.error('Error loading layout:', err);
@@ -159,6 +166,34 @@ export function LayoutPage() {
     }
   };
 
+  const handleBrandUpload = async (file?: File) => {
+    if (!file || !workspace) return;
+    if (!/\.(md|markdown|txt)$/i.test(file.name)) { toast.error('Selecione um arquivo .md'); return; }
+    if (file.size > 1024 * 1024) { toast.error('O arquivo deve ter no máximo 1 MB'); return; }
+    setBrandBusy(true);
+    try {
+      const markdown = await file.text();
+      const { data: res, error } = await supabase.functions.invoke('parse-brand-identity', { body: { markdown } });
+      if (error) {
+        let msg = 'Erro ao interpretar o arquivo';
+        try { const b = await (error as any).context?.json(); if (b?.error) msg = b.error; } catch { /* ignore */ }
+        throw new Error(msg);
+      }
+      const filePath = `${workspace.id}/brand.md`;
+      const { error: upErr } = await supabase.storage.from('logos').upload(filePath, file, { upsert: true, contentType: 'text/markdown' });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('logos').getPublicUrl(filePath);
+      update('brandMdUrl', `${pub.publicUrl}?t=${Date.now()}`);
+      setBrandTheme(res.theme);
+      toast.success('Identidade lida! Clique em Salvar para aplicar.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || 'Erro ao processar identidade visual');
+    } finally {
+      setBrandBusy(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!workspace) return;
     setSaving(true);
@@ -168,6 +203,8 @@ export function LayoutPage() {
         logo_url: data.logoUrl,
         cover_pdf_url: data.coverPdfUrl || null,
         back_pdf_url: data.backPdfUrl || null,
+        brand_md_url: data.brandMdUrl || null,
+        brand_theme: (brandTheme as any) || null,
         company_name: data.companyName,
         website: data.website,
         email: data.email,
@@ -250,6 +287,55 @@ export function LayoutPage() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Identidade visual</CardTitle>
+            <CardDescription>Envie o manual da sua marca em .md. A IA lê as cores e a tipografia e aplica em todos os documentos emitidos.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-md border p-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Manual da marca (.md)</p>
+                  {data.brandMdUrl ? (
+                    <a href={data.brandMdUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Ver arquivo enviado</a>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Nenhum arquivo — visual padrão</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <label>
+                  <input type="file" accept=".md,.markdown,text/markdown,text/plain" className="hidden" onChange={(e) => { handleBrandUpload(e.target.files?.[0]); e.target.value = ''; }} />
+                  <Button variant="outline" size="sm" asChild disabled={brandBusy}>
+                    <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />{brandBusy ? 'Lendo com IA...' : data.brandMdUrl ? 'Trocar' : 'Enviar .md'}</span>
+                  </Button>
+                </label>
+                {data.brandMdUrl && (
+                  <Button variant="ghost" size="sm" aria-label="Remover identidade" onClick={() => { update('brandMdUrl', ''); setBrandTheme(null); }} className="text-destructive hover:text-destructive">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            {brandTheme && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-3">
+                  {([['primary', 'Principal'], ['secondary', 'Secundária'], ['accent', 'Linhas'], ['text', 'Texto'], ['highlightBg', 'Fundo destaque']] as const).map(([k, label]) => (
+                    <div key={k} className="flex flex-col items-center gap-1">
+                      <div className="w-10 h-10 rounded-md border" style={{ background: brandTheme[k] || undefined }} />
+                      <span className="text-[11px] text-muted-foreground">{label}</span>
+                      <span className="text-[10px] text-muted-foreground">{brandTheme[k] || 'padrão'}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">Fonte: {({ sans: 'Sem serifa', serif: 'Com serifa', mono: 'Monoespaçada' } as Record<string, string>)[brandTheme.fontFamily || ''] || 'padrão'}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
