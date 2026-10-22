@@ -175,6 +175,19 @@ export function LayoutPage() {
     }
   };
 
+  const persistBrand = async (url: string | null, theme: BrandTheme | null) => {
+    if (!workspace) return;
+    const fields = { brand_md_url: url, brand_theme: theme as any };
+    if (existingId) {
+      const { error } = await supabase.from('workspace_layout').update(fields).eq('id', existingId);
+      if (error) throw error;
+    } else {
+      const { data: row, error } = await supabase.from('workspace_layout').insert({ workspace_id: workspace.id, ...fields }).select('id').single();
+      if (error) throw error;
+      setExistingId(row.id);
+    }
+  };
+
   const handleBrandUpload = async (file?: File) => {
     if (!file || !workspace) return;
     if (!/\.(md|markdown|txt)$/i.test(file.name)) { toast.error('Selecione um arquivo .md'); return; }
@@ -192,9 +205,11 @@ export function LayoutPage() {
       const { error: upErr } = await supabase.storage.from('logos').upload(filePath, file, { upsert: true, contentType: 'text/markdown' });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('logos').getPublicUrl(filePath);
-      update('brandMdUrl', `${pub.publicUrl}?t=${Date.now()}`);
+      const url = `${pub.publicUrl}?t=${Date.now()}`;
+      update('brandMdUrl', url);
       setBrandTheme(res.theme);
-      toast.success('Identidade lida! Clique em Salvar para aplicar.');
+      await persistBrand(url, res.theme);
+      toast.success('Identidade visual aplicada aos documentos!');
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || 'Erro ao processar identidade visual');
@@ -328,7 +343,7 @@ export function LayoutPage() {
                   </Button>
                 </label>
                 {data.brandMdUrl && (
-                  <Button variant="ghost" size="sm" aria-label="Remover identidade" onClick={() => { update('brandMdUrl', ''); setBrandTheme(null); }} className="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="sm" aria-label="Remover identidade" onClick={async () => { update('brandMdUrl', ''); setBrandTheme(null); try { await persistBrand(null, null); toast.success('Identidade removida'); } catch { toast.error('Erro ao remover'); } }} className="text-destructive hover:text-destructive">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 )}
