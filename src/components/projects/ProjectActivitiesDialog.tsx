@@ -80,6 +80,10 @@ interface Props {
   /** 'page' renders full-screen content (no modal) with a back button. */
   variant?: 'dialog' | 'page';
   onBack?: () => void;
+  /** Current project status + available columns; when provided a status selector is shown. */
+  projectStatus?: string;
+  statusOptions?: { key: string; label: string; color: string }[];
+  onStatusChange?: (status: string) => void;
 }
 
 const COLUMNS: { key: ActivityStatus; label: string; dotClass: string; chipClass: string; colBg: string; cardBg: string; cardBorder: string; addText: string }[] = [
@@ -97,7 +101,7 @@ function formatDateBR(iso: string | null): string {
   return `${d}/${m}/${y.slice(2)}`;
 }
 
-export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, projectName, variant = 'dialog', onBack }: Props) {
+export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, projectName, variant = 'dialog', onBack, projectStatus, statusOptions, onStatusChange }: Props) {
   const { workspace, profile } = useAuth();
   const workspaceId = workspace?.id;
   const [comments, setComments] = useState<Array<{ id: string; userId: string; userName: string; photoUrl: string | null; text: string; createdAt: string; editedAt?: string | null; mentions?: string[]; readBy?: string[] }>>([]);
@@ -1041,6 +1045,24 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       </>
   );
 
+  const statusSelect = projectStatus && statusOptions && onStatusChange ? (
+    <div className="flex items-center gap-2 shrink-0">
+      <span className="text-xs text-muted-foreground whitespace-nowrap">Status</span>
+      <Select value={projectStatus} onValueChange={(v) => onStatusChange(v)}>
+        <SelectTrigger className="h-9 w-[170px] text-sm font-medium shrink-0">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="z-[200]">
+          {statusOptions.map((c) => (
+            <SelectItem key={c.key} value={c.key} className="text-sm">
+              {c.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : null;
+
   if (variant === 'page') {
     if (!open) return null;
     return (
@@ -1054,6 +1076,7 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
             <h1 className="text-xl md:text-2xl font-bold truncate">{projectName}</h1>
             <p className="text-xs text-muted-foreground">Atividades do projeto</p>
           </div>
+          {statusSelect}
         </div>
         {inner}
       </div>
@@ -1066,6 +1089,7 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
         <DialogHeader>
           <DialogTitle>Atividades do projeto</DialogTitle>
           <DialogDescription className="truncate">{projectName}</DialogDescription>
+          {statusSelect}
         </DialogHeader>
         {inner}
       </DialogContent>

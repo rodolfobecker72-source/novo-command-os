@@ -88,7 +88,7 @@ export function ProjectManagementPage() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [activitiesFor, setActivitiesFor] = useState<{ id: string; name: string } | null>(null);
+  const [activitiesFor, setActivitiesFor] = useState<{ id: string; name: string; status: string } | null>(null);
   const [activityCounts, setActivityCounts] = useState<Record<string, { total: number; done: number }>>({});
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -154,7 +154,7 @@ export function ProjectManagementPage() {
     if (!card) return;
     setCollapsed((prev) => ({ ...prev, [card.status]: false }));
     setHighlightCardId(card.id);
-    setActivitiesFor({ id: card.id, name: card.projectName });
+    setActivitiesFor({ id: card.id, name: card.projectName, status: card.status });
     setSearchParams((prev) => {
       const sp = new URLSearchParams(prev);
       sp.delete('budget');
@@ -286,6 +286,12 @@ export function ProjectManagementPage() {
             onBack={() => { setActivitiesFor(null); setActivityRefreshKey(k => k + 1); }}
             projectCardId={activitiesFor.id}
             projectName={activitiesFor.name}
+            projectStatus={activitiesFor.status}
+            statusOptions={sortedColumns.map((c) => ({ key: c.key, label: c.label, color: c.color }))}
+            onStatusChange={(s) => {
+              updateProjectCard(activitiesFor.id, { status: s });
+              setActivitiesFor((a) => (a ? { ...a, status: s } : a));
+            }}
           />
         </div>
       </div>
@@ -417,7 +423,7 @@ export function ProjectManagementPage() {
                                       type="button"
                                       onClick={() => {
                                         saveScrollPosition();
-                                        setActivitiesFor({ id: card.id, name: `${card.proposalId ? card.proposalId + ' - ' : ''}${card.projectName}${card.clientName ? ' · ' + card.clientName : ''}` });
+                                        setActivitiesFor({ id: card.id, name: `${card.proposalId ? card.proposalId + ' - ' : ''}${card.projectName}${card.clientName ? ' · ' + card.clientName : ''}`, status: card.status });
                                       }}
                                       className="min-w-0 flex-1 text-left hover:text-primary"
                                       title="Ver atividades do projeto"
