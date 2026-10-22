@@ -32,6 +32,9 @@ export interface PDFLayoutSettings {
   sectionInvestmentTitle?: string;
   sectionTotalTitle?: string;
   validityText?: string;
+  companyCnpj?: string;
+  companyAddress?: string;
+  companyCityLine?: string;
   brandTheme?: import('./pdfTheme').BrandTheme | null;
   coverPdfUrl?: string;
   backPdfUrl?: string;
