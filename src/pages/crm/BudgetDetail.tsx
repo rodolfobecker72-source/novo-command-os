@@ -3953,6 +3953,7 @@ export function BudgetDetail() {
         categoryKey={catalogSelector.categoryKey}
         onSelect={catalogSelector.onPick}
       />
+      {cashflowPay.dialog}
     </div>
   );
 }
