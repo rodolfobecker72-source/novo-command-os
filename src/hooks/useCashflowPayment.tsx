@@ -105,15 +105,15 @@ export function useCashflowPayment() {
 
   const dialog = (
     <Dialog open={!!pending} onOpenChange={(o) => !o && !saving && setPending(null)}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Registrar pagamento</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="max-h-48 overflow-y-auto rounded border divide-y text-sm">
+        <div className="space-y-4 min-w-0">
+          <div className="max-h-60 overflow-y-auto rounded-md border divide-y text-sm">
             {pending?.items.map((i) => (
-              <div key={i.costId} className="flex justify-between gap-2 px-3 py-2">
-                <span className="truncate">{i.description}</span>
+              <div key={i.costId} className="flex items-start justify-between gap-3 px-3 py-2">
+                <span className="min-w-0 flex-1 break-words leading-snug">{i.description}</span>
                 <span className="font-medium shrink-0">{formatCurrency(i.value)}</span>
               </div>
             ))}
