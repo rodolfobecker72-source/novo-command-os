@@ -252,7 +252,26 @@ export function TeamFinancePage() {
 
   // Aplica vários updates sequencialmente (cada projeto é atualizado na sua execução)
   const markPaid = async (list: Entry[], date: Date) => {
-    for (const e of list) await applyUpdate(e, { paymentStatus: 'pago', paymentDate: date });
+    const byBudget = new Map<string, Set<string>>();
+    list.forEach((e) => {
+      if (!byBudget.has(e.budgetId)) byBudget.set(e.budgetId, new Set());
+      byBudget.get(e.budgetId)!.add((e.source as any).costId);
+    });
+    for (const [budgetId, ids] of byBudget) {
+      const ex = budgets.find((b) => b.id === budgetId)?.execution as any;
+      if (!ex) continue;
+      const mark = (arr: any[] | undefined) =>
+        arr?.map((c) => (ids.has(c.id) ? { ...c, paymentStatus: 'pago', paymentDate: date } : c));
+      await updateExecution(budgetId, {
+        services: ex.services?.map((svc: any) => ({
+          ...svc,
+          costs: mark(svc.costs),
+          extraCosts: mark(svc.extraCosts),
+        })),
+        operationalCosts: mark(ex.operationalCosts),
+        extraOperationalCosts: mark(ex.extraOperationalCosts),
+      } as any);
+    }
   };
 
   const changeStatus = async (e: Entry, v: PaymentStatus) => {
