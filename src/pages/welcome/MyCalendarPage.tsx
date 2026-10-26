@@ -564,6 +564,12 @@ export function MyCalendarPage() {
                 </p>
                 <p className="font-medium">{selected.subtitle}</p>
               </div>
+              {selected.kind === 'project' && selected.clientName && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Cliente</p>
+                  <p className="font-medium">{selected.clientName}</p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-muted-foreground">Data</p>
                 <p className="font-medium flex items-center gap-1.5">
