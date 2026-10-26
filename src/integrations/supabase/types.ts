@@ -497,6 +497,7 @@ export type Database = {
           credit_card_id: string | null
           date: string
           description: string
+          execution_cost_id: string | null
           id: string
           is_future_payment: boolean
           is_paid: boolean
@@ -517,6 +518,7 @@ export type Database = {
           credit_card_id?: string | null
           date?: string
           description?: string
+          execution_cost_id?: string | null
           id?: string
           is_future_payment?: boolean
           is_paid?: boolean
@@ -537,6 +539,7 @@ export type Database = {
           credit_card_id?: string | null
           date?: string
           description?: string
+          execution_cost_id?: string | null
           id?: string
           is_future_payment?: boolean
           is_paid?: boolean
