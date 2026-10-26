@@ -35,6 +35,7 @@ interface PersonalEvent {
   kind: EventKind;
   title: string;
   subtitle: string;
+  clientName?: string;
   status?: string;
   budgetId?: string;
   leadId?: string;
@@ -126,14 +127,14 @@ export function MyCalendarPage() {
       if (notesRes.error) throw notesRes.error;
 
       const cardIds = Array.from(new Set((activitiesRes.data || []).map((a: any) => a.project_card_id).filter(Boolean)));
-      const cardsMap = new Map<string, { proposalId: string; projectName: string; budgetId: string }>();
+      const cardsMap = new Map<string, { proposalId: string; projectName: string; clientName: string; budgetId: string }>();
       if (cardIds.length) {
         const { data: cards } = await supabase
           .from('project_cards')
-          .select('id, proposal_id, project_name, budget_id')
+          .select('id, proposal_id, project_name, client_name, budget_id')
           .in('id', cardIds);
         (cards || []).forEach((c: any) =>
-          cardsMap.set(c.id, { proposalId: c.proposal_id, projectName: c.project_name, budgetId: c.budget_id }),
+          cardsMap.set(c.id, { proposalId: c.proposal_id, projectName: c.project_name, clientName: c.client_name, budgetId: c.budget_id }),
         );
       }
 
@@ -155,6 +156,7 @@ export function MyCalendarPage() {
             kind: 'project',
             title: a.title || '(sem título)',
             subtitle: card ? `${card.proposalId} — ${card.projectName}` : 'Projeto',
+            clientName: card?.clientName,
             status: a.status,
             budgetId: card?.budgetId,
             isDelivery: !!a.is_delivery,
@@ -562,6 +564,12 @@ export function MyCalendarPage() {
                 </p>
                 <p className="font-medium">{selected.subtitle}</p>
               </div>
+              {selected.kind === 'project' && selected.clientName && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Cliente</p>
+                  <p className="font-medium">{selected.clientName}</p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-muted-foreground">Data</p>
                 <p className="font-medium flex items-center gap-1.5">
@@ -765,6 +773,9 @@ function DraggableEvent({ ev, userId, onOpen }: { ev: PersonalEvent; userId?: st
         <span className="truncate">{ev.kind === 'project' ? ev.subtitle : ev.title}</span>
       </div>
       <div className="truncate opacity-80">{ev.kind === 'project' ? ev.title : ev.subtitle}</div>
+      {ev.kind === 'project' && ev.clientName && (
+        <div className="truncate opacity-60 text-[9px] md:text-[10px]">{ev.clientName}</div>
+      )}
     </button>
   );
 }
