@@ -8,6 +8,7 @@ import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { generateFinancialReportPDF } from '@/utils/financialReportPDF';
 import { generateContractPDF } from '@/utils/contractPDF';
 import { supabase } from '@/integrations/supabase/client';
+import { useCashflowPayment } from '@/hooks/useCashflowPayment';
 import { Header } from '@/components/layout/Header';
 import { useCRM } from '@/contexts/CRMContext';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -142,6 +143,7 @@ export function BudgetDetail() {
   const navigate = useNavigate();
   const { profile, workspace, role } = useAuth();
   const { getBudget, getClient, updateBudget, addBudgetVersion, approveBudget, updateBudgetVersion, deleteLastVersion, updateExecutionCost, updateExecution, addExtraCost, removeExtraCost, deleteBudget, finalizeExecution, addDeliveryLink, removeDeliveryLink, kanbanColumns, getObjectivesForCategory, getCategoryLabel, serviceCategories, getHDForBudget } = useCRM();
+  const cashflowPay = useCashflowPayment();
 
   const budget = getBudget(id || '');
   const baseClient = budget ? getClient(budget.clientId) : null;
@@ -3340,13 +3342,7 @@ export function BudgetDetail() {
                                     <TableCell>
                                       <Select
                                         value={cost.paymentStatus}
-                                        onValueChange={(value) => {
-                                          updateExecution(budget.id, {
-                                            operationalCosts: (budget.execution?.operationalCosts || []).map(c =>
-                                              c.id === cost.id ? { ...c, paymentStatus: value as PaymentStatusType, paymentDate: value === 'pago' ? new Date() : null } : c
-                                            ),
-                                          });
-                                        }}
+                                        onValueChange={(value) => handleUpdateOperationalPayment('operationalCosts', cost.id, value as PaymentStatusType)}
                                       >
                                         <SelectTrigger className="w-28 h-8">
                                           <SelectValue />
