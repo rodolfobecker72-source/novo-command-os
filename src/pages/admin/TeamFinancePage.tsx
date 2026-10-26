@@ -29,6 +29,9 @@ import { Wallet, CheckCircle2, Clock, Users } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useTeamFinanceEnabled } from '@/hooks/useTeamFinanceEnabled';
+import { useCashflowPayment, PayItem } from '@/hooks/useCashflowPayment';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 type Source =
   | { kind: 'service'; serviceId: string; costId: string; isExtra: boolean }
@@ -236,6 +239,50 @@ export function TeamFinancePage() {
     await updateExecution(entry.budgetId, { [key]: updated } as any);
   };
 
+  const cashflowPay = useCashflowPayment();
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+  useEffect(() => setChecked(new Set()), [selected, monthSel]);
+
+  const toPayItem = (e: Entry): PayItem => ({
+    costId: (e.source as any).costId,
+    budgetId: e.budgetId,
+    value: e.realValue,
+    description: `#${e.proposalId} ${e.projectName} — ${e.description} (${selected})`,
+  });
+
+  // Aplica vários updates sequencialmente (cada projeto é atualizado na sua execução)
+  const markPaid = async (list: Entry[], date: Date) => {
+    const byBudget = new Map<string, Set<string>>();
+    list.forEach((e) => {
+      if (!byBudget.has(e.budgetId)) byBudget.set(e.budgetId, new Set());
+      byBudget.get(e.budgetId)!.add((e.source as any).costId);
+    });
+    for (const [budgetId, ids] of byBudget) {
+      const ex = budgets.find((b) => b.id === budgetId)?.execution as any;
+      if (!ex) continue;
+      const mark = (arr: any[] | undefined) =>
+        arr?.map((c) => (ids.has(c.id) ? { ...c, paymentStatus: 'pago', paymentDate: date } : c));
+      await updateExecution(budgetId, {
+        services: ex.services?.map((svc: any) => ({
+          ...svc,
+          costs: mark(svc.costs),
+          extraCosts: mark(svc.extraCosts),
+        })),
+        operationalCosts: mark(ex.operationalCosts),
+        extraOperationalCosts: mark(ex.extraOperationalCosts),
+      } as any);
+    }
+  };
+
+  const changeStatus = async (e: Entry, v: PaymentStatus) => {
+    if (v === 'pago' && e.paymentStatus !== 'pago') {
+      cashflowPay.requestPay([toPayItem(e)], (d) => markPaid([e], d));
+      return;
+    }
+    if (v !== 'pago' && e.paymentStatus === 'pago') await cashflowPay.unpay([(e.source as any).costId]);
+    await applyUpdate(e, { paymentStatus: v, paymentDate: e.paymentDate });
+  };
+
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<string>('');
 
@@ -372,16 +419,41 @@ export function TeamFinancePage() {
                 </div>
 
                 <Card className="overflow-hidden">
-                  <div className="px-4 py-3 bg-muted/40 flex items-center justify-between border-b">
+                  <div className="px-4 py-3 bg-muted/40 flex flex-wrap gap-2 items-center justify-between border-b">
                     <h3 className="font-semibold capitalize">{formatMonth(monthSel)}</h3>
-                    <span className="text-sm font-semibold">
-                      {formatCurrency(totals.total)}
-                  </span>
+                    <div className="flex items-center gap-3">
+                      {checked.size > 0 && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const list = monthEntries.filter((e) => checked.has(rowKey(e)));
+                            cashflowPay.requestPay(list.map(toPayItem), async (d) => {
+                              await markPaid(list, d);
+                              setChecked(new Set());
+                            });
+                          }}
+                        >
+                          Pagar selecionados ({checked.size})
+                        </Button>
+                      )}
+                      <span className="text-sm font-semibold">
+                        {formatCurrency(totals.total)}
+                      </span>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            aria-label="Selecionar todos os pendentes"
+                            checked={monthEntries.filter((x) => x.paymentStatus === 'pendente').length > 0 && monthEntries.filter((x) => x.paymentStatus === 'pendente').every((x) => checked.has(rowKey(x)))}
+                            onCheckedChange={(v) =>
+                              setChecked(v ? new Set(monthEntries.filter((x) => x.paymentStatus === 'pendente').map(rowKey)) : new Set())
+                            }
+                          />
+                        </TableHead>
                         <TableHead>Projeto</TableHead>
                         <TableHead>Cliente</TableHead>
                         <TableHead>Descrição</TableHead>
@@ -393,7 +465,7 @@ export function TeamFinancePage() {
                     <TableBody>
                       {monthEntries.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                             Nenhum lançamento neste mês.
                           </TableCell>
                         </TableRow>
@@ -405,6 +477,21 @@ export function TeamFinancePage() {
                               key={k}
                               className={e.paymentStatus === 'pago' ? 'bg-success/10' : undefined}
                             >
+                              <TableCell>
+                                {e.paymentStatus === 'pendente' && (
+                                  <Checkbox
+                                    aria-label="Selecionar pagamento"
+                                    checked={checked.has(k)}
+                                    onCheckedChange={(v) =>
+                                      setChecked((prev) => {
+                                        const n = new Set(prev);
+                                        v ? n.add(k) : n.delete(k);
+                                        return n;
+                                      })
+                                    }
+                                  />
+                                )}
+                              </TableCell>
                               <TableCell className="font-medium">
                                 #{e.proposalId} {e.projectName ? `- ${e.projectName}` : ''}
                               </TableCell>
@@ -447,13 +534,7 @@ export function TeamFinancePage() {
                               <TableCell>
                                 <Select
                                   value={e.paymentStatus}
-                                  onValueChange={(v) =>
-                                    applyUpdate(e, {
-                                      paymentStatus: v as PaymentStatus,
-                                      paymentDate:
-                                        v === 'pago' ? e.paymentDate || new Date() : e.paymentDate,
-                                    })
-                                  }
+                                  onValueChange={(v) => changeStatus(e, v as PaymentStatus)}
                                 >
                                   <SelectTrigger className="h-8 w-36 text-xs">
                                     <SelectValue />
@@ -495,8 +576,9 @@ export function TeamFinancePage() {
                 </Card>
 
                 <p className="text-xs text-muted-foreground">
-                  As alterações feitas aqui atualizam automaticamente a execução do projeto.
+                  As alterações feitas aqui atualizam automaticamente a execução do projeto. Ao marcar como pago, o valor é lançado no fluxo de caixa e debitado da conta escolhida.
                 </p>
+                {cashflowPay.dialog}
               </>
             )}
           </>

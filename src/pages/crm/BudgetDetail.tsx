@@ -8,6 +8,7 @@ import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { generateFinancialReportPDF } from '@/utils/financialReportPDF';
 import { generateContractPDF } from '@/utils/contractPDF';
 import { supabase } from '@/integrations/supabase/client';
+import { useCashflowPayment } from '@/hooks/useCashflowPayment';
 import { Header } from '@/components/layout/Header';
 import { useCRM } from '@/contexts/CRMContext';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -142,6 +143,7 @@ export function BudgetDetail() {
   const navigate = useNavigate();
   const { profile, workspace, role } = useAuth();
   const { getBudget, getClient, updateBudget, addBudgetVersion, approveBudget, updateBudgetVersion, deleteLastVersion, updateExecutionCost, updateExecution, addExtraCost, removeExtraCost, deleteBudget, finalizeExecution, addDeliveryLink, removeDeliveryLink, kanbanColumns, getObjectivesForCategory, getCategoryLabel, serviceCategories, getHDForBudget } = useCRM();
+  const cashflowPay = useCashflowPayment();
 
   const budget = getBudget(id || '');
   const baseClient = budget ? getClient(budget.clientId) : null;
@@ -626,7 +628,33 @@ export function BudgetDetail() {
   };
 
   const handleUpdateExecutionPayment = (serviceId: string, costId: string, status: PaymentStatusType, date: Date | null, isExtraCost = false) => {
+    const svc = budget.execution?.services?.find((s) => s.id === serviceId);
+    const cost = (isExtraCost ? svc?.extraCosts : svc?.costs)?.find((c) => c.id === costId);
+    if (status === 'pago' && cost?.paymentStatus !== 'pago') {
+      cashflowPay.requestPay(
+        [{ costId, budgetId: budget.id, value: Number(cost?.realValue) || 0, description: `#${budget.proposalId} ${budget.projectName} — ${cost?.description || ''}${cost?.supplier ? ` (${cost.supplier})` : ''}` }],
+        (d) => updateExecutionCost(budget.id, serviceId, costId, { paymentStatus: status, paymentDate: d }, isExtraCost),
+      );
+      return;
+    }
+    if (status !== 'pago' && cost?.paymentStatus === 'pago') cashflowPay.unpay([costId]);
     updateExecutionCost(budget.id, serviceId, costId, { paymentStatus: status, paymentDate: date }, isExtraCost);
+  };
+
+  const handleUpdateOperationalPayment = (key: 'operationalCosts' | 'extraOperationalCosts', costId: string, status: PaymentStatusType) => {
+    const list = ((budget.execution as any)?.[key] || []) as any[];
+    const cost = list.find((c) => c.id === costId);
+    const save = (d: Date | null) =>
+      updateExecution(budget.id, { [key]: list.map((c) => (c.id === costId ? { ...c, paymentStatus: status, paymentDate: d } : c)) } as any);
+    if (status === 'pago' && cost?.paymentStatus !== 'pago') {
+      cashflowPay.requestPay(
+        [{ costId, budgetId: budget.id, value: Number(cost?.realValue) || 0, description: `#${budget.proposalId} ${budget.projectName} — ${cost?.description || ''}${cost?.supplier ? ` (${cost.supplier})` : ''}` }],
+        (d) => save(d),
+      );
+      return;
+    }
+    if (status !== 'pago' && cost?.paymentStatus === 'pago') cashflowPay.unpay([costId]);
+    save(null);
   };
 
   const handleUpdateExtraCostSupplier = (serviceId: string, costId: string, supplier: string) => {
@@ -3314,13 +3342,7 @@ export function BudgetDetail() {
                                     <TableCell>
                                       <Select
                                         value={cost.paymentStatus}
-                                        onValueChange={(value) => {
-                                          updateExecution(budget.id, {
-                                            operationalCosts: (budget.execution?.operationalCosts || []).map(c =>
-                                              c.id === cost.id ? { ...c, paymentStatus: value as PaymentStatusType, paymentDate: value === 'pago' ? new Date() : null } : c
-                                            ),
-                                          });
-                                        }}
+                                        onValueChange={(value) => handleUpdateOperationalPayment('operationalCosts', cost.id, value as PaymentStatusType)}
                                       >
                                         <SelectTrigger className="w-28 h-8">
                                           <SelectValue />
@@ -3931,6 +3953,7 @@ export function BudgetDetail() {
         categoryKey={catalogSelector.categoryKey}
         onSelect={catalogSelector.onPick}
       />
+      {cashflowPay.dialog}
     </div>
   );
 }
