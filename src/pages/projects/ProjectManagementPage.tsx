@@ -93,6 +93,7 @@ export function ProjectManagementPage() {
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightBudgetId = searchParams.get('budget');
+  const openProjectId = searchParams.get('projeto');
   const [highlightCardId, setHighlightCardId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -163,6 +164,20 @@ export function ProjectManagementPage() {
     const t = setTimeout(() => setHighlightCardId(null), 3000);
     return () => clearTimeout(t);
   }, [highlightBudgetId, projectCards, setSearchParams]);
+
+  // Opens a project directly when arriving from another screen (e.g. Boas-vindas)
+  useEffect(() => {
+    if (!openProjectId || projectCards.length === 0) return;
+    const card = projectCards.find((c) => c.id === openProjectId);
+    if (!card) return;
+    setCollapsed((prev) => ({ ...prev, [card.status]: false }));
+    setActivitiesFor({ id: card.id, name: card.projectName, status: card.status });
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev);
+      sp.delete('projeto');
+      return sp;
+    }, { replace: true });
+  }, [openProjectId, projectCards, setSearchParams]);
 
   const sortedColumns = useMemo(
     () => [...projectColumns].sort((a, b) => a.order - b.order),

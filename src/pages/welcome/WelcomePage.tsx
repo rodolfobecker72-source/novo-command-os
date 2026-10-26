@@ -94,7 +94,7 @@ function getUpcomingRange(ref: Date) {
 }
 
 export function WelcomePage() {
-  const { profile, workspace } = useAuth();
+  const { profile, workspace, hasPageAccess } = useAuth();
   const navigate = useNavigate();
   const [birthdays, setBirthdays] = useState<BirthdayMember[]>([]);
   const [userActivities, setUserActivities] = useState<UserActivities[]>([]);
@@ -103,6 +103,17 @@ export function WelcomePage() {
   const [personalNotes, setPersonalNotes] = useState<PersonalNoteItem[]>([]);
   const [reloadNonce, setReloadNonce] = useState(0);
   const [activityDialog, setActivityDialog] = useState<{ projectCardId: string; projectName: string } | null>(null);
+
+  // Opens the project inside the Área de Projetos screen (full project view).
+  // Falls back to the activities panel when the user has no access there.
+  const openProject = (projectCardId: string, projectName: string) => {
+    if (!projectCardId) return;
+    if (hasPageAccess('gestao-projetos')) {
+      navigate(`/gestao-projetos?projeto=${encodeURIComponent(projectCardId)}`);
+    } else {
+      setActivityDialog({ projectCardId, projectName });
+    }
+  };
 
   useRealtimeSync({
     workspaceId: workspace?.id,
@@ -620,9 +631,9 @@ export function WelcomePage() {
                           variant="ghost"
                           size="icon"
                           className="shrink-0 -mr-1 -mt-1 h-7 w-7 text-muted-foreground hover:text-primary"
-                          onClick={() => setActivityDialog({ projectCardId: a.projectCardId, projectName: a.projectName })}
-                          title="Abrir painel de atividades do projeto"
-                          aria-label="Abrir painel de atividades do projeto"
+                          onClick={() => openProject(a.projectCardId, a.projectName)}
+                          title="Abrir projeto"
+                          aria-label="Abrir projeto"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Button>
@@ -674,10 +685,10 @@ export function WelcomePage() {
                       <div className="shrink-0 flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => setActivityDialog({ projectCardId: m.cardId, projectName: m.projectName })}
+                          onClick={() => openProject(m.cardId, m.projectName)}
                           className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary transition"
-                          title="Abrir painel de atividades do projeto"
-                          aria-label="Abrir painel de atividades do projeto"
+                          title="Abrir projeto"
+                          aria-label="Abrir projeto"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </button>
