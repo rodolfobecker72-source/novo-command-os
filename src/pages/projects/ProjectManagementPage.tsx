@@ -165,6 +165,20 @@ export function ProjectManagementPage() {
     return () => clearTimeout(t);
   }, [highlightBudgetId, projectCards, setSearchParams]);
 
+  // Opens a project directly when arriving from another screen (e.g. Boas-vindas)
+  useEffect(() => {
+    if (!openProjectId || projectCards.length === 0) return;
+    const card = projectCards.find((c) => c.id === openProjectId);
+    if (!card) return;
+    setCollapsed((prev) => ({ ...prev, [card.status]: false }));
+    setActivitiesFor({ id: card.id, name: card.projectName, status: card.status });
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev);
+      sp.delete('projeto');
+      return sp;
+    }, { replace: true });
+  }, [openProjectId, projectCards, setSearchParams]);
+
   const sortedColumns = useMemo(
     () => [...projectColumns].sort((a, b) => a.order - b.order),
     [projectColumns]
