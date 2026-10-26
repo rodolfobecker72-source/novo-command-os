@@ -920,6 +920,7 @@ export function BudgetDetail() {
 
   const isVendedor = role === 'vendedor';
   const isAdminOrOwner = role === 'owner' || role === 'admin';
+  const canSeeExecution = isAdminOrOwner;
   const canDownloadPDF = !isVendedor || budget?.pdfReleased;
 
   const generatePDFForVersion = async (version: BudgetVersion) => {
@@ -1078,7 +1079,7 @@ export function BudgetDetail() {
               <Repeat className="w-4 h-4 mr-2" />
               {budget.isRecurring ? 'Recorrente' : 'Marcar recorrente'}
             </Button>
-            {budget.status === 'aprovada' && (
+            {budget.status === 'aprovada' && canSeeExecution && (
               <Button
                 size="sm"
                 onClick={() => navigate(`/gestao-projetos?budget=${budget.id}`)}
@@ -1136,7 +1137,7 @@ export function BudgetDetail() {
         </div>
 
         {/* Tabs for Budget vs Execution */}
-        {budget.status === 'aprovada' && budget.execution && (
+        {budget.status === 'aprovada' && budget.execution && canSeeExecution && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger value="budget" className="flex items-center gap-2">
@@ -1190,7 +1191,7 @@ export function BudgetDetail() {
           {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Info Card */}
-            {(activeTab === 'budget' || !(budget.status === 'aprovada' && budget.execution)) && (
+            {(activeTab === 'budget' || !canSeeExecution || !(budget.status === 'aprovada' && budget.execution)) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1598,7 +1599,7 @@ export function BudgetDetail() {
             )}
 
             {/* Budget View */}
-            {activeTab === 'budget' && (
+            {(activeTab === 'budget' || !canSeeExecution) && (
               <>
                 {/* Edit Version Button */}
                 {!isEditingVersion && (
@@ -3014,7 +3015,7 @@ export function BudgetDetail() {
             )}
 
             {/* Execution View */}
-            {activeTab === 'execution' && budget.execution && (
+            {activeTab === 'execution' && budget.execution && canSeeExecution && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -3546,7 +3547,7 @@ export function BudgetDetail() {
             )}
 
             {/* If Approved - Show approval info */}
-            {budget.status === 'aprovada' && activeTab === 'budget' && (
+            {budget.status === 'aprovada' && (activeTab === 'budget' || !canSeeExecution) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
