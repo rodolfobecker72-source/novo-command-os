@@ -35,6 +35,7 @@ export const APP_PAGES: AppPage[] = [
   { key: 'metas', label: 'Metas', href: '/configuracoes/metas', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
   
   // Administrativo
+  { key: 'dashboard', label: 'Dashboard', href: '/crm/dashboard', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
   { key: 'financeiro', label: 'Financeiro', href: '/financeiro', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
   { key: 'patrimonio', label: 'Patrimônio', href: '/patrimonio', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
   { key: 'financeiro-time', label: 'Financeiro do Time', href: '/financeiro-time', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },

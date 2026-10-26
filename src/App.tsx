@@ -94,7 +94,7 @@ const App = () => (
                   
                   {/* CRM */}
                   <Route path="/crm" element={<PageGuard pageKey="crm"><CRMKanban /></PageGuard>} />
-                  <Route path="/crm/dashboard" element={<PageGuard pageKey="crm"><CRMDashboard /></PageGuard>} />
+                  <Route path="/crm/dashboard" element={<PageGuard pageKey="dashboard"><CRMDashboard /></PageGuard>} />
                   <Route path="/crm/orcamento/novo" element={<PageGuard pageKey="crm"><NewBudget /></PageGuard>} />
                   <Route path="/crm/orcamento/:id" element={<PageGuard pageKey="crm"><BudgetDetail /></PageGuard>} />
                   
