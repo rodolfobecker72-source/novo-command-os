@@ -35,6 +35,7 @@ interface PersonalEvent {
   kind: EventKind;
   title: string;
   subtitle: string;
+  clientName?: string;
   status?: string;
   budgetId?: string;
   leadId?: string;
@@ -126,14 +127,14 @@ export function MyCalendarPage() {
       if (notesRes.error) throw notesRes.error;
 
       const cardIds = Array.from(new Set((activitiesRes.data || []).map((a: any) => a.project_card_id).filter(Boolean)));
-      const cardsMap = new Map<string, { proposalId: string; projectName: string; budgetId: string }>();
+      const cardsMap = new Map<string, { proposalId: string; projectName: string; clientName: string; budgetId: string }>();
       if (cardIds.length) {
         const { data: cards } = await supabase
           .from('project_cards')
-          .select('id, proposal_id, project_name, budget_id')
+          .select('id, proposal_id, project_name, client_name, budget_id')
           .in('id', cardIds);
         (cards || []).forEach((c: any) =>
-          cardsMap.set(c.id, { proposalId: c.proposal_id, projectName: c.project_name, budgetId: c.budget_id }),
+          cardsMap.set(c.id, { proposalId: c.proposal_id, projectName: c.project_name, clientName: c.client_name, budgetId: c.budget_id }),
         );
       }
 
