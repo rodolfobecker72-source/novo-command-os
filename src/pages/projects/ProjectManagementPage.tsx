@@ -93,6 +93,7 @@ export function ProjectManagementPage() {
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightBudgetId = searchParams.get('budget');
+  const openProjectId = searchParams.get('projeto');
   const [highlightCardId, setHighlightCardId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
