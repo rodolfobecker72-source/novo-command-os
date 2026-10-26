@@ -51,7 +51,6 @@ const navGroups: NavGroup[] = [
       { name: 'Gestão de Leads', href: '/prospeccao', icon: Target, pageKey: 'prospeccao' },
       { name: 'Empresas Cadastradas', href: '/clientes', icon: Users, pageKey: 'clientes' },
       { name: 'CRM', href: '/crm', icon: LayoutGrid, pageKey: 'crm' },
-      { name: 'Dashboard', href: '/crm/dashboard', icon: TrendingUp, pageKey: 'crm' },
     ],
   },
   {
@@ -69,6 +68,7 @@ const navGroups: NavGroup[] = [
     label: 'Administrativo',
     icon: ShieldCheck,
     items: [
+      { name: 'Dashboard', href: '/crm/dashboard', icon: TrendingUp, pageKey: 'dashboard' },
       { name: 'Financeiro', href: '/financeiro', icon: DollarSign, pageKey: 'financeiro' },
       { name: 'Financeiro do Time', href: '/financeiro-time', icon: Users, pageKey: 'financeiro-time' },
       { name: 'Patrimônio', href: '/patrimonio', icon: Building2, pageKey: 'patrimonio' },
