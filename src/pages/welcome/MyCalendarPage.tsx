@@ -156,6 +156,7 @@ export function MyCalendarPage() {
             kind: 'project',
             title: a.title || '(sem título)',
             subtitle: card ? `${card.proposalId} — ${card.projectName}` : 'Projeto',
+            clientName: card?.clientName,
             status: a.status,
             budgetId: card?.budgetId,
             isDelivery: !!a.is_delivery,
@@ -766,6 +767,9 @@ function DraggableEvent({ ev, userId, onOpen }: { ev: PersonalEvent; userId?: st
         <span className="truncate">{ev.kind === 'project' ? ev.subtitle : ev.title}</span>
       </div>
       <div className="truncate opacity-80">{ev.kind === 'project' ? ev.title : ev.subtitle}</div>
+      {ev.kind === 'project' && ev.clientName && (
+        <div className="truncate opacity-60 text-[9px] md:text-[10px]">{ev.clientName}</div>
+      )}
     </button>
   );
 }
