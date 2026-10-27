@@ -27,3 +27,14 @@ export function movePaymentTerm<T extends OrderedPaymentTerm>(terms: T[], id: st
 export function activePaymentTerms<T extends OrderedPaymentTerm>(terms: T[]): T[] {
   return sortPaymentTerms(terms).filter(term => term.active);
 }
+
+export function dragPaymentTerm<T extends OrderedPaymentTerm>(terms: T[], activeId: string, overId: string): T[] {
+  const ordered = sortPaymentTerms(terms);
+  const from = ordered.findIndex(term => term.id === activeId);
+  const to = ordered.findIndex(term => term.id === overId);
+  if (from < 0 || to < 0 || from === to) return ordered;
+  const [moved] = ordered.splice(from, 1);
+  if (!moved) return ordered;
+  ordered.splice(to, 0, moved);
+  return ordered.map((term, sortOrder) => ({ ...term, sortOrder }));
+}
