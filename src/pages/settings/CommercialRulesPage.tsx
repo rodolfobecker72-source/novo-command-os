@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { dragPaymentTerm, sortPaymentTerms, type OrderedPaymentTerm } from '@/utils/paymentTermOrder';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@/utils/dndModifiers';
 import { SortablePaymentTermRow } from '@/components/crm/SortablePaymentTermRow';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
