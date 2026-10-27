@@ -43,6 +43,13 @@
       "when": 1793124969912,
       "tag": "0005_payment_terms_sort_order",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793129448913,
+      "tag": "0006_lead_second_responsible",
+      "breakpoints": true
     }
   ]
 }

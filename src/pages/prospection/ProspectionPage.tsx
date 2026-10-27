@@ -85,6 +85,7 @@ const emptyLead: Omit<ProspectionLead, 'id' | 'createdAt' | 'updatedAt'> = {
   priority: 'media',
   strategicNotes: '',
   responsibleUserId: null,
+  responsibleUserId2: null,
   temperatureManual: false,
 };
 
@@ -369,6 +370,7 @@ export function ProspectionPage() {
       priority: lead.priority,
       strategicNotes: lead.strategicNotes,
       responsibleUserId: lead.responsibleUserId ?? null,
+      responsibleUserId2: lead.responsibleUserId2 ?? null,
       temperatureManual: lead.temperatureManual ?? false,
     });
     setDialogOpen(true);
@@ -564,7 +566,7 @@ export function ProspectionPage() {
                       {statusLeads.map(lead => (
                         <DraggableLeadCard key={lead.id} lead={lead}>
                           <Card className="border-0 shadow-sm rounded-2xl cursor-grab active:cursor-grabbing hover:shadow-md transition-all"
-                            onClick={() => setDetailLead(lead)}>
+                            onClick={() => openEdit(lead)}>
                             <CardContent className="p-4 space-y-2.5">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex items-start gap-2 min-w-0">
@@ -760,7 +762,22 @@ export function ProspectionPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Data da Próxima Ação</Label>
-              <Input type="date" value={formData.nextActionDate} onChange={e => setFormData(p => ({ ...p, nextActionDate: e.target.value }))} />
+              <div className="flex gap-2">
+                <Input type="date" className="flex-1" value={formData.nextActionDate} onChange={e => setFormData(p => ({ ...p, nextActionDate: e.target.value }))} />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number" min={0} placeholder="Dias" className="w-20" aria-label="Dias a partir de hoje"
+                    onChange={e => {
+                      const n = parseInt(e.target.value, 10);
+                      if (isNaN(n) || n < 0) return;
+                      const d = new Date(); d.setDate(d.getDate() + n);
+                      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                      setFormData(p => ({ ...p, nextActionDate: iso }));
+                    }}
+                  />
+                  <span className="text-xs text-muted-foreground">dias</span>
+                </div>
+              </div>
             </div>
             <div className="space-y-1.5 md:col-span-2">
               <Label className="text-xs">Próxima Ação</Label>
@@ -775,6 +792,21 @@ export function ProspectionPage() {
                 <SelectTrigger><SelectValue placeholder="Selecione um responsável" /></SelectTrigger>
                 <SelectContent className="z-[200]">
                   {members.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs">2º Responsável (opcional)</Label>
+              <Select
+                value={formData.responsibleUserId2 || 'none'}
+                onValueChange={(v) => setFormData(p => ({ ...p, responsibleUserId2: v === 'none' ? null : v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                <SelectContent className="z-[200]">
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {members.filter(m => m.id !== formData.responsibleUserId).map(m => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -849,7 +881,7 @@ export function ProspectionPage() {
                   <div><span className="text-muted-foreground text-xs">Potencial:</span><p className="font-semibold">R$ {detailLead.estimatedPotential.toLocaleString('pt-BR')}</p></div>
                   <div><span className="text-muted-foreground text-xs">Resp. Prospecção:</span><p>{detailLead.prospectionResponsible || '-'}</p></div>
                   <div><span className="text-muted-foreground text-xs">Resp. Fechamento:</span><p>{detailLead.closingResponsible || '-'}</p></div>
-                  <div><span className="text-muted-foreground text-xs">Responsável pelo Lead:</span><p>{memberName(detailLead.responsibleUserId) || '-'}</p></div>
+                  <div><span className="text-muted-foreground text-xs">Responsável pelo Lead:</span><p>{[memberName(detailLead.responsibleUserId), memberName(detailLead.responsibleUserId2)].filter(Boolean).join(', ') || '-'}</p></div>
                   <div><span className="text-muted-foreground text-xs">Último Contato:</span><p>{detailLead.lastContactDate ? format(new Date(detailLead.lastContactDate + 'T12:00:00'), 'dd/MM/yyyy') : '-'}</p></div>
                   <div><span className="text-muted-foreground text-xs">Data da Próxima Ação:</span><p>{detailLead.nextActionDate ? format(new Date(detailLead.nextActionDate + 'T12:00:00'), 'dd/MM/yyyy') : '-'}</p></div>
                   <div className="col-span-2"><span className="text-muted-foreground text-xs">Próxima Ação:</span><p>{detailLead.nextAction || '-'}</p></div>
