@@ -582,10 +582,10 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
   };
 
   const handleUpdateDelivery = async (id: string, value: boolean) => {
-    setActivities(prev => prev.map(a => a.id === id ? { ...a, isDelivery: value } : a));
+    setActivities(prev => prev.map(a => a.id === id ? { ...a, isDelivery: value, endDate: value ? null : a.endDate } : a));
     const { error } = await supabase
       .from('project_activities')
-      .update({ is_delivery: value } as any)
+      .update({ is_delivery: value, ...(value ? { end_date: null } : {}) } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar entrega');
     else syncActivityToGoogle(id, 'upsert');
