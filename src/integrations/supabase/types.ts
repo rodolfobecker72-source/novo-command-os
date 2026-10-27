@@ -1248,6 +1248,7 @@ export type Database = {
           description: string
           id: string
           name: string
+          sort_order: number
           updated_at: string
           workspace_id: string
         }
@@ -1257,6 +1258,7 @@ export type Database = {
           description?: string
           id?: string
           name?: string
+          sort_order?: number
           updated_at?: string
           workspace_id: string
         }
@@ -1266,6 +1268,7 @@ export type Database = {
           description?: string
           id?: string
           name?: string
+          sort_order?: number
           updated_at?: string
           workspace_id?: string
         }
@@ -2128,6 +2131,10 @@ export type Database = {
         Returns: boolean
       }
       is_system_admin: { Args: { _user_id: string }; Returns: boolean }
+      reorder_payment_terms: {
+        Args: { p_ids: string[]; p_workspace_id: string }
+        Returns: undefined
+      }
       workspace_has_members: {
         Args: { _workspace_id: string }
         Returns: boolean
