@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Permitir reordenar condições de pagamento e refletir a sequência na seleção das propostas
+
 - [x] Diagnóstico do filtro de mês na Gestão de Leads (versão publicada com offset de mês; código atual correto)
 - [x] Ícones de WhatsApp e e-mail nos cards de leads (ativos quando cadastrado, cinza quando não; clique abre o app)
 - [x] Cadastro de empresa direto em /clientes, sem passar pela Gestão de Leads
