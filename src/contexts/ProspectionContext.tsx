@@ -59,6 +59,7 @@ function leadFromDb(row: any): ProspectionLead {
     priority: row.priority,
     strategicNotes: row.strategic_notes,
     responsibleUserId: row.responsible_user_id ?? null,
+    responsibleUserId2: row.responsible_user_id_2 ?? null,
     temperatureManual: row.temperature_manual ?? false,
     meetingScheduledAt: row.meeting_scheduled_at ?? null,
     meetingHappened: row.meeting_happened ?? null,
@@ -90,6 +91,7 @@ function leadToDb(l: Partial<ProspectionLead>, workspaceId?: string): any {
   if (l.priority !== undefined) row.priority = l.priority;
   if (l.strategicNotes !== undefined) row.strategic_notes = l.strategicNotes;
   if (l.responsibleUserId !== undefined) row.responsible_user_id = l.responsibleUserId || null;
+  if (l.responsibleUserId2 !== undefined) row.responsible_user_id_2 = l.responsibleUserId2 || null;
   if (l.temperatureManual !== undefined) row.temperature_manual = l.temperatureManual;
   if (l.meetingScheduledAt !== undefined) row.meeting_scheduled_at = l.meetingScheduledAt;
   if (l.meetingHappened !== undefined) row.meeting_happened = l.meetingHappened;

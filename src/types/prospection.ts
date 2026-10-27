@@ -73,6 +73,7 @@ export interface ProspectionLead {
   priority: LeadPriority;
   // Responsible user (workspace member)
   responsibleUserId?: string | null;
+  responsibleUserId2?: string | null;
   temperatureManual?: boolean;
   meetingScheduledAt?: string | null;
   meetingHappened?: boolean | null;

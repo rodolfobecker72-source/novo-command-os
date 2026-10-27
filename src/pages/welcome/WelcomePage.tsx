@@ -269,7 +269,7 @@ export function WelcomePage() {
         .from('prospection_leads')
         .select('id, company_name, next_action, next_action_date, funnel_status, responsible_user_id')
         .eq('workspace_id', workspace.id)
-        .eq('responsible_user_id', profile.id);
+        .or(`responsible_user_id.eq.${profile.id},responsible_user_id_2.eq.${profile.id}`);
 
       const items: LeadAlertItem[] = [];
       for (const l of (leads || []) as any[]) {

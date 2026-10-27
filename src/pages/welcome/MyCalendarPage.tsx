@@ -112,7 +112,7 @@ export function MyCalendarPage() {
               .from('prospection_leads')
               .select('id, company_name, next_action, next_action_date')
               .eq('workspace_id', workspace.id)
-              .eq('responsible_user_id', user.id)
+              .or(`responsible_user_id.eq.${user.id},responsible_user_id_2.eq.${user.id}`)
               .not('next_action_date', 'is', null)
               .neq('next_action_date', ''),
         supabase
