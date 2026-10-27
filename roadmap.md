@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Permitir reordenar condições de pagamento e refletir a sequência na seleção das propostas
+- [x] Permitir reordenar condições de pagamento e refletir a sequência na seleção das propostas (testes aprovados; conta atual sem acesso à tela de reordenação)
 
 - [x] Diagnóstico do filtro de mês na Gestão de Leads (versão publicada com offset de mês; código atual correto)
 - [x] Ícones de WhatsApp e e-mail nos cards de leads (ativos quando cadastrado, cinza quando não; clique abre o app)
