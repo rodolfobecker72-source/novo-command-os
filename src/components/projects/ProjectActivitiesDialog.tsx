@@ -1605,6 +1605,24 @@ function SortableCard({
         </PopoverContent>
       </Popover>
 
+      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={activity.isCaptacao}
+          onChange={(e) => onUpdateCaptacao(activity.id, e.target.checked)}
+          className="h-3.5 w-3.5 accent-red-500"
+        />
+        <span className={cn(activity.isCaptacao && 'text-red-600 font-medium')}>Captação</span>
+      </label>
+      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={activity.isDelivery}
+          onChange={(e) => onUpdateDelivery(activity.id, e.target.checked)}
+          className="h-3.5 w-3.5 accent-blue-500"
+        />
+        <span className={cn(activity.isDelivery && 'text-blue-600 font-medium')}>Entrega</span>
+      </label>
       {/* Date */}
       <div className={cn('flex items-center gap-2 text-xs flex-wrap', isOverdue ? 'text-destructive' : 'text-muted-foreground')}>
         <Calendar className={cn('w-3.5 h-3.5 shrink-0', activity.isDelivery && 'text-blue-500')} />
@@ -1629,24 +1647,6 @@ function SortableCard({
           </>
         )}
       </div>
-      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={activity.isCaptacao}
-          onChange={(e) => onUpdateCaptacao(activity.id, e.target.checked)}
-          className="h-3.5 w-3.5 accent-red-500"
-        />
-        <span className={cn(activity.isCaptacao && 'text-red-600 font-medium')}>Captação</span>
-      </label>
-      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={activity.isDelivery}
-          onChange={(e) => onUpdateDelivery(activity.id, e.target.checked)}
-          className="h-3.5 w-3.5 accent-blue-500"
-        />
-        <span className={cn(activity.isDelivery && 'text-blue-600 font-medium')}>Entrega</span>
-      </label>
       </div>
     </div>
   );
