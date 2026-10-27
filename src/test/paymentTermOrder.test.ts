@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activePaymentTerms, movePaymentTerm, sortPaymentTerms } from '@/utils/paymentTermOrder';
+import { activePaymentTerms, dragPaymentTerm, movePaymentTerm, sortPaymentTerms } from '@/utils/paymentTermOrder';
 
 const terms = [
   { id: 'a', name: '40% ao fechar - 60% na entrega', description: '', active: true, sortOrder: 0, createdAt: '2026-10-01' },
@@ -8,6 +8,13 @@ const terms = [
 ];
 
 describe('ordem das condições de pagamento', () => {
+  it('arrasta diretamente do último ao primeiro mantendo a ordem da seleção', () => {
+    const reordered = dragPaymentTerm(terms, 'c', 'a');
+    expect(reordered.map(term => term.id)).toEqual(['c', 'a', 'b']);
+    expect(activePaymentTerms(reordered).map(term => term.id)).toEqual(['c', 'a']);
+    expect(reordered.map(term => term.sortOrder)).toEqual([0, 1, 2]);
+    expect(dragPaymentTerm(terms, 'c', 'missing')).toEqual(terms);
+  });
   it('permite mover condições e mantém a sequência ajustada na seleção', () => {
     const moved = movePaymentTerm(terms, 'c', -1);
     const reordered = movePaymentTerm(moved, 'c', -1);

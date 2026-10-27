@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { movePaymentTerm, sortPaymentTerms, type OrderedPaymentTerm } from '@/utils/paymentTermOrder';
+import { dragPaymentTerm, sortPaymentTerms, type OrderedPaymentTerm } from '@/utils/paymentTermOrder';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { SortablePaymentTermRow } from '@/components/crm/SortablePaymentTermRow';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Save, Percent, ShieldAlert, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, Percent, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 type PaymentTerm = OrderedPaymentTerm;
@@ -41,6 +44,10 @@ export function CommercialRulesPage() {
   const [termsLoading, setTermsLoading] = useState(false);
   const [reordering, setReordering] = useState(false);
   const reorderLock = useRef(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -96,10 +103,11 @@ export function CommercialRulesPage() {
     setTermsLoading(false);
   }
 
-  async function reorderTerm(id: string, direction: -1 | 1) {
+  async function reorderTerm({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
     if (!workspaceId || !isOwner || reorderLock.current) return;
     const previous = paymentTerms;
-    const next = movePaymentTerm(previous, id, direction);
+    const next = dragPaymentTerm(previous, String(active.id), String(over.id));
     reorderLock.current = true;
     setReordering(true);
     setPaymentTerms(next);
@@ -338,10 +346,12 @@ export function CommercialRulesPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={reorderTerm}>
+                <SortableContext items={paymentTerms.map(term => term.id)} strategy={verticalListSortingStrategy}>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-20">Ordem</TableHead>
+                      <TableHead className="w-10"><span className="sr-only">Ordem</span></TableHead>
                       <TableHead>Nome</TableHead>
                       <TableHead className="hidden sm:table-cell">Descrição</TableHead>
                       <TableHead>Status</TableHead>
@@ -349,18 +359,8 @@ export function CommercialRulesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paymentTerms.map((term, index) => (
-                      <TableRow key={term.id}>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Mover para cima" aria-label={`Mover ${term.name} para cima`} disabled={reordering || index === 0} onClick={() => reorderTerm(term.id, -1)}>
-                              <ArrowUp className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Mover para baixo" aria-label={`Mover ${term.name} para baixo`} disabled={reordering || index === paymentTerms.length - 1} onClick={() => reorderTerm(term.id, 1)}>
-                              <ArrowDown className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                    {paymentTerms.map((term) => (
+                      <SortablePaymentTermRow key={term.id} id={term.id} name={term.name} disabled={reordering || termsLoading}>
                         <TableCell className="font-medium">{term.name}</TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground max-w-[300px] truncate">
                           {term.description || '—'}
@@ -383,10 +383,12 @@ export function CommercialRulesPage() {
                             </Button>
                           </div>
                         </TableCell>
-                      </TableRow>
+                      </SortablePaymentTermRow>
                     ))}
                   </TableBody>
                 </Table>
+                </SortableContext>
+                </DndContext>
               </div>
             )}
           </CardContent>
