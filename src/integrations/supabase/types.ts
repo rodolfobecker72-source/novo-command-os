@@ -1507,6 +1507,7 @@ export type Database = {
           priority: string
           prospection_responsible: string
           responsible_user_id: string | null
+          responsible_user_id_2: string | null
           segment: string
           strategic_notes: string
           temperature: string
@@ -1536,6 +1537,7 @@ export type Database = {
           priority?: string
           prospection_responsible?: string
           responsible_user_id?: string | null
+          responsible_user_id_2?: string | null
           segment?: string
           strategic_notes?: string
           temperature?: string
@@ -1565,6 +1567,7 @@ export type Database = {
           priority?: string
           prospection_responsible?: string
           responsible_user_id?: string | null
+          responsible_user_id_2?: string | null
           segment?: string
           strategic_notes?: string
           temperature?: string
