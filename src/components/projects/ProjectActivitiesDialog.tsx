@@ -1612,18 +1612,22 @@ function SortableCard({
           type="date"
           value={activity.dueDate || ''}
           onChange={(e) => onUpdateDue(activity.id, e.target.value || null)}
-          className="bg-transparent outline-none cursor-pointer hover:text-foreground transition-colors"
-          placeholder="Início"
+          className={cn('bg-transparent outline-none cursor-pointer hover:text-foreground transition-colors', activity.isDelivery && 'text-blue-600 font-medium')}
+          placeholder={activity.isDelivery ? 'Data de entrega' : 'Início'}
         />
-        <span className="opacity-60">→</span>
-        <input
-          type="date"
-          value={activity.endDate || ''}
-          min={activity.dueDate || undefined}
-          onChange={(e) => onUpdateEnd(activity.id, e.target.value || null)}
-          className="bg-transparent outline-none cursor-pointer hover:text-foreground transition-colors"
-          placeholder="Fim"
-        />
+        {!activity.isDelivery && (
+          <>
+            <span className="opacity-60">→</span>
+            <input
+              type="date"
+              value={activity.endDate || ''}
+              min={activity.dueDate || undefined}
+              onChange={(e) => onUpdateEnd(activity.id, e.target.value || null)}
+              className="bg-transparent outline-none cursor-pointer hover:text-foreground transition-colors"
+              placeholder="Fim"
+            />
+          </>
+        )}
       </div>
       <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
         <input
