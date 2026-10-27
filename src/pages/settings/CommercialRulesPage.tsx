@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { movePaymentTerm, sortPaymentTerms, type OrderedPaymentTerm } from '@/utils/paymentTermOrder';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,15 +12,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Save, Percent, ShieldAlert } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, Percent, ShieldAlert, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface PaymentTerm {
-  id: string;
-  name: string;
-  description: string;
-  active: boolean;
-}
+type PaymentTerm = OrderedPaymentTerm;
 
 interface CostSettings {
   default_fixed_cost_percentage: number;
@@ -43,6 +39,8 @@ export function CommercialRulesPage() {
   // Payment terms
   const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([]);
   const [termsLoading, setTermsLoading] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const reorderLock = useRef(false);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -83,17 +81,42 @@ export function CommercialRulesPage() {
       .from('payment_terms')
       .select('*')
       .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: true });
+      .order('sort_order').order('created_at').order('id');
 
     if (data) {
-      setPaymentTerms(data.map(d => ({
+      setPaymentTerms(sortPaymentTerms(data.map(d => ({
         id: d.id,
         name: d.name,
         description: d.description,
         active: d.active,
-      })));
+        sortOrder: d.sort_order,
+        createdAt: d.created_at,
+      }))));
     }
     setTermsLoading(false);
+  }
+
+  async function reorderTerm(id: string, direction: -1 | 1) {
+    if (!workspaceId || !isOwner || reorderLock.current) return;
+    const previous = paymentTerms;
+    const next = movePaymentTerm(previous, id, direction);
+    reorderLock.current = true;
+    setReordering(true);
+    setPaymentTerms(next);
+    try {
+      const { error } = await supabase.rpc('reorder_payment_terms', {
+        p_workspace_id: workspaceId,
+        p_ids: next.map(term => term.id),
+      });
+      if (error) throw error;
+      toast.success('Ordem das condições salva');
+    } catch {
+      setPaymentTerms(previous);
+      toast.error('Não foi possível salvar a ordem das condições');
+    } finally {
+      reorderLock.current = false;
+      setReordering(false);
+    }
   }
 
   async function saveCostSettings() {
@@ -170,6 +193,7 @@ export function CommercialRulesPage() {
           name: termForm.name.trim(),
           description: termForm.description.trim(),
           active: termForm.active,
+          sort_order: Math.max(-1, ...paymentTerms.map(term => term.sortOrder)) + 1,
         }));
     }
 
@@ -302,7 +326,7 @@ export function CommercialRulesPage() {
                 Gerencie as opções de pagamento disponíveis nas propostas
               </CardDescription>
             </div>
-            <Button onClick={openNewTerm} size="sm">
+            <Button onClick={openNewTerm} size="sm" disabled={reordering || termsLoading}>
               <Plus className="w-4 h-4 mr-2" />
               Nova Condição
             </Button>
@@ -317,6 +341,7 @@ export function CommercialRulesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-20">Ordem</TableHead>
                       <TableHead>Nome</TableHead>
                       <TableHead className="hidden sm:table-cell">Descrição</TableHead>
                       <TableHead>Status</TableHead>
@@ -324,8 +349,18 @@ export function CommercialRulesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paymentTerms.map((term) => (
+                    {paymentTerms.map((term, index) => (
                       <TableRow key={term.id}>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Mover para cima" aria-label={`Mover ${term.name} para cima`} disabled={reordering || index === 0} onClick={() => reorderTerm(term.id, -1)}>
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Mover para baixo" aria-label={`Mover ${term.name} para baixo`} disabled={reordering || index === paymentTerms.length - 1} onClick={() => reorderTerm(term.id, 1)}>
+                              <ArrowDown className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">{term.name}</TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground max-w-[300px] truncate">
                           {term.description || '—'}
@@ -337,13 +372,13 @@ export function CommercialRulesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => toggleTermActive(term)} title={term.active ? 'Desativar' : 'Ativar'}>
+                            <Button variant="ghost" size="icon" disabled={reordering} onClick={() => toggleTermActive(term)} title={term.active ? 'Desativar' : 'Ativar'}>
                               <Switch checked={term.active} className="pointer-events-none" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => openEditTerm(term)}>
+                            <Button variant="ghost" size="icon" disabled={reordering} onClick={() => openEditTerm(term)}>
                               <Pencil className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteId(term.id)} className="text-destructive hover:text-destructive">
+                            <Button variant="ghost" size="icon" disabled={reordering} onClick={() => setDeleteId(term.id)} className="text-destructive hover:text-destructive">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>

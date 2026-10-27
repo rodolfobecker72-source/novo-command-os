@@ -1,1 +1,2 @@
 - PDF colors/fonts come from `resolveTheme(layoutSettings.brandTheme)` in src/utils/pdfTheme.ts; never hardcode them in generators — keeps workspace brand identity applied to every document.
+- Payment-term selectors share `usePaymentTerms` and ordering helpers; reorder the complete workspace list atomically through `reorder_payment_terms` to keep proposal creation and editing consistent without partial saves.

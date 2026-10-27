@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePaymentTerms } from '@/hooks/usePaymentTerms';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { ServiceItemSelector } from '@/components/crm/ServiceItemSelector';
@@ -155,7 +156,7 @@ export function NewBudget() {
   const submittingRef = useRef(false);
 
   // Payment terms from commercial rules
-  const [availablePaymentTerms, setAvailablePaymentTerms] = useState<{ id: string; name: string }[]>([]);
+  const availablePaymentTerms = usePaymentTerms(workspace?.id);
 
   // Sincronizar proposalId quando budgets carregam
   useEffect(() => {
@@ -183,16 +184,6 @@ export function NewBudget() {
         }
       });
 
-    // Load payment terms
-    supabase
-      .from('payment_terms')
-      .select('id, name')
-      .eq('workspace_id', workspace.id)
-      .eq('active', true)
-      .order('created_at')
-      .then(({ data }) => {
-        if (data) setAvailablePaymentTerms(data);
-      });
   }, [workspace?.id]);
 
   // Filtrar clientes pela busca

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePaymentTerms } from '@/hooks/usePaymentTerms';
 import { generateProposalPDF, buildFinalPdfBlob } from '@/utils/pdfGenerator';
 import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { generateFinancialReportPDF } from '@/utils/financialReportPDF';
@@ -266,7 +267,7 @@ export function BudgetDetail() {
   };
 
   // Commercial rules (loaded for draft editing)
-  const [availablePaymentTerms, setAvailablePaymentTerms] = useState<{ id: string; name: string }[]>([]);
+  const availablePaymentTerms = usePaymentTerms(workspace?.id);
   const [defaultTargetMargin, setDefaultTargetMargin] = useState<number>(20);
 
   useEffect(() => {
@@ -275,15 +276,6 @@ export function BudgetDetail() {
 
   useEffect(() => {
     if (!workspace?.id) return;
-    supabase
-      .from('payment_terms')
-      .select('id, name')
-      .eq('workspace_id', workspace.id)
-      .eq('active', true)
-      .order('created_at')
-      .then(({ data }) => {
-        if (data) setAvailablePaymentTerms(data);
-      });
     supabase
       .from('workspace_settings')
       .select('default_target_margin_percentage')
