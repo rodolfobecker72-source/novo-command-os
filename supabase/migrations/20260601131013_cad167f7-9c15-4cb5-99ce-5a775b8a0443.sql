@@ -1,1 +1,0 @@
-ALTER TABLE public.project_cards ADD COLUMN IF NOT EXISTS drive_url text DEFAULT '';

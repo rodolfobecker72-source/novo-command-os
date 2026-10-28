@@ -1,1 +1,0 @@
-ALTER TABLE public.clients ADD COLUMN sector text NOT NULL DEFAULT '';

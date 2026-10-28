@@ -1,1 +1,0 @@
-DROP TABLE IF EXISTS public.user_google_tokens CASCADE;

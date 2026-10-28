@@ -1,1 +1,0 @@
-ALTER TABLE public.budgets ADD COLUMN pdf_released boolean NOT NULL DEFAULT false;

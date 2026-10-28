@@ -1,1 +1,0 @@
-ALTER TABLE public.prospection_leads ADD COLUMN IF NOT EXISTS responsible_user_id UUID;
