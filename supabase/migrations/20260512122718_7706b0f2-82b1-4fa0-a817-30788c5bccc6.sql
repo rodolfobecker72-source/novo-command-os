@@ -1,1 +1,0 @@
-UPDATE project_cards pc SET project_name = b.project_name FROM budgets b WHERE pc.budget_id = b.id AND pc.project_name IS DISTINCT FROM b.project_name;

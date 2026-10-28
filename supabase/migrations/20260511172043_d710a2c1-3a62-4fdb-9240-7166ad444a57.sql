@@ -1,1 +1,0 @@
-ALTER TABLE public.assets ADD COLUMN IF NOT EXISTS units jsonb NOT NULL DEFAULT '[]'::jsonb;

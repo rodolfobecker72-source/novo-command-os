@@ -1,1 +1,0 @@
-ALTER TABLE public.prospection_leads ADD COLUMN IF NOT EXISTS meeting_scheduled_at timestamptz, ADD COLUMN IF NOT EXISTS meeting_happened boolean;

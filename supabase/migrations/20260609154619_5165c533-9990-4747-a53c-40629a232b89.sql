@@ -1,1 +1,0 @@
-ALTER TABLE public.budgets ADD COLUMN IF NOT EXISTS hide_nf_observation_in_pdf boolean NOT NULL DEFAULT false;

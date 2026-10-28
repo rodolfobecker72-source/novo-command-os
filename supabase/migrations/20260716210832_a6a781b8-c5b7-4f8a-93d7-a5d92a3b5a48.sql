@@ -1,1 +1,0 @@
-ALTER TABLE public.monthly_goals ADD COLUMN IF NOT EXISTS meetings_goal integer NOT NULL DEFAULT 0;

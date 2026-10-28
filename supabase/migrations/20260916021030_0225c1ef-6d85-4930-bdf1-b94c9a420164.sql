@@ -1,1 +1,0 @@
-ALTER TABLE public.workspace_settings ADD COLUMN IF NOT EXISTS team_finance_enabled boolean NOT NULL DEFAULT false;

@@ -1,1 +1,0 @@
-ALTER TABLE public.project_activities ADD COLUMN freela_name TEXT;

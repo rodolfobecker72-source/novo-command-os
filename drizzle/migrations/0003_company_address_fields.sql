@@ -1,1 +1,0 @@
-ALTER TABLE public.workspace_layout ADD COLUMN IF NOT EXISTS company_cnpj text, ADD COLUMN IF NOT EXISTS company_address text, ADD COLUMN IF NOT EXISTS company_city_line text;

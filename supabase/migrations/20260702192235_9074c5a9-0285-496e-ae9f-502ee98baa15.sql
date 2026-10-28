@@ -1,1 +1,0 @@
-ALTER TABLE public.project_cards ADD COLUMN IF NOT EXISTS material_links jsonb NOT NULL DEFAULT '[]'::jsonb;

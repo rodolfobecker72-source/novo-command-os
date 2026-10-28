@@ -1,1 +1,0 @@
-ALTER TABLE public.workspace_layout ADD COLUMN IF NOT EXISTS cover_pdf_url text, ADD COLUMN IF NOT EXISTS back_pdf_url text;

@@ -1,1 +1,0 @@
-ALTER TABLE public.budgets ADD COLUMN execution_month text DEFAULT NULL;
