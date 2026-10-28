@@ -64,3 +64,25 @@ export function getPagesByGroup(): Record<string, AppPage[]> {
     return acc;
   }, {} as Record<string, AppPage[]>);
 }
+
+const KNOWN_ROLES = ['owner', 'admin', 'vendedor', 'time_operacional'];
+
+/**
+ * Whether a workspace member may open a page. A role this build doesn't know
+ * (e.g. renamed in the database before the app was redeployed) gets the most
+ * restricted role's limits, never full access.
+ */
+export function canAccessPage(
+  pageKey: string,
+  membership: { role: string | null; page_permissions: string[] | null } | null,
+): boolean {
+  if (!membership) return false;
+  const role = membership.role && KNOWN_ROLES.includes(membership.role) ? membership.role : 'time_operacional';
+  // Role-based restrictions first (e.g. vendedor cannot access Configurações pages)
+  if (isRoleRestricted(pageKey, role)) return false;
+  // Owner e admin acessam tudo que não estiver restrito acima
+  if (role === 'owner' || role === 'admin') return true;
+  // No specific permissions set: everything the role allows
+  if (!membership.page_permissions || membership.page_permissions.length === 0) return true;
+  return membership.page_permissions.includes(pageKey);
+}

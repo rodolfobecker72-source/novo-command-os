@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { getAllPageKeys, isRoleRestricted } from '@/config/pages';
+import { canAccessPage } from '@/config/pages';
 
 export type AppRole = 'owner' | 'admin' | 'vendedor' | 'time_operacional';
 
@@ -244,16 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMembership(null);
   };
 
-  const hasPageAccess = (pageKey: string): boolean => {
-    if (!membership) return false;
-    // Check role-based restrictions first (e.g. vendedor cannot access Configurações pages)
-    if (role && isRoleRestricted(pageKey, role)) return false;
-    // Owner e admin acessam tudo que não estiver restrito acima (ver restrictedFrom em pages.ts)
-    if (role === 'owner' || role === 'admin') return true;
-    // If no specific permissions set, grant all access
-    if (!membership.page_permissions || membership.page_permissions.length === 0) return true;
-    return membership.page_permissions.includes(pageKey);
-  };
+  const hasPageAccess = (pageKey: string): boolean => canAccessPage(pageKey, membership);
 
   const value = useMemo<AuthContextType>(
     () => ({

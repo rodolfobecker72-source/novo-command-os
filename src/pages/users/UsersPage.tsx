@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth, type AppRole, type Profile } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/lib/edgeFunctions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -121,7 +122,7 @@ export function UsersPage() {
     setIsLoading(true);
 
     try {
-      const response = await supabase.functions.invoke('list-workspace-members');
+      const response = await invokeFunction('list-workspace-members');
       if (response.error) {
         toast.error('Erro ao carregar membros: ' + (response.error.message || 'Erro desconhecido'));
         setIsLoading(false);
@@ -165,7 +166,7 @@ export function UsersPage() {
     setIsCreating(true);
 
     try {
-      const response = await supabase.functions.invoke('create-member', {
+      const response = await invokeFunction('create-member', {
         body: {
           email: createForm.email.trim(),
           password: createForm.password,
@@ -260,7 +261,7 @@ export function UsersPage() {
       }
 
       // Call edge function to update profile + role
-      const response = await supabase.functions.invoke('update-member-profile', {
+      const response = await invokeFunction('update-member-profile', {
         body: {
           targetUserId: editingMember.user_id,
           name: editForm.name.trim(),
@@ -299,7 +300,7 @@ export function UsersPage() {
     if (!deletingMember) return;
 
     try {
-      const response = await supabase.functions.invoke('delete-member', {
+      const response = await invokeFunction('delete-member', {
         body: { targetUserId: deletingMember.user_id },
       });
 
@@ -337,7 +338,7 @@ export function UsersPage() {
 
     setIsResettingPassword(true);
     try {
-      const response = await supabase.functions.invoke('reset-user-password', {
+      const response = await invokeFunction('reset-user-password', {
         body: { targetUserId: resetPasswordMember.user_id, new_password: newPassword },
       });
 
