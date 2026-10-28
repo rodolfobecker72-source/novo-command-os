@@ -313,7 +313,9 @@ interface CRMContextType {
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
 
 export function CRMProvider({ children }: { children: ReactNode }) {
-  const { workspace, session, isLoading: authLoading } = useAuth();
+  const { workspace, session, isLoading: authLoading, role } = useAuth();
+  const roleRef = useRef(role);
+  useEffect(() => { roleRef.current = role; }, [role]);
   const workspaceId = workspace?.id;
 
   // Refs to avoid stale closures in ensureWorkspace
@@ -414,7 +416,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setKanbanColumns(kanbanData.map(kanbanColumnFromDb));
 
       let catData = catRes.data || [];
-      if (catData.length === 0 && !force) {
+      // Only the owner may write service categories (RLS), so only they seed defaults.
+      if (catData.length === 0 && !force && roleRef.current === 'owner') {
         const defaults = DEFAULT_SERVICE_CATEGORIES.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, order: c.order, is_default: c.isDefault || false,
         }));

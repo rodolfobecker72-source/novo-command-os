@@ -145,6 +145,8 @@ export function BudgetDetail() {
   const { profile, workspace, role } = useAuth();
   const { getBudget, getClient, updateBudget, addBudgetVersion, approveBudget, updateBudgetVersion, deleteLastVersion, updateExecutionCost, updateExecution, addExtraCost, removeExtraCost, deleteBudget, finalizeExecution, addDeliveryLink, removeDeliveryLink, kanbanColumns, getObjectivesForCategory, getCategoryLabel, serviceCategories, getHDForBudget } = useCRM();
   const cashflowPay = useCashflowPayment();
+  // Paying a cost writes to the Financeiro, which only owner/admin can access.
+  const canManagePayments = role === 'owner' || role === 'admin';
 
   const budget = getBudget(id || '');
   const baseClient = budget ? getClient(budget.clientId) : null;
@@ -620,6 +622,7 @@ export function BudgetDetail() {
   };
 
   const handleUpdateExecutionPayment = (serviceId: string, costId: string, status: PaymentStatusType, date: Date | null, isExtraCost = false) => {
+    if (!canManagePayments) return;
     const svc = budget.execution?.services?.find((s) => s.id === serviceId);
     const cost = (isExtraCost ? svc?.extraCosts : svc?.costs)?.find((c) => c.id === costId);
     if (status === 'pago' && cost?.paymentStatus !== 'pago') {
@@ -634,6 +637,7 @@ export function BudgetDetail() {
   };
 
   const handleUpdateOperationalPayment = (key: 'operationalCosts' | 'extraOperationalCosts', costId: string, status: PaymentStatusType) => {
+    if (!canManagePayments) return;
     const list = ((budget.execution as any)?.[key] || []) as any[];
     const cost = list.find((c) => c.id === costId);
     const save = (d: Date | null) =>
@@ -3105,6 +3109,7 @@ export function BudgetDetail() {
                                     <TableCell>
                                       <Select
                                         value={cost.paymentStatus}
+                                        disabled={!canManagePayments}
                                         onValueChange={(value) => handleUpdateExecutionPayment(
                                           service.id,
                                           cost.id,
@@ -3179,6 +3184,7 @@ export function BudgetDetail() {
                                       <TableCell>
                                         <Select
                                           value={cost.paymentStatus}
+                                          disabled={!canManagePayments}
                                           onValueChange={(value) => handleUpdateExecutionPayment(
                                             service.id,
                                             cost.id,
@@ -3335,6 +3341,7 @@ export function BudgetDetail() {
                                     <TableCell>
                                       <Select
                                         value={cost.paymentStatus}
+                                        disabled={!canManagePayments}
                                         onValueChange={(value) => handleUpdateOperationalPayment('operationalCosts', cost.id, value as PaymentStatusType)}
                                       >
                                         <SelectTrigger className="w-28 h-8">
