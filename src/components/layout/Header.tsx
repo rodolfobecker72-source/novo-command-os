@@ -27,7 +27,7 @@ interface OutletContextType {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
-  const { profile, logout, role } = useAuth();
+  const { profile, logout, role, hasPageAccess } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const { enabled: teamFinanceEnabled } = useTeamFinanceEnabled();
@@ -100,7 +100,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               <UserPen className="w-4 h-4 mr-2" />
               Meu Perfil
             </DropdownMenuItem>
-            {role && role !== 'owner' && teamFinanceEnabled && (
+            {role && role !== 'owner' && teamFinanceEnabled && hasPageAccess('meu-financeiro') && (
               <DropdownMenuItem onClick={() => navigate('/meu-financeiro')}>
                 <Wallet className="w-4 h-4 mr-2" />
                 Meu Financeiro

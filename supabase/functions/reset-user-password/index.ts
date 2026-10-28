@@ -6,103 +6,75 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, new_password, admin_key } = await req.json();
-
-    // Validate: require service role key as admin_key, or a valid owner/admin JWT
-    const authHeader = req.headers.get("Authorization");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verify caller is authenticated
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json({ error: "Not authenticated" }, 401);
+
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
-    let authorized = false;
-    
-    // Check admin_key in body
-    if (admin_key === serviceRoleKey) {
-      authorized = true;
-    }
-    
-    // Check Authorization header for authenticated owner/admin
-    if (!authorized && authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
-      if (token !== anonKey) {
-        const anonClient = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          anonKey,
-          { global: { headers: { Authorization: authHeader } } }
-        );
-        const { data: claimsData, error: claimsError } =
-          await anonClient.auth.getClaims(token);
-        if (!claimsError && claimsData?.claims) {
-          const callerId = claimsData.claims.sub as string;
-          const { data: callerRole } = await anonClient.rpc("get_user_role", {
-            _user_id: callerId,
-          });
-          if (callerRole === "owner" || callerRole === "admin") {
-            authorized = true;
-          }
-        }
-      }
-    }
-    
-    if (!authorized) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user: caller } } = await callerClient.auth.getUser();
+    if (!caller) return json({ error: "Not authenticated" }, 401);
+
+    // Check caller is owner (same rule as create/update/delete-member)
+    const { data: callerMember } = await supabaseAdmin
+      .from("workspace_members")
+      .select("workspace_id, role")
+      .eq("user_id", caller.id)
+      .single();
+
+    if (!callerMember || callerMember.role !== "owner") {
+      return json({ error: "Only owners can reset passwords" }, 403);
     }
 
-    if (!email || !new_password) {
-      return new Response(
-        JSON.stringify({ error: "email and new_password required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    const { targetUserId, new_password } = await req.json();
+
+    if (!targetUserId || !new_password) {
+      return json({ error: "targetUserId and new_password required" }, 400);
     }
 
-    // Use service role to update user password
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    if (typeof new_password !== "string" || new_password.length < 6) {
+      return json({ error: "Password must be at least 6 characters" }, 400);
+    }
+
+    // Verify target user is in the caller's workspace
+    const { data: targetMember } = await supabaseAdmin
+      .from("workspace_members")
+      .select("id")
+      .eq("user_id", targetUserId)
+      .eq("workspace_id", callerMember.workspace_id)
+      .maybeSingle();
+
+    if (!targetMember) {
+      return json({ error: "User not found in this workspace" }, 404);
+    }
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      targetUserId,
+      { password: new_password },
     );
-
-    // Find user by email
-    const { data: userList, error: listError } =
-      await adminClient.auth.admin.listUsers();
-    if (listError) throw listError;
-
-    const targetUser = userList.users.find((u: any) => u.email === email);
-    if (!targetUser) {
-      return new Response(JSON.stringify({ error: "User not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { error: updateError } =
-      await adminClient.auth.admin.updateUserById(targetUser.id, {
-        password: new_password,
-      });
 
     if (updateError) throw updateError;
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Password updated" }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return json({ success: true, message: "Password updated" });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: err.message }, 500);
   }
 });
