@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       ].filter(Boolean).join("\n"),
       start: { date: activity.due_date },
       end: { date: activity.due_date },
-      source: { title: "Hero Command", url: "https://command.hero.rec.br" },
+      source: { title: "Command OS", url: "https://acesso.command-os.app.br" },
     };
 
     const { data: existingMaps } = await admin

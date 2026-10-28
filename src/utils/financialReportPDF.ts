@@ -69,11 +69,12 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
   const generatedDate = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
 
   let logoData: { base64: string; width: number; height: number } | null = null;
-  const headerLogoUrl = layoutSettings?.logoUrl || '/images/hero-logo-black.png';
-  try {
-    logoData = await loadImageAsBase64(headerLogoUrl);
-  } catch (e) {
-    console.warn('Could not load logo:', e);
+  if (layoutSettings?.logoUrl) {
+    try {
+      logoData = await loadImageAsBase64(layoutSettings.logoUrl);
+    } catch (e) {
+      console.warn('Could not load logo:', e);
+    }
   }
 
   let footerLogoData: { base64: string; width: number; height: number } | null = null;
@@ -119,10 +120,8 @@ export async function generateFinancialReportPDF({ budget, client, userName, lay
     if (layoutSettings?.companyName) footerParts.push(layoutSettings.companyName.toUpperCase());
     if (layoutSettings?.website) footerParts.push(layoutSettings.website);
     if (layoutSettings?.email) footerParts.push(layoutSettings.email);
-    const footerText = footerParts.length > 0
-      ? footerParts.join(' • ')
-      : 'HERO AUDIOVISUAL • www.hero.rec.br • comercial@hero.rec.br';
-    doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+    const footerText = footerParts.join(' • ');
+    if (footerText) doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
   };
 
   const ensureSpace = (neededHeight: number): number => {

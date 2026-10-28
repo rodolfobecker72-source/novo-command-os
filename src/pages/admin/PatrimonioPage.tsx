@@ -35,7 +35,7 @@ interface Asset {
   description: string;
   value: number;
   serial_number: string;
-  hero_asset_number: string;
+  asset_number: string;
   photo: string;
   reference_link: string;
   assigned_to: string;
@@ -52,7 +52,7 @@ interface Asset {
 
 interface AssetUnit {
   serial_number: string;
-  hero_asset_number: string;
+  asset_number: string;
   [key: string]: string;
 }
 
@@ -61,7 +61,7 @@ const emptyForm = {
   description: '',
   value: 0,
   serial_number: '',
-  hero_asset_number: '',
+  asset_number: '',
   reference_link: '',
   assigned_to: '',
   category: 'equipamento' as AssetCategory,
@@ -77,7 +77,7 @@ function syncUnits(units: AssetUnit[], quantity: number): AssetUnit[] {
   const qty = Math.max(1, quantity);
   if (qty <= 1) return [];
   const next = units.slice(0, qty);
-  while (next.length < qty) next.push({ serial_number: '', hero_asset_number: '' });
+  while (next.length < qty) next.push({ serial_number: '', asset_number: '' });
   return next;
 }
 
@@ -130,7 +130,7 @@ export function PatrimonioPage() {
       description: asset.description,
       value: Number(asset.value) || 0,
       serial_number: asset.serial_number,
-      hero_asset_number: asset.hero_asset_number,
+      asset_number: asset.asset_number,
       reference_link: asset.reference_link,
       assigned_to: asset.assigned_to,
       category: (asset.category as AssetCategory) || 'equipamento',
@@ -204,11 +204,11 @@ export function PatrimonioPage() {
       a.name.toLowerCase().includes(s) ||
       a.description.toLowerCase().includes(s) ||
       a.serial_number.toLowerCase().includes(s) ||
-      a.hero_asset_number.toLowerCase().includes(s) ||
+      a.asset_number.toLowerCase().includes(s) ||
       a.assigned_to.toLowerCase().includes(s) ||
       (Array.isArray(a.units) && a.units.some(u =>
         (u.serial_number || '').toLowerCase().includes(s) ||
-        (u.hero_asset_number || '').toLowerCase().includes(s),
+        (u.asset_number || '').toLowerCase().includes(s),
       )),
     );
   }, [assets, search, categoryFilter]);
@@ -296,8 +296,8 @@ export function PatrimonioPage() {
                 {form.quantity <= 1 && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="hero_asset_number">Nº Patrimônio</Label>
-                      <Input id="hero_asset_number" value={form.hero_asset_number} onChange={(e) => setForm(f => ({ ...f, hero_asset_number: e.target.value }))} placeholder="Ex: 0001" />
+                      <Label htmlFor="asset_number">Nº Patrimônio</Label>
+                      <Input id="asset_number" value={form.asset_number} onChange={(e) => setForm(f => ({ ...f, asset_number: e.target.value }))} placeholder="Ex: 0001" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="serial_number">Nº de Série</Label>
@@ -393,10 +393,10 @@ export function PatrimonioPage() {
                           <div className="text-xs font-mono text-muted-foreground w-8">#{idx + 1}</div>
                           <Input
                             placeholder="Nº Patrimônio"
-                            value={u.hero_asset_number}
+                            value={u.asset_number}
                             onChange={(e) => setForm(f => {
                               const next = syncUnits(f.units, f.quantity);
-                              next[idx] = { ...next[idx], hero_asset_number: e.target.value };
+                              next[idx] = { ...next[idx], asset_number: e.target.value };
                               return { ...f, units: next };
                             })}
                           />
@@ -589,11 +589,11 @@ export function PatrimonioPage() {
                           ? (
                             <div className="space-y-0.5">
                               {a.units.map((u, i) => (
-                                <div key={i} className="text-xs">{u.hero_asset_number || '—'}</div>
+                                <div key={i} className="text-xs">{u.asset_number || '—'}</div>
                               ))}
                             </div>
                           )
-                          : (a.hero_asset_number || '—')}
+                          : (a.asset_number || '—')}
                       </TableCell>
                       <TableCell className="text-sm">{a.assigned_to || '—'}</TableCell>
                       <TableCell className="text-right font-medium">{Number(a.quantity) || 1}</TableCell>
@@ -684,7 +684,7 @@ export function PatrimonioPage() {
                       {viewAsset.units.map((u, i) => (
                         <div key={i} className="grid grid-cols-[auto_1fr_1fr] gap-2 p-2 text-xs">
                           <span className="font-mono text-muted-foreground">#{i + 1}</span>
-                          <span><span className="text-muted-foreground">Patrimônio:</span> {u.hero_asset_number || '—'}</span>
+                          <span><span className="text-muted-foreground">Patrimônio:</span> {u.asset_number || '—'}</span>
                           <span><span className="text-muted-foreground">Série:</span> {u.serial_number || '—'}</span>
                         </div>
                       ))}
@@ -694,7 +694,7 @@ export function PatrimonioPage() {
                   <>
                     <div>
                       <div className="text-xs text-muted-foreground">Nº Patrimônio</div>
-                      <div className="font-mono">{viewAsset.hero_asset_number || '—'}</div>
+                      <div className="font-mono">{viewAsset.asset_number || '—'}</div>
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">Nº de Série</div>

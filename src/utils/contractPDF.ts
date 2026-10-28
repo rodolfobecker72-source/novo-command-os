@@ -217,11 +217,12 @@ export async function generateContractPDF(params: ContractPDFParams) {
   const lightGray = __th.accent;
 
   let logoData: { base64: string; width: number; height: number } | null = null;
-  const headerLogoUrl = layoutSettings?.logoUrl || '/images/hero-logo-black.png';
-  try {
-    logoData = await loadImageAsBase64(headerLogoUrl);
-  } catch (error) {
-    console.warn('Could not load logo:', error);
+  if (layoutSettings?.logoUrl) {
+    try {
+      logoData = await loadImageAsBase64(layoutSettings.logoUrl);
+    } catch (error) {
+      console.warn('Could not load logo:', error);
+    }
   }
 
   let footerLogoData: { base64: string; width: number; height: number } | null = null;

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePaymentTerms } from '@/hooks/usePaymentTerms';
 import { generateProposalPDF, buildFinalPdfBlob } from '@/utils/pdfGenerator';
+import { fetchLayoutSettings as fetchLayoutSettings_ } from '@/utils/layoutSettings';
 import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { generateFinancialReportPDF } from '@/utils/financialReportPDF';
 import { generateContractPDF } from '@/utils/contractPDF';
@@ -876,43 +877,7 @@ export function BudgetDetail() {
     toast.success('Link removido!');
   };
 
-  const fetchLayoutSettings = async (): Promise<PDFLayoutSettings | null> => {
-    if (!workspace) return null;
-    try {
-      const { data } = await supabase
-        .from('workspace_layout')
-        .select('*')
-        .eq('workspace_id', workspace.id)
-        .maybeSingle();
-      if (data) {
-        const d = data as any;
-        return {
-          logoUrl: d.logo_url || '',
-          companyName: d.company_name || '',
-          website: d.website || '',
-          email: d.email || '',
-          pdfTitle: d.pdf_title || undefined,
-          sectionClientTitle: d.section_client_title || undefined,
-          sectionBriefingTitle: d.section_briefing_title || undefined,
-          sectionInclusionsTitle: d.section_inclusions_title || undefined,
-          sectionServicesTitle: d.section_services_title || undefined,
-          sectionOperationalTitle: d.section_operational_title || undefined,
-          sectionInvestmentTitle: d.section_investment_title || undefined,
-          sectionTotalTitle: d.section_total_title || undefined,
-          validityText: d.validity_text || undefined,
-          coverPdfUrl: d.cover_pdf_url || undefined,
-          backPdfUrl: d.back_pdf_url || undefined,
-          brandTheme: d.brand_theme || null,
-          companyCnpj: d.company_cnpj || '',
-          companyAddress: d.company_address || '',
-          companyCityLine: d.company_city_line || '',
-        };
-      }
-    } catch (err) {
-      console.warn('Could not load layout settings:', err);
-    }
-    return null;
-  };
+  const fetchLayoutSettings = () => fetchLayoutSettings_(workspace?.id);
 
   const isVendedor = role === 'vendedor';
   const isAdminOrOwner = role === 'owner' || role === 'admin';

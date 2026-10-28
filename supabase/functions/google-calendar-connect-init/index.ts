@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     if (!userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
     const body = await req.json().catch(() => ({}));
-    const origin: string = body.origin || "https://herocommandcrm.lovable.app";
+    const origin: string = body.origin || "https://acesso.command-os.app.br";
     const returnUrl = `${origin.replace(/\/$/, "")}/auth/google-calendar-callback`;
 
     const { authorization_url, session_id } = await startAuthorize({

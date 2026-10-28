@@ -59,21 +59,21 @@ const ROLE_LABELS: Record<AppRole, string> = {
   owner: 'Proprietário',
   admin: 'Administrador',
   vendedor: 'Vendedor',
-  time_hero: 'Time Operacional',
+  time_operacional: 'Time Operacional',
 };
 
 const ROLE_ICONS: Record<AppRole, typeof Crown> = {
   owner: Crown,
   admin: ShieldCheck,
   vendedor: Briefcase,
-  time_hero: Users,
+  time_operacional: Users,
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
   owner: 'bg-primary/10 text-primary',
   admin: 'bg-accent/10 text-accent',
   vendedor: 'bg-warning/10 text-warning',
-  time_hero: 'bg-blue-500/10 text-blue-600',
+  time_operacional: 'bg-blue-500/10 text-blue-600',
 };
 
 export function UsersPage() {
@@ -460,7 +460,7 @@ export function UsersPage() {
                         <SelectContent>
                           <SelectItem value="admin">Administrador</SelectItem>
                           <SelectItem value="vendedor">Vendedor</SelectItem>
-                          <SelectItem value="time_hero">Time Operacional</SelectItem>
+                          <SelectItem value="time_operacional">Time Operacional</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -712,7 +712,7 @@ export function UsersPage() {
                     <SelectContent>
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="vendedor">Vendedor</SelectItem>
-                      <SelectItem value="time_hero">Time Operacional</SelectItem>
+                      <SelectItem value="time_operacional">Time Operacional</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

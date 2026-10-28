@@ -31,7 +31,7 @@ export function ScoreHistory({ history }: ScoreHistoryProps) {
             <History className="w-4 h-4 text-accent" />
             <CardTitle className="text-base">Histórico do Score</CardTitle>
           </div>
-          <CardDescription>Evolução do HERO Client Score</CardDescription>
+          <CardDescription>Evolução do Client Score</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="p-6 text-center text-muted-foreground border rounded-lg">

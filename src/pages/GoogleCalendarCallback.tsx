@@ -50,7 +50,7 @@ export default function GoogleCalendarCallback() {
             </div>
             <h1 className="text-lg font-semibold">Google Calendar conectado</h1>
             <p className="text-sm text-muted-foreground">
-              Você já pode fechar esta janela e voltar para o Hero Command.
+              Você já pode fechar esta janela e voltar para o Command OS.
             </p>
           </>
         )}

@@ -159,7 +159,7 @@ export type Database = {
           category: string
           created_at: string
           description: string
-          hero_asset_number: string
+          asset_number: string
           id: string
           inactive_reason: string
           insurance_expires_at: string | null
@@ -180,7 +180,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
-          hero_asset_number?: string
+          asset_number?: string
           id?: string
           inactive_reason?: string
           insurance_expires_at?: string | null
@@ -201,7 +201,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
-          hero_asset_number?: string
+          asset_number?: string
           id?: string
           inactive_reason?: string
           insurance_expires_at?: string | null
@@ -2148,7 +2148,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "owner" | "admin" | "vendedor" | "visualizador" | "time_hero"
+      app_role: "owner" | "admin" | "vendedor" | "visualizador" | "time_operacional"
       appointment_kind: "reuniao" | "gravacao" | "entrega" | "visita" | "outro"
     }
     CompositeTypes: {
@@ -2277,7 +2277,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["owner", "admin", "vendedor", "visualizador", "time_hero"],
+      app_role: ["owner", "admin", "vendedor", "visualizador", "time_operacional"],
       appointment_kind: ["reuniao", "gravacao", "entrega", "visita", "outro"],
     },
   },
