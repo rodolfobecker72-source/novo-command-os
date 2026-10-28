@@ -1,6 +1,13 @@
 project_id = "ckfhxjmhbvpazprwcnmq"
 
-[functions.reset-user-password]
+# As funções abaixo validam o usuário por conta própria (auth.getUser() com o
+# token do chamador) e checam o papel no workspace, então não dependem da
+# verificação de JWT do gateway (verify_jwt).
+
+[functions.admin-overview]
+verify_jwt = false
+
+[functions.list-workspace-members]
 verify_jwt = false
 
 [functions.create-member]
@@ -9,8 +16,8 @@ verify_jwt = false
 [functions.update-member-profile]
 verify_jwt = false
 
-[functions.google-calendar-oauth-callback]
+[functions.delete-member]
 verify_jwt = false
 
-[functions.public-project-view]
+[functions.reset-user-password]
 verify_jwt = false
