@@ -1,8 +1,8 @@
 project_id = "ckfhxjmhbvpazprwcnmq"
 
 # As funções abaixo validam o usuário por conta própria (auth.getUser() com o
-# token do chamador) e checam o papel no workspace. verify_jwt fica desligado
-# porque o gateway não aceita os tokens das chaves novas (sb_publishable_*).
+# token do chamador) e checam o papel no workspace, então não dependem da
+# verificação de JWT do gateway (verify_jwt).
 
 [functions.admin-overview]
 verify_jwt = false
