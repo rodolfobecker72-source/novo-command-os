@@ -14,26 +14,6 @@
 -- As funções citam tabelas criadas mais abaixo; valida os corpos só ao executar.
 SET check_function_bodies = false;
 
---
--- PostgreSQL database dump
---
-
-\restrict ZhE3F9UqstsGfkxFdjAcFh0z6YWL694Vu1MhM1cEi3RWxRKtDdJPDzw0pgJ7KgZ
-
--- Dumped from database version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
-
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
-
-
---
--- Name: app_role; Type: TYPE; Schema: public; Owner: -
---
-
 CREATE TYPE public.app_role AS ENUM (
     'owner',
     'admin',
@@ -42,11 +22,6 @@ CREATE TYPE public.app_role AS ENUM (
     'time_hero'
 );
 
-
---
--- Name: appointment_kind; Type: TYPE; Schema: public; Owner: -
---
-
 CREATE TYPE public.appointment_kind AS ENUM (
     'reuniao',
     'gravacao',
@@ -54,11 +29,6 @@ CREATE TYPE public.appointment_kind AS ENUM (
     'visita',
     'outro'
 );
-
-
---
--- Name: accept_invite(uuid); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.accept_invite(invite_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -84,11 +54,6 @@ BEGIN
 END;
 $$;
 
-
---
--- Name: can_manage_avatar(uuid, text); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.can_manage_avatar(_user_id uuid, _folder text) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -104,11 +69,6 @@ CREATE FUNCTION public.can_manage_avatar(_user_id uuid, _folder text) RETURNS bo
     )
 $$;
 
-
---
--- Name: get_user_role(uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.get_user_role(_user_id uuid) RETURNS public.app_role
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -116,11 +76,6 @@ CREATE FUNCTION public.get_user_role(_user_id uuid) RETURNS public.app_role
   SELECT role FROM public.workspace_members
   WHERE user_id = _user_id LIMIT 1
 $$;
-
-
---
--- Name: get_user_role(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.get_user_role(_user_id uuid, _workspace_id uuid) RETURNS public.app_role
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -131,11 +86,6 @@ CREATE FUNCTION public.get_user_role(_user_id uuid, _workspace_id uuid) RETURNS 
   LIMIT 1
 $$;
 
-
---
--- Name: get_user_workspace(uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.get_user_workspace(_user_id uuid) RETURNS uuid
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -143,11 +93,6 @@ CREATE FUNCTION public.get_user_workspace(_user_id uuid) RETURNS uuid
   SELECT workspace_id FROM public.workspace_members
   WHERE user_id = _user_id LIMIT 1
 $$;
-
-
---
--- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.handle_new_user() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -163,11 +108,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
-
---
--- Name: handle_signup_workspace(text); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.handle_signup_workspace(workspace_name text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
@@ -199,11 +139,6 @@ BEGIN
 END;
 $$;
 
-
---
--- Name: has_role(uuid, public.app_role); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.has_role(_user_id uuid, _role public.app_role) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -213,11 +148,6 @@ CREATE FUNCTION public.has_role(_user_id uuid, _role public.app_role) RETURNS bo
     WHERE user_id = _user_id AND role = _role
   )
 $$;
-
-
---
--- Name: has_workspace_access(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.has_workspace_access(_user_id uuid, _workspace_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -229,22 +159,12 @@ CREATE FUNCTION public.has_workspace_access(_user_id uuid, _workspace_id uuid) R
   )
 $$;
 
-
---
--- Name: is_system_admin(uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.is_system_admin(_user_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
   SELECT EXISTS (SELECT 1 FROM public.system_admins WHERE user_id = _user_id)
 $$;
-
-
---
--- Name: reorder_payment_terms(uuid, uuid[]); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.reorder_payment_terms(p_workspace_id uuid, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql
@@ -262,11 +182,6 @@ BEGIN
 END;
 $$;
 
-
---
--- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -277,24 +192,12 @@ BEGIN
 END;
 $$;
 
-
---
--- Name: workspace_has_members(uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.workspace_has_members(_workspace_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
   SELECT EXISTS (SELECT 1 FROM public.workspace_members WHERE workspace_id = _workspace_id)
 $$;
-
-
-
-
---
--- Name: appointments; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.appointments (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -318,11 +221,6 @@ CREATE TABLE public.appointments (
 
 ALTER TABLE ONLY public.appointments REPLICA IDENTITY FULL;
 
-
---
--- Name: archived_projects; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.archived_projects (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -336,11 +234,6 @@ CREATE TABLE public.archived_projects (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: assets; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.assets (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -366,11 +259,6 @@ CREATE TABLE public.assets (
 
 ALTER TABLE ONLY public.assets REPLICA IDENTITY FULL;
 
-
---
--- Name: budget_versions; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.budget_versions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -394,11 +282,6 @@ CREATE TABLE public.budget_versions (
 );
 
 ALTER TABLE ONLY public.budget_versions REPLICA IDENTITY FULL;
-
-
---
--- Name: budgets; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.budgets (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -447,11 +330,6 @@ CREATE TABLE public.budgets (
 
 ALTER TABLE ONLY public.budgets REPLICA IDENTITY FULL;
 
-
---
--- Name: calendar_notes; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.calendar_notes (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -463,11 +341,6 @@ CREATE TABLE public.calendar_notes (
 );
 
 ALTER TABLE ONLY public.calendar_notes REPLICA IDENTITY FULL;
-
-
---
--- Name: cashflow_entries; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.cashflow_entries (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -493,11 +366,6 @@ CREATE TABLE public.cashflow_entries (
 
 ALTER TABLE ONLY public.cashflow_entries REPLICA IDENTITY FULL;
 
-
---
--- Name: client_contacts; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.client_contacts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -511,11 +379,6 @@ CREATE TABLE public.client_contacts (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: clients; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.clients (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -545,11 +408,6 @@ CREATE TABLE public.clients (
 
 ALTER TABLE ONLY public.clients REPLICA IDENTITY FULL;
 
-
---
--- Name: cost_centers; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.cost_centers (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -559,11 +417,6 @@ CREATE TABLE public.cost_centers (
 );
 
 ALTER TABLE ONLY public.cost_centers REPLICA IDENTITY FULL;
-
-
---
--- Name: credit_cards; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.credit_cards (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -582,11 +435,6 @@ CREATE TABLE public.credit_cards (
 
 ALTER TABLE ONLY public.credit_cards REPLICA IDENTITY FULL;
 
-
---
--- Name: feedback_reports; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.feedback_reports (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid,
@@ -603,11 +451,6 @@ CREATE TABLE public.feedback_reports (
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
-
---
--- Name: financial_accounts; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.financial_accounts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -623,11 +466,6 @@ CREATE TABLE public.financial_accounts (
 
 ALTER TABLE ONLY public.financial_accounts REPLICA IDENTITY FULL;
 
-
---
--- Name: google_calendar_connections; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.google_calendar_connections (
     user_id uuid NOT NULL,
     workspace_id uuid,
@@ -639,11 +477,6 @@ CREATE TABLE public.google_calendar_connections (
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
-
---
--- Name: google_calendar_sync_map; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.google_calendar_sync_map (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
@@ -652,11 +485,6 @@ CREATE TABLE public.google_calendar_sync_map (
     google_event_id text NOT NULL,
     last_synced_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: hard_drives; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.hard_drives (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -669,11 +497,6 @@ CREATE TABLE public.hard_drives (
 
 ALTER TABLE ONLY public.hard_drives REPLICA IDENTITY FULL;
 
-
---
--- Name: historical_project_links; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.historical_project_links (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -682,11 +505,6 @@ CREATE TABLE public.historical_project_links (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: kanban_columns; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.kanban_columns (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -700,11 +518,6 @@ CREATE TABLE public.kanban_columns (
 
 ALTER TABLE ONLY public.kanban_columns REPLICA IDENTITY FULL;
 
-
---
--- Name: landing_leads; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.landing_leads (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name text DEFAULT ''::text NOT NULL,
@@ -714,11 +527,6 @@ CREATE TABLE public.landing_leads (
     instagram text DEFAULT ''::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: lead_statuses; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.lead_statuses (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -733,11 +541,6 @@ CREATE TABLE public.lead_statuses (
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
-
---
--- Name: legacy_projects; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.legacy_projects (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -750,11 +553,6 @@ CREATE TABLE public.legacy_projects (
 
 ALTER TABLE ONLY public.legacy_projects REPLICA IDENTITY FULL;
 
-
---
--- Name: monthly_goals; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.monthly_goals (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -766,11 +564,6 @@ CREATE TABLE public.monthly_goals (
 );
 
 ALTER TABLE ONLY public.monthly_goals REPLICA IDENTITY FULL;
-
-
---
--- Name: payment_terms; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.payment_terms (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -785,11 +578,6 @@ CREATE TABLE public.payment_terms (
 
 ALTER TABLE ONLY public.payment_terms REPLICA IDENTITY FULL;
 
-
---
--- Name: profiles; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.profiles (
     id uuid NOT NULL,
     name text DEFAULT ''::text NOT NULL,
@@ -797,11 +585,6 @@ CREATE TABLE public.profiles (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     birth_date date
 );
-
-
---
--- Name: project_activities; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.project_activities (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -822,11 +605,6 @@ CREATE TABLE public.project_activities (
 );
 
 ALTER TABLE ONLY public.project_activities REPLICA IDENTITY FULL;
-
-
---
--- Name: project_cards; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.project_cards (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -856,11 +634,6 @@ CREATE TABLE public.project_cards (
 
 ALTER TABLE ONLY public.project_cards REPLICA IDENTITY FULL;
 
-
---
--- Name: project_columns; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.project_columns (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -872,11 +645,6 @@ CREATE TABLE public.project_columns (
 );
 
 ALTER TABLE ONLY public.project_columns REPLICA IDENTITY FULL;
-
-
---
--- Name: prospection_leads; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.prospection_leads (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -911,11 +679,6 @@ CREATE TABLE public.prospection_leads (
 
 ALTER TABLE ONLY public.prospection_leads REPLICA IDENTITY FULL;
 
-
---
--- Name: revenue_centers; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.revenue_centers (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -925,11 +688,6 @@ CREATE TABLE public.revenue_centers (
 );
 
 ALTER TABLE ONLY public.revenue_centers REPLICA IDENTITY FULL;
-
-
---
--- Name: score_history; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.score_history (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -943,11 +701,6 @@ CREATE TABLE public.score_history (
 
 ALTER TABLE ONLY public.score_history REPLICA IDENTITY FULL;
 
-
---
--- Name: service_categories; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.service_categories (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -958,11 +711,6 @@ CREATE TABLE public.service_categories (
 );
 
 ALTER TABLE ONLY public.service_categories REPLICA IDENTITY FULL;
-
-
---
--- Name: service_items; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.service_items (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -978,11 +726,6 @@ CREATE TABLE public.service_items (
 
 ALTER TABLE ONLY public.service_items REPLICA IDENTITY FULL;
 
-
---
--- Name: service_objectives; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.service_objectives (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -994,20 +737,10 @@ CREATE TABLE public.service_objectives (
 
 ALTER TABLE ONLY public.service_objectives REPLICA IDENTITY FULL;
 
-
---
--- Name: system_admins; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.system_admins (
     user_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: team_finance_access; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.team_finance_access (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1017,11 +750,6 @@ CREATE TABLE public.team_finance_access (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: workspace_contract_template; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.workspace_contract_template (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1033,27 +761,17 @@ CREATE TABLE public.workspace_contract_template (
 
 ALTER TABLE ONLY public.workspace_contract_template REPLICA IDENTITY FULL;
 
-
---
--- Name: workspace_invites; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.workspace_invites (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
     email text NOT NULL,
-    role public.app_role DEFAULT 'visualizador'::public.app_role NOT NULL,
+    role public.app_role DEFAULT 'vendedor'::public.app_role NOT NULL,
     page_permissions text[] DEFAULT '{}'::text[] NOT NULL,
     invited_by uuid,
     accepted_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT workspace_invites_role_not_visualizador CHECK ((role <> 'visualizador'::public.app_role))
 );
-
-
---
--- Name: workspace_layout; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.workspace_layout (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1099,27 +817,17 @@ CREATE TABLE public.workspace_layout (
 
 ALTER TABLE ONLY public.workspace_layout REPLICA IDENTITY FULL;
 
-
---
--- Name: workspace_members; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.workspace_members (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
     user_id uuid NOT NULL,
-    role public.app_role DEFAULT 'visualizador'::public.app_role NOT NULL,
+    role public.app_role DEFAULT 'vendedor'::public.app_role NOT NULL,
     joined_at timestamp with time zone DEFAULT now() NOT NULL,
     page_permissions text[] DEFAULT '{}'::text[] NOT NULL,
     CONSTRAINT workspace_members_role_not_visualizador CHECK ((role <> 'visualizador'::public.app_role))
 );
 
 ALTER TABLE ONLY public.workspace_members REPLICA IDENTITY FULL;
-
-
---
--- Name: workspace_settings; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.workspace_settings (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1134,11 +842,6 @@ CREATE TABLE public.workspace_settings (
 
 ALTER TABLE ONLY public.workspace_settings REPLICA IDENTITY FULL;
 
-
---
--- Name: workspaces; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.workspaces (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name text NOT NULL,
@@ -1146,1179 +849,409 @@ CREATE TABLE public.workspaces (
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
-
---
--- Name: appointments appointments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_pkey PRIMARY KEY (id);
-
-
---
--- Name: archived_projects archived_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.archived_projects
     ADD CONSTRAINT archived_projects_pkey PRIMARY KEY (id);
 
-
---
--- Name: assets assets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.assets
     ADD CONSTRAINT assets_pkey PRIMARY KEY (id);
-
-
---
--- Name: budget_versions budget_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.budget_versions
     ADD CONSTRAINT budget_versions_pkey PRIMARY KEY (id);
 
-
---
--- Name: budgets budgets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.budgets
     ADD CONSTRAINT budgets_pkey PRIMARY KEY (id);
-
-
---
--- Name: calendar_notes calendar_notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.calendar_notes
     ADD CONSTRAINT calendar_notes_pkey PRIMARY KEY (id);
 
-
---
--- Name: cashflow_entries cashflow_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.cashflow_entries
     ADD CONSTRAINT cashflow_entries_pkey PRIMARY KEY (id);
-
-
---
--- Name: client_contacts client_contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.client_contacts
     ADD CONSTRAINT client_contacts_pkey PRIMARY KEY (id);
 
-
---
--- Name: clients clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.clients
     ADD CONSTRAINT clients_pkey PRIMARY KEY (id);
-
-
---
--- Name: cost_centers cost_centers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.cost_centers
     ADD CONSTRAINT cost_centers_pkey PRIMARY KEY (id);
 
-
---
--- Name: credit_cards credit_cards_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.credit_cards
     ADD CONSTRAINT credit_cards_pkey PRIMARY KEY (id);
-
-
---
--- Name: feedback_reports feedback_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.feedback_reports
     ADD CONSTRAINT feedback_reports_pkey PRIMARY KEY (id);
 
-
---
--- Name: financial_accounts financial_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.financial_accounts
     ADD CONSTRAINT financial_accounts_pkey PRIMARY KEY (id);
-
-
---
--- Name: google_calendar_connections google_calendar_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.google_calendar_connections
     ADD CONSTRAINT google_calendar_connections_pkey PRIMARY KEY (user_id);
 
-
---
--- Name: google_calendar_sync_map google_calendar_sync_map_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.google_calendar_sync_map
     ADD CONSTRAINT google_calendar_sync_map_pkey PRIMARY KEY (id);
-
-
---
--- Name: google_calendar_sync_map google_calendar_sync_map_user_id_activity_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.google_calendar_sync_map
     ADD CONSTRAINT google_calendar_sync_map_user_id_activity_id_key UNIQUE (user_id, activity_id);
 
-
---
--- Name: hard_drives hard_drives_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.hard_drives
     ADD CONSTRAINT hard_drives_pkey PRIMARY KEY (id);
-
-
---
--- Name: historical_project_links historical_project_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.historical_project_links
     ADD CONSTRAINT historical_project_links_pkey PRIMARY KEY (id);
 
-
---
--- Name: historical_project_links historical_project_links_workspace_id_history_key_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.historical_project_links
     ADD CONSTRAINT historical_project_links_workspace_id_history_key_key UNIQUE (workspace_id, history_key);
-
-
---
--- Name: kanban_columns kanban_columns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.kanban_columns
     ADD CONSTRAINT kanban_columns_pkey PRIMARY KEY (id);
 
-
---
--- Name: landing_leads landing_leads_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.landing_leads
     ADD CONSTRAINT landing_leads_pkey PRIMARY KEY (id);
-
-
---
--- Name: lead_statuses lead_statuses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.lead_statuses
     ADD CONSTRAINT lead_statuses_pkey PRIMARY KEY (id);
 
-
---
--- Name: lead_statuses lead_statuses_workspace_id_key_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.lead_statuses
     ADD CONSTRAINT lead_statuses_workspace_id_key_key UNIQUE (workspace_id, key);
-
-
---
--- Name: legacy_projects legacy_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.legacy_projects
     ADD CONSTRAINT legacy_projects_pkey PRIMARY KEY (id);
 
-
---
--- Name: monthly_goals monthly_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.monthly_goals
     ADD CONSTRAINT monthly_goals_pkey PRIMARY KEY (id);
-
-
---
--- Name: monthly_goals monthly_goals_workspace_id_month_key; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.monthly_goals
     ADD CONSTRAINT monthly_goals_workspace_id_month_key UNIQUE (workspace_id, month);
 
-
---
--- Name: payment_terms payment_terms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.payment_terms
     ADD CONSTRAINT payment_terms_pkey PRIMARY KEY (id);
-
-
---
--- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
 
-
---
--- Name: project_activities project_activities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.project_activities
     ADD CONSTRAINT project_activities_pkey PRIMARY KEY (id);
-
-
---
--- Name: project_cards project_cards_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.project_cards
     ADD CONSTRAINT project_cards_pkey PRIMARY KEY (id);
 
-
---
--- Name: project_columns project_columns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.project_columns
     ADD CONSTRAINT project_columns_pkey PRIMARY KEY (id);
-
-
---
--- Name: project_columns project_columns_workspace_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.project_columns
     ADD CONSTRAINT project_columns_workspace_key_unique UNIQUE (workspace_id, key);
 
-
---
--- Name: prospection_leads prospection_leads_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.prospection_leads
     ADD CONSTRAINT prospection_leads_pkey PRIMARY KEY (id);
-
-
---
--- Name: revenue_centers revenue_centers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.revenue_centers
     ADD CONSTRAINT revenue_centers_pkey PRIMARY KEY (id);
 
-
---
--- Name: score_history score_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.score_history
     ADD CONSTRAINT score_history_pkey PRIMARY KEY (id);
-
-
---
--- Name: service_categories service_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.service_categories
     ADD CONSTRAINT service_categories_pkey PRIMARY KEY (id);
 
-
---
--- Name: service_categories service_categories_workspace_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.service_categories
     ADD CONSTRAINT service_categories_workspace_key_unique UNIQUE (workspace_id, key);
-
-
---
--- Name: service_items service_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.service_items
     ADD CONSTRAINT service_items_pkey PRIMARY KEY (id);
 
-
---
--- Name: service_objectives service_objectives_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.service_objectives
     ADD CONSTRAINT service_objectives_pkey PRIMARY KEY (id);
-
-
---
--- Name: system_admins system_admins_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.system_admins
     ADD CONSTRAINT system_admins_pkey PRIMARY KEY (user_id);
 
-
---
--- Name: team_finance_access team_finance_access_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.team_finance_access
     ADD CONSTRAINT team_finance_access_pkey PRIMARY KEY (id);
-
-
---
--- Name: team_finance_access team_finance_access_workspace_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.team_finance_access
     ADD CONSTRAINT team_finance_access_workspace_id_user_id_key UNIQUE (workspace_id, user_id);
 
-
---
--- Name: workspace_contract_template workspace_contract_template_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_contract_template
     ADD CONSTRAINT workspace_contract_template_pkey PRIMARY KEY (id);
-
-
---
--- Name: workspace_contract_template workspace_contract_template_workspace_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspace_contract_template
     ADD CONSTRAINT workspace_contract_template_workspace_id_key UNIQUE (workspace_id);
 
-
---
--- Name: workspace_invites workspace_invites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_invites
     ADD CONSTRAINT workspace_invites_pkey PRIMARY KEY (id);
-
-
---
--- Name: workspace_layout workspace_layout_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspace_layout
     ADD CONSTRAINT workspace_layout_pkey PRIMARY KEY (id);
 
-
---
--- Name: workspace_layout workspace_layout_workspace_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_layout
     ADD CONSTRAINT workspace_layout_workspace_id_key UNIQUE (workspace_id);
-
-
---
--- Name: workspace_members workspace_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspace_members
     ADD CONSTRAINT workspace_members_pkey PRIMARY KEY (id);
 
-
---
--- Name: workspace_members workspace_members_workspace_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_members
     ADD CONSTRAINT workspace_members_workspace_id_user_id_key UNIQUE (workspace_id, user_id);
-
-
---
--- Name: workspace_settings workspace_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspace_settings
     ADD CONSTRAINT workspace_settings_pkey PRIMARY KEY (id);
 
-
---
--- Name: workspace_settings workspace_settings_workspace_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_settings
     ADD CONSTRAINT workspace_settings_workspace_id_key UNIQUE (workspace_id);
-
-
---
--- Name: workspaces workspaces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspaces
     ADD CONSTRAINT workspaces_pkey PRIMARY KEY (id);
 
-
---
--- Name: appointments_budget_idx; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX appointments_budget_idx ON public.appointments USING btree (budget_id) WHERE (budget_id IS NOT NULL);
-
-
---
--- Name: appointments_lead_idx; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX appointments_lead_idx ON public.appointments USING btree (lead_id) WHERE (lead_id IS NOT NULL);
 
-
---
--- Name: appointments_workspace_start_idx; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX appointments_workspace_start_idx ON public.appointments USING btree (workspace_id, start_at);
-
-
---
--- Name: client_contacts_client_idx; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX client_contacts_client_idx ON public.client_contacts USING btree (client_id);
 
-
---
--- Name: idx_archived_projects_ws_group; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_archived_projects_ws_group ON public.archived_projects USING btree (workspace_id, group_name);
-
-
---
--- Name: idx_budget_versions_budget_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_budget_versions_budget_id ON public.budget_versions USING btree (budget_id);
 
-
---
--- Name: idx_budget_versions_workspace_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_budget_versions_workspace_id ON public.budget_versions USING btree (workspace_id);
-
-
---
--- Name: idx_budgets_client_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_budgets_client_id ON public.budgets USING btree (client_id);
 
-
---
--- Name: idx_budgets_status; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_budgets_status ON public.budgets USING btree (status);
-
-
---
--- Name: idx_budgets_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_budgets_workspace_id ON public.budgets USING btree (workspace_id);
 
-
---
--- Name: idx_calendar_notes_user_date; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_calendar_notes_user_date ON public.calendar_notes USING btree (user_id, date);
-
-
---
--- Name: idx_cashflow_entries_credit_card; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_cashflow_entries_credit_card ON public.cashflow_entries USING btree (credit_card_id) WHERE (credit_card_id IS NOT NULL);
 
-
---
--- Name: idx_cashflow_execution_cost; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_cashflow_execution_cost ON public.cashflow_entries USING btree (workspace_id, execution_cost_id);
-
-
---
--- Name: idx_clients_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_clients_workspace_id ON public.clients USING btree (workspace_id);
 
-
---
--- Name: idx_gcsm_activity; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_gcsm_activity ON public.google_calendar_sync_map USING btree (activity_id);
-
-
---
--- Name: idx_kanban_columns_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_kanban_columns_workspace_id ON public.kanban_columns USING btree (workspace_id);
 
-
---
--- Name: idx_lead_statuses_workspace; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_lead_statuses_workspace ON public.lead_statuses USING btree (workspace_id, "order");
-
-
---
--- Name: idx_monthly_goals_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_monthly_goals_workspace_id ON public.monthly_goals USING btree (workspace_id);
 
-
---
--- Name: idx_payment_terms_workspace_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_payment_terms_workspace_id ON public.payment_terms USING btree (workspace_id);
-
-
---
--- Name: idx_project_activities_card; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_project_activities_card ON public.project_activities USING btree (project_card_id);
 
-
---
--- Name: idx_project_activities_workspace; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_project_activities_workspace ON public.project_activities USING btree (workspace_id);
-
-
---
--- Name: idx_project_cards_budget_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_project_cards_budget_id ON public.project_cards USING btree (budget_id);
 
-
---
--- Name: idx_project_cards_workspace_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_project_cards_workspace_id ON public.project_cards USING btree (workspace_id);
-
-
---
--- Name: idx_project_columns_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_project_columns_workspace_id ON public.project_columns USING btree (workspace_id);
 
-
---
--- Name: idx_prospection_leads_workspace_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_prospection_leads_workspace_id ON public.prospection_leads USING btree (workspace_id);
-
-
---
--- Name: idx_score_history_client_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_score_history_client_id ON public.score_history USING btree (client_id);
 
-
---
--- Name: idx_score_history_workspace_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_score_history_workspace_id ON public.score_history USING btree (workspace_id);
-
-
---
--- Name: idx_service_categories_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_service_categories_workspace_id ON public.service_categories USING btree (workspace_id);
 
-
---
--- Name: idx_service_items_workspace_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_service_items_workspace_id ON public.service_items USING btree (workspace_id);
-
-
---
--- Name: idx_service_objectives_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_service_objectives_workspace_id ON public.service_objectives USING btree (workspace_id);
 
-
---
--- Name: idx_workspace_invites_email; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_workspace_invites_email ON public.workspace_invites USING btree (email);
-
-
---
--- Name: idx_workspace_invites_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_workspace_invites_workspace_id ON public.workspace_invites USING btree (workspace_id);
 
-
---
--- Name: idx_workspace_members_user_id; Type: INDEX; Schema: public; Owner: -
---
-
 CREATE INDEX idx_workspace_members_user_id ON public.workspace_members USING btree (user_id);
-
-
---
--- Name: idx_workspace_members_workspace_id; Type: INDEX; Schema: public; Owner: -
---
 
 CREATE INDEX idx_workspace_members_workspace_id ON public.workspace_members USING btree (workspace_id);
 
-
---
--- Name: appointments appointments_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER appointments_updated_at BEFORE UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-
---
--- Name: lead_statuses lead_statuses_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
 
 CREATE TRIGGER lead_statuses_updated_at BEFORE UPDATE ON public.lead_statuses FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-
---
--- Name: google_calendar_connections trg_gcal_conn_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER trg_gcal_conn_updated_at BEFORE UPDATE ON public.google_calendar_connections FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-
---
--- Name: archived_projects update_archived_projects_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
 
 CREATE TRIGGER update_archived_projects_updated_at BEFORE UPDATE ON public.archived_projects FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-
---
--- Name: calendar_notes update_calendar_notes_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER update_calendar_notes_updated_at BEFORE UPDATE ON public.calendar_notes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-
---
--- Name: client_contacts update_client_contacts_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
 
 CREATE TRIGGER update_client_contacts_updated_at BEFORE UPDATE ON public.client_contacts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-
---
--- Name: credit_cards update_credit_cards_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER update_credit_cards_updated_at BEFORE UPDATE ON public.credit_cards FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-
---
--- Name: feedback_reports update_feedback_reports_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
 
 CREATE TRIGGER update_feedback_reports_updated_at BEFORE UPDATE ON public.feedback_reports FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-
---
--- Name: historical_project_links update_historical_project_links_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER update_historical_project_links_updated_at BEFORE UPDATE ON public.historical_project_links FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-
---
--- Name: project_activities update_project_activities_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
 
 CREATE TRIGGER update_project_activities_updated_at BEFORE UPDATE ON public.project_activities FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-
---
--- Name: team_finance_access update_team_finance_access_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER update_team_finance_access_updated_at BEFORE UPDATE ON public.team_finance_access FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-
---
--- Name: workspace_layout update_workspace_layout_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
 CREATE TRIGGER update_workspace_layout_updated_at BEFORE UPDATE ON public.workspace_layout FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-
---
--- Name: appointments appointments_budget_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_budget_id_fkey FOREIGN KEY (budget_id) REFERENCES public.budgets(id) ON DELETE SET NULL;
 
-
---
--- Name: appointments appointments_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE SET NULL;
-
-
---
--- Name: appointments appointments_lead_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES public.prospection_leads(id) ON DELETE SET NULL;
 
-
---
--- Name: appointments appointments_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: archived_projects archived_projects_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.archived_projects
     ADD CONSTRAINT archived_projects_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: assets assets_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.assets
     ADD CONSTRAINT assets_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: budget_versions budget_versions_budget_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.budget_versions
     ADD CONSTRAINT budget_versions_budget_id_fkey FOREIGN KEY (budget_id) REFERENCES public.budgets(id) ON DELETE CASCADE;
 
-
---
--- Name: budget_versions budget_versions_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.budget_versions
     ADD CONSTRAINT budget_versions_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: budgets budgets_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.budgets
     ADD CONSTRAINT budgets_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.client_contacts(id) ON DELETE SET NULL;
 
-
---
--- Name: budgets budgets_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.budgets
     ADD CONSTRAINT budgets_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: cashflow_entries cashflow_entries_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.cashflow_entries
     ADD CONSTRAINT cashflow_entries_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.financial_accounts(id);
 
-
---
--- Name: cashflow_entries cashflow_entries_cost_center_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.cashflow_entries
     ADD CONSTRAINT cashflow_entries_cost_center_id_fkey FOREIGN KEY (cost_center_id) REFERENCES public.cost_centers(id);
-
-
---
--- Name: cashflow_entries cashflow_entries_credit_card_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.cashflow_entries
     ADD CONSTRAINT cashflow_entries_credit_card_id_fkey FOREIGN KEY (credit_card_id) REFERENCES public.credit_cards(id) ON DELETE SET NULL;
 
-
---
--- Name: cashflow_entries cashflow_entries_revenue_center_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.cashflow_entries
     ADD CONSTRAINT cashflow_entries_revenue_center_id_fkey FOREIGN KEY (revenue_center_id) REFERENCES public.revenue_centers(id);
-
-
---
--- Name: cashflow_entries cashflow_entries_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.cashflow_entries
     ADD CONSTRAINT cashflow_entries_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id);
 
-
---
--- Name: client_contacts client_contacts_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.client_contacts
     ADD CONSTRAINT client_contacts_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE CASCADE;
-
-
---
--- Name: client_contacts client_contacts_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.client_contacts
     ADD CONSTRAINT client_contacts_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: clients clients_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.clients
     ADD CONSTRAINT clients_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: cost_centers cost_centers_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.cost_centers
     ADD CONSTRAINT cost_centers_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id);
 
-
---
--- Name: credit_cards credit_cards_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.credit_cards
     ADD CONSTRAINT credit_cards_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.financial_accounts(id) ON DELETE SET NULL;
-
-
---
--- Name: credit_cards credit_cards_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.credit_cards
     ADD CONSTRAINT credit_cards_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: financial_accounts financial_accounts_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.financial_accounts
     ADD CONSTRAINT financial_accounts_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id);
-
-
---
--- Name: google_calendar_connections google_calendar_connections_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.google_calendar_connections
     ADD CONSTRAINT google_calendar_connections_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
-
---
--- Name: hard_drives hard_drives_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.hard_drives
     ADD CONSTRAINT hard_drives_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: historical_project_links historical_project_links_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.historical_project_links
     ADD CONSTRAINT historical_project_links_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: kanban_columns kanban_columns_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.kanban_columns
     ADD CONSTRAINT kanban_columns_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: lead_statuses lead_statuses_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.lead_statuses
     ADD CONSTRAINT lead_statuses_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: legacy_projects legacy_projects_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.legacy_projects
     ADD CONSTRAINT legacy_projects_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: monthly_goals monthly_goals_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.monthly_goals
     ADD CONSTRAINT monthly_goals_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: payment_terms payment_terms_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.payment_terms
     ADD CONSTRAINT payment_terms_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: project_cards project_cards_budget_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.project_cards
     ADD CONSTRAINT project_cards_budget_id_fkey FOREIGN KEY (budget_id) REFERENCES public.budgets(id) ON DELETE CASCADE;
 
-
---
--- Name: project_cards project_cards_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.project_cards
     ADD CONSTRAINT project_cards_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: project_columns project_columns_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.project_columns
     ADD CONSTRAINT project_columns_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: prospection_leads prospection_leads_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.prospection_leads
     ADD CONSTRAINT prospection_leads_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: revenue_centers revenue_centers_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.revenue_centers
     ADD CONSTRAINT revenue_centers_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id);
 
-
---
--- Name: score_history score_history_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.score_history
     ADD CONSTRAINT score_history_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: service_categories service_categories_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.service_categories
     ADD CONSTRAINT service_categories_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: service_items service_items_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.service_items
     ADD CONSTRAINT service_items_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: service_objectives service_objectives_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.service_objectives
     ADD CONSTRAINT service_objectives_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: team_finance_access team_finance_access_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.team_finance_access
     ADD CONSTRAINT team_finance_access_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
-
---
--- Name: team_finance_access team_finance_access_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.team_finance_access
     ADD CONSTRAINT team_finance_access_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: workspace_contract_template workspace_contract_template_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_contract_template
     ADD CONSTRAINT workspace_contract_template_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: workspace_invites workspace_invites_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspace_invites
     ADD CONSTRAINT workspace_invites_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: workspace_layout workspace_layout_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_layout
     ADD CONSTRAINT workspace_layout_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
-
-
---
--- Name: workspace_members workspace_members_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.workspace_members
     ADD CONSTRAINT workspace_members_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: workspace_settings workspace_settings_workspace_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY public.workspace_settings
     ADD CONSTRAINT workspace_settings_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE;
 
-
---
--- Name: lead_statuses Members can create lead statuses; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Members can create lead statuses" ON public.lead_statuses FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: archived_projects Members can delete archived projects; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Members can delete archived projects" ON public.archived_projects FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: lead_statuses Members can delete lead statuses; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Members can delete lead statuses" ON public.lead_statuses FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: archived_projects Members can insert archived projects; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Members can insert archived projects" ON public.archived_projects FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: archived_projects Members can update archived projects; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Members can update archived projects" ON public.archived_projects FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id)) WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: lead_statuses Members can update lead statuses; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Members can update lead statuses" ON public.lead_statuses FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id)) WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: archived_projects Members can view archived projects; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Members can view archived projects" ON public.archived_projects FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: lead_statuses Members can view lead statuses; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Members can view lead statuses" ON public.lead_statuses FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: team_finance_access Members can view team finance access; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Members can view team finance access" ON public.team_finance_access FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: team_finance_access Owner/admin manage team finance access; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Owner/admin manage team finance access" ON public.team_finance_access TO authenticated USING ((EXISTS ( SELECT 1
    FROM public.workspace_members wm
@@ -2326,1152 +1259,346 @@ CREATE POLICY "Owner/admin manage team finance access" ON public.team_finance_ac
    FROM public.workspace_members wm
   WHERE ((wm.workspace_id = team_finance_access.workspace_id) AND (wm.user_id = auth.uid()) AND (wm.role = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))))));
 
-
---
--- Name: feedback_reports System admins can delete feedback; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "System admins can delete feedback" ON public.feedback_reports FOR DELETE TO authenticated USING (public.is_system_admin(auth.uid()));
-
-
---
--- Name: feedback_reports System admins can update feedback; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "System admins can update feedback" ON public.feedback_reports FOR UPDATE TO authenticated USING (public.is_system_admin(auth.uid()));
 
-
---
--- Name: system_admins Users can check own system admin status; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Users can check own system admin status" ON public.system_admins FOR SELECT TO authenticated USING ((user_id = auth.uid()));
-
-
---
--- Name: feedback_reports Users can create own feedback; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Users can create own feedback" ON public.feedback_reports FOR INSERT TO authenticated WITH CHECK ((auth.uid() = user_id));
 
-
---
--- Name: historical_project_links Users can delete historical links in their workspace; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Users can delete historical links in their workspace" ON public.historical_project_links FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: historical_project_links Users can insert historical links in their workspace; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Users can insert historical links in their workspace" ON public.historical_project_links FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: historical_project_links Users can update historical links in their workspace; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Users can update historical links in their workspace" ON public.historical_project_links FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: historical_project_links Users can view historical links of their workspace; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Users can view historical links of their workspace" ON public.historical_project_links FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: feedback_reports Users can view own feedback; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Users can view own feedback" ON public.feedback_reports FOR SELECT TO authenticated USING (((auth.uid() = user_id) OR public.is_system_admin(auth.uid())));
-
-
---
--- Name: appointments Workspace members can create appointments; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Workspace members can create appointments" ON public.appointments FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: appointments Workspace members can delete appointments; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Workspace members can delete appointments" ON public.appointments FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: appointments Workspace members can update appointments; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY "Workspace members can update appointments" ON public.appointments FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id)) WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: appointments Workspace members can view appointments; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY "Workspace members can view appointments" ON public.appointments FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: landing_leads anyone_can_insert_landing_leads; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY anyone_can_insert_landing_leads ON public.landing_leads FOR INSERT TO anon, authenticated WITH CHECK (true);
 
-
---
--- Name: appointments; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
-
---
--- Name: archived_projects; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.archived_projects ENABLE ROW LEVEL SECURITY;
 
---
--- Name: assets; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
-
---
--- Name: assets assets_owner_admin; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY assets_owner_admin ON public.assets TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
 
-
---
--- Name: budget_versions; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.budget_versions ENABLE ROW LEVEL SECURITY;
-
---
--- Name: budget_versions budget_versions_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY budget_versions_delete ON public.budget_versions FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: budget_versions budget_versions_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY budget_versions_insert ON public.budget_versions FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: budget_versions budget_versions_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY budget_versions_select ON public.budget_versions FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: budget_versions budget_versions_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY budget_versions_update ON public.budget_versions FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: budgets; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
 
---
--- Name: budgets budgets_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY budgets_delete ON public.budgets FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: budgets budgets_insert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY budgets_insert ON public.budgets FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: budgets budgets_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY budgets_select ON public.budgets FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: budgets budgets_update; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY budgets_update ON public.budgets FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: calendar_notes; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.calendar_notes ENABLE ROW LEVEL SECURITY;
-
---
--- Name: calendar_notes calendar_notes_delete_own; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY calendar_notes_delete_own ON public.calendar_notes FOR DELETE TO authenticated USING (((auth.uid() = user_id) AND public.has_workspace_access(auth.uid(), workspace_id)));
 
-
---
--- Name: calendar_notes calendar_notes_insert_own; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY calendar_notes_insert_own ON public.calendar_notes FOR INSERT TO authenticated WITH CHECK (((auth.uid() = user_id) AND public.has_workspace_access(auth.uid(), workspace_id)));
-
-
---
--- Name: calendar_notes calendar_notes_select_own; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY calendar_notes_select_own ON public.calendar_notes FOR SELECT TO authenticated USING (((auth.uid() = user_id) AND public.has_workspace_access(auth.uid(), workspace_id)));
 
-
---
--- Name: calendar_notes calendar_notes_update_own; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY calendar_notes_update_own ON public.calendar_notes FOR UPDATE TO authenticated USING (((auth.uid() = user_id) AND public.has_workspace_access(auth.uid(), workspace_id)));
-
-
---
--- Name: cashflow_entries; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.cashflow_entries ENABLE ROW LEVEL SECURITY;
 
---
--- Name: cashflow_entries cashflow_entries_owner_admin; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY cashflow_entries_owner_admin ON public.cashflow_entries TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
-
-
---
--- Name: client_contacts cc_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY cc_delete ON public.client_contacts FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: client_contacts cc_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY cc_insert ON public.client_contacts FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: client_contacts cc_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY cc_select ON public.client_contacts FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: client_contacts cc_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY cc_update ON public.client_contacts FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: client_contacts; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.client_contacts ENABLE ROW LEVEL SECURITY;
 
---
--- Name: clients; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
-
---
--- Name: clients clients_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY clients_delete ON public.clients FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: clients clients_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY clients_insert ON public.clients FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: clients clients_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY clients_select ON public.clients FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: clients clients_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY clients_update ON public.clients FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: cost_centers; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.cost_centers ENABLE ROW LEVEL SECURITY;
 
---
--- Name: cost_centers cost_centers_owner_admin; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY cost_centers_owner_admin ON public.cost_centers TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
-
-
---
--- Name: credit_cards; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.credit_cards ENABLE ROW LEVEL SECURITY;
 
---
--- Name: credit_cards credit_cards_owner_admin; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY credit_cards_owner_admin ON public.credit_cards TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
-
-
---
--- Name: feedback_reports; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.feedback_reports ENABLE ROW LEVEL SECURITY;
 
---
--- Name: financial_accounts; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.financial_accounts ENABLE ROW LEVEL SECURITY;
-
---
--- Name: financial_accounts financial_accounts_owner_admin; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY financial_accounts_owner_admin ON public.financial_accounts TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
 
-
---
--- Name: google_calendar_connections gcal_conn_own_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY gcal_conn_own_delete ON public.google_calendar_connections FOR DELETE TO authenticated USING ((auth.uid() = user_id));
-
-
---
--- Name: google_calendar_connections gcal_conn_own_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY gcal_conn_own_select ON public.google_calendar_connections FOR SELECT TO authenticated USING ((auth.uid() = user_id));
 
-
---
--- Name: google_calendar_connections gcal_conn_own_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY gcal_conn_own_update ON public.google_calendar_connections FOR UPDATE TO authenticated USING ((auth.uid() = user_id)) WITH CHECK ((auth.uid() = user_id));
-
-
---
--- Name: google_calendar_connections gcal_conn_own_upsert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY gcal_conn_own_upsert ON public.google_calendar_connections FOR INSERT TO authenticated WITH CHECK ((auth.uid() = user_id));
 
-
---
--- Name: google_calendar_sync_map gcsm_delete_own; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY gcsm_delete_own ON public.google_calendar_sync_map FOR DELETE TO authenticated USING ((auth.uid() = user_id));
-
-
---
--- Name: google_calendar_sync_map gcsm_insert_own; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY gcsm_insert_own ON public.google_calendar_sync_map FOR INSERT TO authenticated WITH CHECK ((auth.uid() = user_id));
 
-
---
--- Name: google_calendar_sync_map gcsm_select_own; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY gcsm_select_own ON public.google_calendar_sync_map FOR SELECT TO authenticated USING ((auth.uid() = user_id));
-
-
---
--- Name: google_calendar_sync_map gcsm_update_own; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY gcsm_update_own ON public.google_calendar_sync_map FOR UPDATE TO authenticated USING ((auth.uid() = user_id));
 
-
---
--- Name: google_calendar_connections; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.google_calendar_connections ENABLE ROW LEVEL SECURITY;
-
---
--- Name: google_calendar_sync_map; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.google_calendar_sync_map ENABLE ROW LEVEL SECURITY;
 
---
--- Name: hard_drives; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.hard_drives ENABLE ROW LEVEL SECURITY;
-
---
--- Name: hard_drives hard_drives_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY hard_drives_delete ON public.hard_drives FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: hard_drives hard_drives_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY hard_drives_insert ON public.hard_drives FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: hard_drives hard_drives_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY hard_drives_select ON public.hard_drives FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: hard_drives hard_drives_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY hard_drives_update ON public.hard_drives FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: historical_project_links; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.historical_project_links ENABLE ROW LEVEL SECURITY;
 
---
--- Name: kanban_columns; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.kanban_columns ENABLE ROW LEVEL SECURITY;
-
---
--- Name: kanban_columns kanban_columns_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY kanban_columns_delete ON public.kanban_columns FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: kanban_columns kanban_columns_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY kanban_columns_insert ON public.kanban_columns FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: kanban_columns kanban_columns_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY kanban_columns_select ON public.kanban_columns FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: kanban_columns kanban_columns_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY kanban_columns_update ON public.kanban_columns FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: landing_leads; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.landing_leads ENABLE ROW LEVEL SECURITY;
 
---
--- Name: lead_statuses; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.lead_statuses ENABLE ROW LEVEL SECURITY;
-
---
--- Name: prospection_leads leads_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY leads_delete ON public.prospection_leads FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: prospection_leads leads_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY leads_insert ON public.prospection_leads FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: prospection_leads leads_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY leads_select ON public.prospection_leads FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: prospection_leads leads_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY leads_update ON public.prospection_leads FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: legacy_projects; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.legacy_projects ENABLE ROW LEVEL SECURITY;
 
---
--- Name: legacy_projects legacy_projects_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY legacy_projects_delete ON public.legacy_projects FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: legacy_projects legacy_projects_insert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY legacy_projects_insert ON public.legacy_projects FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: legacy_projects legacy_projects_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY legacy_projects_select ON public.legacy_projects FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: legacy_projects legacy_projects_update; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY legacy_projects_update ON public.legacy_projects FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: monthly_goals; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.monthly_goals ENABLE ROW LEVEL SECURITY;
-
---
--- Name: monthly_goals monthly_goals_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY monthly_goals_delete ON public.monthly_goals FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: monthly_goals monthly_goals_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY monthly_goals_insert ON public.monthly_goals FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: monthly_goals monthly_goals_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY monthly_goals_select ON public.monthly_goals FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: monthly_goals monthly_goals_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY monthly_goals_update ON public.monthly_goals FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: payment_terms; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.payment_terms ENABLE ROW LEVEL SECURITY;
 
---
--- Name: payment_terms payment_terms_delete_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY payment_terms_delete_owner ON public.payment_terms FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: payment_terms payment_terms_insert_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY payment_terms_insert_owner ON public.payment_terms FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: payment_terms payment_terms_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY payment_terms_select ON public.payment_terms FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: payment_terms payment_terms_update_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY payment_terms_update_owner ON public.payment_terms FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
---
--- Name: profiles profiles_insert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY profiles_insert ON public.profiles FOR INSERT TO authenticated WITH CHECK ((auth.uid() = id));
 
-
---
--- Name: profiles profiles_select_own; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING ((auth.uid() = id));
-
-
---
--- Name: profiles profiles_select_peers; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY profiles_select_peers ON public.profiles FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
    FROM (public.workspace_members wm1
      JOIN public.workspace_members wm2 ON ((wm1.workspace_id = wm2.workspace_id)))
   WHERE ((wm1.user_id = auth.uid()) AND (wm2.user_id = profiles.id)))));
 
-
---
--- Name: profiles profiles_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY profiles_update ON public.profiles FOR UPDATE TO authenticated USING ((auth.uid() = id));
-
-
---
--- Name: project_activities; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.project_activities ENABLE ROW LEVEL SECURITY;
 
---
--- Name: project_activities project_activities_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY project_activities_delete ON public.project_activities FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: project_activities project_activities_insert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY project_activities_insert ON public.project_activities FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: project_activities project_activities_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY project_activities_select ON public.project_activities FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: project_activities project_activities_update; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY project_activities_update ON public.project_activities FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: project_cards; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.project_cards ENABLE ROW LEVEL SECURITY;
-
---
--- Name: project_cards project_cards_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY project_cards_delete ON public.project_cards FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: project_cards project_cards_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY project_cards_insert ON public.project_cards FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: project_cards project_cards_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY project_cards_select ON public.project_cards FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: project_cards project_cards_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY project_cards_update ON public.project_cards FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: project_columns; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.project_columns ENABLE ROW LEVEL SECURITY;
 
---
--- Name: project_columns project_columns_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY project_columns_delete ON public.project_columns FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: project_columns project_columns_insert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY project_columns_insert ON public.project_columns FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: project_columns project_columns_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY project_columns_select ON public.project_columns FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: project_columns project_columns_update; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY project_columns_update ON public.project_columns FOR UPDATE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: prospection_leads; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.prospection_leads ENABLE ROW LEVEL SECURITY;
-
---
--- Name: revenue_centers; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.revenue_centers ENABLE ROW LEVEL SECURITY;
 
---
--- Name: revenue_centers revenue_centers_owner_admin; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY revenue_centers_owner_admin ON public.revenue_centers TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role]))) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
-
-
---
--- Name: score_history; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.score_history ENABLE ROW LEVEL SECURITY;
 
---
--- Name: score_history score_history_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY score_history_delete ON public.score_history FOR DELETE TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: score_history score_history_insert; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY score_history_insert ON public.score_history FOR INSERT TO authenticated WITH CHECK (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: score_history score_history_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY score_history_select ON public.score_history FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: service_categories; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.service_categories ENABLE ROW LEVEL SECURITY;
 
---
--- Name: service_categories service_categories_delete_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY service_categories_delete_owner ON public.service_categories FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: service_categories service_categories_insert_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY service_categories_insert_owner ON public.service_categories FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: service_categories service_categories_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY service_categories_select ON public.service_categories FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: service_categories service_categories_update_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY service_categories_update_owner ON public.service_categories FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: service_items; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.service_items ENABLE ROW LEVEL SECURITY;
-
---
--- Name: service_items service_items_delete_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY service_items_delete_owner ON public.service_items FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: service_items service_items_insert_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY service_items_insert_owner ON public.service_items FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: service_items service_items_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY service_items_select ON public.service_items FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: service_items service_items_update_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY service_items_update_owner ON public.service_items FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: service_objectives; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.service_objectives ENABLE ROW LEVEL SECURITY;
 
---
--- Name: service_objectives service_objectives_delete_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY service_objectives_delete_owner ON public.service_objectives FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: service_objectives service_objectives_insert_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY service_objectives_insert_owner ON public.service_objectives FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: service_objectives service_objectives_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY service_objectives_select ON public.service_objectives FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: service_objectives service_objectives_update_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY service_objectives_update_owner ON public.service_objectives FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: system_admins; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.system_admins ENABLE ROW LEVEL SECURITY;
-
---
--- Name: landing_leads system_admins_can_select_landing_leads; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY system_admins_can_select_landing_leads ON public.landing_leads FOR SELECT TO authenticated USING (public.is_system_admin(auth.uid()));
 
-
---
--- Name: team_finance_access; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.team_finance_access ENABLE ROW LEVEL SECURITY;
-
---
--- Name: workspace_contract_template; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.workspace_contract_template ENABLE ROW LEVEL SECURITY;
 
---
--- Name: workspace_contract_template workspace_contract_template_delete_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_contract_template_delete_owner ON public.workspace_contract_template FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: workspace_contract_template workspace_contract_template_insert_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_contract_template_insert_owner ON public.workspace_contract_template FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: workspace_contract_template workspace_contract_template_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_contract_template_select ON public.workspace_contract_template FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: workspace_contract_template workspace_contract_template_update_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_contract_template_update_owner ON public.workspace_contract_template FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: workspace_invites; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.workspace_invites ENABLE ROW LEVEL SECURITY;
-
---
--- Name: workspace_invites workspace_invites_delete; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_invites_delete ON public.workspace_invites FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
 
-
---
--- Name: workspace_invites workspace_invites_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_invites_insert ON public.workspace_invites FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
-
-
---
--- Name: workspace_invites workspace_invites_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_invites_select ON public.workspace_invites FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: workspace_invites workspace_invites_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_invites_update ON public.workspace_invites FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = ANY (ARRAY['owner'::public.app_role, 'admin'::public.app_role])));
-
-
---
--- Name: workspace_layout; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.workspace_layout ENABLE ROW LEVEL SECURITY;
 
---
--- Name: workspace_layout workspace_layout_delete_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_layout_delete_owner ON public.workspace_layout FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: workspace_layout workspace_layout_insert_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_layout_insert_owner ON public.workspace_layout FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: workspace_layout workspace_layout_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_layout_select ON public.workspace_layout FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: workspace_layout workspace_layout_update_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_layout_update_owner ON public.workspace_layout FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: workspace_members; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.workspace_members ENABLE ROW LEVEL SECURITY;
 
---
--- Name: workspace_members workspace_members_delete; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_members_delete ON public.workspace_members FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: workspace_members workspace_members_insert_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_members_insert_owner ON public.workspace_members FOR INSERT TO authenticated WITH CHECK (((auth.uid() = user_id) AND (role = 'owner'::public.app_role) AND (NOT public.workspace_has_members(workspace_id)) AND (EXISTS ( SELECT 1
    FROM public.workspaces w
   WHERE ((w.id = workspace_members.workspace_id) AND (w.created_by = auth.uid()))))));
 
-
---
--- Name: workspace_members workspace_members_select; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_members_select ON public.workspace_members FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
-
-
---
--- Name: workspace_members workspace_members_update; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_members_update ON public.workspace_members FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: workspace_settings; Type: ROW SECURITY; Schema: public; Owner: -
---
-
 ALTER TABLE public.workspace_settings ENABLE ROW LEVEL SECURITY;
-
---
--- Name: workspace_settings workspace_settings_delete_owner; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_settings_delete_owner ON public.workspace_settings FOR DELETE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
 
-
---
--- Name: workspace_settings workspace_settings_insert_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_settings_insert_owner ON public.workspace_settings FOR INSERT TO authenticated WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: workspace_settings workspace_settings_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspace_settings_select ON public.workspace_settings FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), workspace_id));
 
-
---
--- Name: workspace_settings workspace_settings_update_owner; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspace_settings_update_owner ON public.workspace_settings FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role)) WITH CHECK ((public.get_user_role(auth.uid(), workspace_id) = 'owner'::public.app_role));
-
-
---
--- Name: workspaces; Type: ROW SECURITY; Schema: public; Owner: -
---
 
 ALTER TABLE public.workspaces ENABLE ROW LEVEL SECURITY;
 
---
--- Name: workspaces workspaces_insert; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspaces_insert ON public.workspaces FOR INSERT TO authenticated WITH CHECK ((auth.uid() = created_by));
-
-
---
--- Name: workspaces workspaces_select; Type: POLICY; Schema: public; Owner: -
---
 
 CREATE POLICY workspaces_select ON public.workspaces FOR SELECT TO authenticated USING (public.has_workspace_access(auth.uid(), id));
 
-
---
--- Name: workspaces workspaces_update; Type: POLICY; Schema: public; Owner: -
---
-
 CREATE POLICY workspaces_update ON public.workspaces FOR UPDATE TO authenticated USING ((public.get_user_role(auth.uid(), id) = 'owner'::public.app_role));
-
-
---
--- PostgreSQL database dump complete
---
-
-\unrestrict ZhE3F9UqstsGfkxFdjAcFh0z6YWL694Vu1MhM1cEi3RWxRKtDdJPDzw0pgJ7KgZ
 
 -- ============================================================================
 -- Storage
@@ -3549,8 +1676,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authentic
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
 -- Visitantes não logados só podem enviar o formulário de interesse
+-- (o Supabase concede tudo a anon por padrão em tabelas novas)
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon;
 GRANT INSERT ON public.landing_leads TO anon;
 
 -- Funções: só usuários logados (e o backend) executam
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, anon;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
+-- A função do gatilho de cadastro não deve ser chamada diretamente
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM authenticated;
