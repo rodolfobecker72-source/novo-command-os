@@ -509,7 +509,7 @@ export function EditClient() {
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit" className="flex-1 btn-hero">
+                  <Button type="submit" className="flex-1 btn-cta">
                     <Save className="w-4 h-4 mr-2" />
                     Salvar Alterações
                   </Button>

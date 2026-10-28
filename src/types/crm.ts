@@ -470,7 +470,7 @@ export interface Asset {
   description: string;
   value: number;
   serialNumber: string; // Optional, can be empty
-  heroAssetNumber: string; // Nº Patrimônio HERO - Optional
+  assetNumber: string; // Nº de patrimônio (opcional)
   photo: string; // base64 or URL
   referenceLink: string; // Optional
   assignedTo: string; // Free text for now

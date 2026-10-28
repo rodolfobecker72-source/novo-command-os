@@ -9,11 +9,14 @@ import { ServiceItemSelector } from '@/components/crm/ServiceItemSelector';
 import { SortableTableBody } from '@/components/crm/SortableTableBody';
 import { ContactSelect } from '@/components/crm/ContactSelect';
 import { format } from 'date-fns';
-import jsPDF from 'jspdf';
+import { generateProposalPDF } from '@/utils/pdfGenerator';
+import { fetchLayoutSettings } from '@/utils/layoutSettings';
 import { Header } from '@/components/layout/Header';
 import { useCRM } from '@/contexts/CRMContext';
 import {
   CRMStatus,
+  Budget,
+  BudgetVersion,
   ServiceType,
   CostItem,
   PaymentStatus,
@@ -109,7 +112,7 @@ interface ServiceItem {
 
 export function NewBudget() {
   const { clients, addBudget, addBudgetVersion, kanbanColumns, serviceCategories, getObjectivesForCategory, getCategoryLabel, budgets, isLoading: crmLoading } = useCRM();
-  const { workspace, role } = useAuth();
+  const { workspace, role, profile } = useAuth();
   const navigate = useNavigate();
 
   // Auto-generate next proposalId starting from 900
@@ -462,7 +465,8 @@ export function NewBudget() {
   };
 
   // Gerar PDF
-  const generatePDF = () => {
+  // Same proposal PDF as a saved budget, built from the unsaved form
+  const generatePDF = async () => {
     if (role === 'vendedor') {
       toast.error('Vendedores só podem baixar propostas aprovadas');
       return;
@@ -472,120 +476,48 @@ export function NewBudget() {
       return;
     }
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = 20;
+    try {
+      const budgetDraft = {
+        proposalId: formData.proposalId,
+        projectName: formData.projectName || 'Projeto',
+        projectDescription: formData.projectDescription,
+        location: formData.location,
+        hasExecutionDate: formData.hasExecutionDate,
+        executionStartDate: formData.executionStartDate,
+        executionEndDate: formData.executionEndDate,
+        paymentTerms: formData.paymentTerms,
+        hideNfInPdf: false,
+        hideOperationalInPdf: false,
+        hideNfObservationInPdf: false,
+      } as unknown as Budget;
+      const versionDraft = {
+        version: 1,
+        services,
+        operationalCosts,
+        nfCostPercentage: formData.nfCostPercentage,
+        margin: formData.targetMargin,
+      } as unknown as BudgetVersion;
+      const objectiveLabels: Record<string, Record<string, string>> = {};
+      serviceCategories.forEach((c) => {
+        objectiveLabels[c.key] = Object.fromEntries(
+          (getObjectivesForCategory(c.key) || []).map((o) => [o.value, o.label]),
+        );
+      });
 
-    // Header
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('HERO', 20, yPos);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Proposta Comercial', 20, yPos + 8);
-
-    // Linha separadora
-    yPos += 20;
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.5);
-    doc.line(20, yPos, pageWidth - 20, yPos);
-
-    // Dados do projeto
-    yPos += 15;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Projeto', 20, yPos);
-    
-    yPos += 8;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.projectName || 'Nome do Projeto', 20, yPos);
-
-    yPos += 12;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Cliente', 20, yPos);
-    
-    yPos += 8;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(selectedClient.companyName, 20, yPos);
-
-    // Serviços
-    yPos += 15;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Escopo do Serviço', 20, yPos);
-
-    services.forEach((service, index) => {
-      yPos += 10;
-      const objectives = getObjectivesForCategory(service.serviceType);
-      const objectiveLabel = objectives.find(o => o.value === service.objective)?.label || service.objective;
-      
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${service.serviceType} - ${objectiveLabel}`, 20, yPos);
-      
-      if (service.description) {
-        yPos += 6;
-        doc.setFont('helvetica', 'normal');
-        const lines = doc.splitTextToSize(service.description, pageWidth - 40);
-        doc.text(lines, 20, yPos);
-        yPos += lines.length * 5;
-      }
-    });
-
-    // Observações
-    yPos += 15;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Observações', 20, yPos);
-    
-    yPos += 8;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const observacoes = [
-      '• Logística inclusa',
-      '• Impostos inclusos',
-      '• Nota Fiscal obrigatória',
-      '',
-      'O que não está incluso:',
-      '• Itens não especificados nesta proposta',
-    ];
-    observacoes.forEach(obs => {
-      doc.text(obs, 20, yPos);
-      yPos += 5;
-    });
-
-    // Valor Final
-    yPos += 10;
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.5);
-    doc.line(20, yPos, pageWidth - 20, yPos);
-
-    yPos += 12;
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Valor Final', 20, yPos);
-    doc.text(formatCurrency(totals.totalProjectValue), pageWidth - 20, yPos, { align: 'right' });
-
-    // Condição de Pagamento
-    if (formData.paymentTerms) {
-      yPos += 10;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Condição de Pagamento: ${formData.paymentTerms}`, 20, yPos);
+      await generateProposalPDF({
+        budget: budgetDraft,
+        version: versionDraft,
+        client: selectedClient,
+        responsibleUser: profile ? { id: profile.id, name: profile.name, photo: profile.photo_url || '' } : null,
+        layoutSettings: await fetchLayoutSettings(workspace?.id),
+        categoryLabels: Object.fromEntries(serviceCategories.map((c) => [c.key, c.label])),
+        objectiveLabels,
+      });
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Erro ao gerar PDF');
     }
-
-    // Versão
-    yPos += 15;
-    doc.setFontSize(9);
-    doc.setTextColor(128);
-    doc.text(`Proposta V1 - ${new Date().toLocaleDateString('pt-BR')}`, 20, yPos);
-
-    // Salvar
-    doc.save(`proposta_${formData.projectName.replace(/\s+/g, '_') || 'orcamento'}.pdf`);
-    toast.success('PDF gerado com sucesso!');
   };
 
   const getMarginColor = (margin: number) => {
@@ -1622,7 +1554,7 @@ export function NewBudget() {
                 Gerar PDF
               </Button>
             )}
-            <Button type="submit" className="flex-1 btn-hero" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 btn-cta" disabled={isSubmitting}>
               <Save className="w-4 h-4 mr-2" />
               {isSubmitting ? 'Salvando...' : 'Salvar Orçamento'}
             </Button>

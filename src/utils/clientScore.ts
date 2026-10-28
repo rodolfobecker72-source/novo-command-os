@@ -1,6 +1,6 @@
 import { Budget, Client } from '@/types/crm';
 
-// ============= HERO CLIENT SCORE CALCULATOR =============
+// ============= CLIENT SCORE CALCULATOR =============
 // Score baseado em 3 pilares:
 // 1. Recorrência de projetos (positivo)
 // 2. Margem real média (positivo)
@@ -83,7 +83,7 @@ function getPotentialBadge(
   return 'neutro';
 }
 
-// Função principal para calcular o HERO Client Score
+// Função principal para calcular o Client Score
 export function calculateClientScore(
   clientId: string,
   budgets: Budget[]

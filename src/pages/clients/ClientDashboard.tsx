@@ -156,7 +156,7 @@ export function ClientDashboard() {
                   {filteredClients.length} cadastro(s) encontrado(s)
                 </CardDescription>
               </div>
-              <Button className="btn-hero" onClick={() => navigate('/clientes/novo')}>
+              <Button className="btn-cta" onClick={() => navigate('/clientes/novo')}>
                 + Nova Empresa
               </Button>
             </div>

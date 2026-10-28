@@ -361,7 +361,7 @@ export function CRMKanban() {
           </div>
           <Button
             onClick={() => navigate('/crm/orcamento/novo')}
-            className="btn-hero w-full sm:w-auto"
+            className="btn-cta w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Novo Orçamento

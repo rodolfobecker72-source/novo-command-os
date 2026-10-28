@@ -179,7 +179,7 @@ function budgetVersionFromDb(row: any): BudgetVersion {
 function assetFromDb(row: any): Asset {
   return {
     id: row.id, name: row.name, description: row.description, value: Number(row.value),
-    serialNumber: row.serial_number, heroAssetNumber: row.hero_asset_number, photo: row.photo,
+    serialNumber: row.serial_number, assetNumber: row.asset_number, photo: row.photo,
     referenceLink: row.reference_link, assignedTo: row.assigned_to,
     createdAt: new Date(row.created_at), updatedAt: new Date(row.updated_at),
   };
@@ -1561,7 +1561,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.from('assets').insert({
         workspace_id: wsId, name: assetData.name, description: assetData.description,
         value: assetData.value, serial_number: assetData.serialNumber,
-        hero_asset_number: assetData.heroAssetNumber, photo: assetData.photo,
+        asset_number: assetData.assetNumber, photo: assetData.photo,
         reference_link: assetData.referenceLink, assigned_to: assetData.assignedTo,
       }).select().single();
       if (error) throw error;
@@ -1578,7 +1578,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.value !== undefined) dbUpdates.value = updates.value;
       if (updates.serialNumber !== undefined) dbUpdates.serial_number = updates.serialNumber;
-      if (updates.heroAssetNumber !== undefined) dbUpdates.hero_asset_number = updates.heroAssetNumber;
+      if (updates.assetNumber !== undefined) dbUpdates.asset_number = updates.assetNumber;
       if (updates.photo !== undefined) dbUpdates.photo = updates.photo;
       if (updates.referenceLink !== undefined) dbUpdates.reference_link = updates.referenceLink;
       if (updates.assignedTo !== undefined) dbUpdates.assigned_to = updates.assignedTo;

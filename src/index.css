@@ -243,14 +243,14 @@
     @apply h-11 rounded-lg border border-input bg-background px-4 text-sm transition-all duration-200 placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none;
   }
 
-  /* Button Hero */
-  .btn-hero {
+  /* Botão de ação principal */
+  .btn-cta {
     @apply inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg font-medium transition-all duration-200;
     background: var(--gradient-primary);
     color: hsl(var(--primary-foreground));
   }
 
-  .btn-hero:hover {
+  .btn-cta:hover {
     @apply shadow-lg transform -translate-y-0.5;
   }
 
