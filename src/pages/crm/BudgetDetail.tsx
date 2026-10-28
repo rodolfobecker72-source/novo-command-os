@@ -3698,14 +3698,12 @@ export function BudgetDetail() {
                     </div>
                   </div>
 
-                  {role !== 'visualizador' && (
-                    <ContactSelect
-                      clientId={client.id}
-                      value={budget.contactId ?? selectedContact?.id ?? null}
-                      onChange={(cid) => { if (cid && cid !== budget.contactId) updateBudget(budget.id, { contactId: cid }); }}
-                      label="Trocar responsável"
-                    />
-                  )}
+                  <ContactSelect
+                    clientId={client.id}
+                    value={budget.contactId ?? selectedContact?.id ?? null}
+                    onChange={(cid) => { if (cid && cid !== budget.contactId) updateBudget(budget.id, { contactId: cid }); }}
+                    label="Trocar responsável"
+                  />
 
                   <a
                     href={`https://wa.me/55${client.phone.replace(/\D/g, '')}`}

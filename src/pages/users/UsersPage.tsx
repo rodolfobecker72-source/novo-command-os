@@ -42,7 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Trash2, UserPlus, Crown, ShieldCheck, Eye as EyeIcon, Briefcase, Camera, Users, KeyRound } from 'lucide-react';
+import { Pencil, Trash2, UserPlus, Crown, ShieldCheck, Briefcase, Camera, Users, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
@@ -59,7 +59,6 @@ const ROLE_LABELS: Record<AppRole, string> = {
   owner: 'Proprietário',
   admin: 'Administrador',
   vendedor: 'Vendedor',
-  visualizador: 'Visualizador',
   time_hero: 'Time Operacional',
 };
 
@@ -67,7 +66,6 @@ const ROLE_ICONS: Record<AppRole, typeof Crown> = {
   owner: Crown,
   admin: ShieldCheck,
   vendedor: Briefcase,
-  visualizador: EyeIcon,
   time_hero: Users,
 };
 
@@ -75,7 +73,6 @@ const ROLE_COLORS: Record<AppRole, string> = {
   owner: 'bg-primary/10 text-primary',
   admin: 'bg-accent/10 text-accent',
   vendedor: 'bg-warning/10 text-warning',
-  visualizador: 'bg-muted text-muted-foreground',
   time_hero: 'bg-blue-500/10 text-blue-600',
 };
 
@@ -463,7 +460,6 @@ export function UsersPage() {
                         <SelectContent>
                           <SelectItem value="admin">Administrador</SelectItem>
                           <SelectItem value="vendedor">Vendedor</SelectItem>
-                          <SelectItem value="visualizador">Visualizador</SelectItem>
                           <SelectItem value="time_hero">Time Operacional</SelectItem>
                         </SelectContent>
                       </Select>
@@ -501,7 +497,7 @@ export function UsersPage() {
                     </TableHeader>
                     <TableBody>
                       {members.map(member => {
-                        const RoleIcon = ROLE_ICONS[member.role];
+                        const RoleIcon = ROLE_ICONS[member.role] ?? Users;
                         return (
                           <TableRow key={member.id}>
                             <TableCell>
@@ -569,7 +565,7 @@ export function UsersPage() {
                 {/* Mobile card list */}
                 <div className="md:hidden space-y-3">
                   {members.map(member => {
-                    const RoleIcon = ROLE_ICONS[member.role];
+                    const RoleIcon = ROLE_ICONS[member.role] ?? Users;
                     return (
                       <div key={member.id} className="border border-border/60 rounded-lg p-3 space-y-2.5">
                         <div className="flex items-start gap-3">
@@ -716,7 +712,6 @@ export function UsersPage() {
                     <SelectContent>
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="vendedor">Vendedor</SelectItem>
-                      <SelectItem value="visualizador">Visualizador</SelectItem>
                       <SelectItem value="time_hero">Time Operacional</SelectItem>
                     </SelectContent>
                   </Select>
