@@ -46,6 +46,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScoreBadge } from '@/components/common/ScoreBadge';
 import { formatCurrency } from '@/types/crm';
 import { useNavigate } from 'react-router-dom';
+import { columnColorClasses } from '@/utils/kanbanColors';
 
 const MONTH_NAMES_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -55,15 +56,19 @@ function formatExecutionMonth(ym: string): string {
   return `${MONTH_NAMES_PT[idx] || month}/${year}`;
 }
 
-function ListColumn({ columnKey, label, cards, total, hideValues }: { columnKey: string; label: string; cards: CRMCard[]; total: number; hideValues: boolean }) {
+function ListColumn({ columnKey, label, color, cards, total, hideValues }: { columnKey: string; label: string; color: string; cards: CRMCard[]; total: number; hideValues: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnKey });
+  const colors = columnColorClasses(color);
   return (
     <div
       ref={setNodeRef}
-      className={`border border-border rounded-xl bg-card overflow-hidden ${isOver ? 'ring-2 ring-accent' : ''}`}
+      className={`border ${colors.border} rounded-xl bg-card overflow-hidden ${isOver ? 'ring-2 ring-accent' : ''}`}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-        <h3 className="font-semibold text-sm">{label}</h3>
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${colors.border} ${colors.header}`}>
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
+          <h3 className="font-semibold text-sm">{label}</h3>
+        </div>
         <div className="flex items-center gap-2">
           {!hideValues && total > 0 && (
             <span className="text-xs font-semibold text-accent">{formatCurrency(total)}</span>
@@ -382,7 +387,7 @@ export function CRMKanban() {
                   key={column.id}
                   status={column.key}
                   cards={cardsByStatus[column.key] || []}
-                  color=""
+                  color={column.color}
                   label={column.label}
                   hideValue={hideValues}
                 />
@@ -413,6 +418,7 @@ export function CRMKanban() {
                     key={column.id}
                     columnKey={column.key}
                     label={column.label}
+                    color={column.color}
                     cards={columnCards}
                     total={total}
                     hideValues={hideValues}

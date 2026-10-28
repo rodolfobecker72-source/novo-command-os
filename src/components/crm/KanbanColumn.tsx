@@ -6,6 +6,7 @@ import {
 import { CRMCard, CRMStatus, formatCurrency } from '@/types/crm';
 import { KanbanCard } from './KanbanCard';
 import { motion } from 'framer-motion';
+import { columnColorClasses } from '@/utils/kanbanColors';
 
 interface KanbanColumnProps {
   status: CRMStatus;
@@ -15,22 +16,10 @@ interface KanbanColumnProps {
   hideValue?: boolean;
 }
 
-const defaultColumnColors: Record<string, { bg: string; border: string; dot: string }> = {
-  oportunidade_mapeada: { bg: 'bg-info/5', border: 'border-info/30', dot: 'bg-info' },
-  fazer_proposta: { bg: 'bg-accent/5', border: 'border-accent/30', dot: 'bg-accent' },
-  pronta_enviar: { bg: 'bg-warning/5', border: 'border-warning/30', dot: 'bg-warning' },
-  proposta_enviada: { bg: 'bg-accent/5', border: 'border-accent/30', dot: 'bg-accent' },
-  fazer_followup: { bg: 'bg-warning/5', border: 'border-warning/30', dot: 'bg-warning' },
-  nao_aprovada: { bg: 'bg-destructive/5', border: 'border-destructive/30', dot: 'bg-destructive' },
-  aprovada: { bg: 'bg-success/5', border: 'border-success/30', dot: 'bg-success' },
-};
-
-const fallbackColors = { bg: 'bg-muted/50', border: 'border-border', dot: 'bg-muted-foreground' };
-
-export function KanbanColumn({ status, cards, label, hideValue }: KanbanColumnProps) {
+export function KanbanColumn({ status, cards, color, label, hideValue }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
-  const colors = defaultColumnColors[status] || fallbackColors;
+  const colors = columnColorClasses(color);
   const total = cards.reduce((sum, c) => sum + (c.value || 0), 0);
 
   return (
@@ -41,7 +30,7 @@ export function KanbanColumn({ status, cards, label, hideValue }: KanbanColumnPr
       } transition-all duration-200`}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-border/50">
+      <div className={`p-4 border-b ${colors.border} ${colors.header} rounded-t-xl`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
