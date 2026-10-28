@@ -282,7 +282,6 @@ interface CRMContextType {
   removeProjectFromHD: (hdId: string, allocationId: string) => Promise<void>;
 
   legacyProjects: LegacyProject[];
-  addLegacyProject: (project: Omit<LegacyProject, 'id' | 'createdAt'>) => Promise<LegacyProject | null>;
   deleteLegacyProject: (id: string) => Promise<void>;
   getLegacyProject: (id: string) => LegacyProject | undefined;
   getHDForBudget: (budgetId: string) => { hdLabel: string; hdId: string } | null;
@@ -1537,21 +1536,6 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   };
 
   // ============= Legacy Project functions =============
-  const addLegacyProject = async (projectData: Omit<LegacyProject, 'id' | 'createdAt'>): Promise<LegacyProject | null> => {
-    const wsId = await ensureWorkspace();
-    if (!wsId) return null;
-    try {
-      const { data, error } = await supabase.from('legacy_projects').insert({
-        workspace_id: wsId, project_number: projectData.projectNumber,
-        client_id: projectData.clientId, client_name: projectData.clientName, size_gb: projectData.sizeGB,
-      }).select().single();
-      if (error) throw error;
-      const newProject = legacyProjectFromDb(data);
-      setLegacyProjects(prev => [...prev, newProject]);
-      return newProject;
-    } catch (e: any) { toast.error('Erro: ' + e.message); return null; }
-  };
-
   const deleteLegacyProject = async (id: string) => {
     try {
       const { error } = await supabase.from('legacy_projects').delete().eq('id', id);
@@ -1791,7 +1775,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     serviceCategories, serviceObjectives, addServiceCategory, updateServiceCategory, deleteServiceCategory, reorderServiceCategories,
     addServiceObjective, updateServiceObjective, deleteServiceObjective, reorderServiceObjectives, getObjectivesForCategory, getCategoryLabel,
     hardDrives, addHardDrive, updateHardDrive, deleteHardDrive, allocateProjectToHD, removeProjectFromHD,
-    legacyProjects, addLegacyProject, deleteLegacyProject, getLegacyProject, getHDForBudget,
+    legacyProjects, deleteLegacyProject, getLegacyProject, getHDForBudget,
     scoreHistory, getClientScoreHistory,
     assets, addAsset, updateAsset, deleteAsset,
     projectCards, projectColumns, updateProjectCard, deleteProjectCard, archiveProjectCards, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
