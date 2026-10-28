@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { HISTORICAL_PROJECTS } from '@/data/historicalProjects';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -19,27 +18,9 @@ export function ProjectHistoryPage() {
 
   const [query, setQuery] = useState('');
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
-  const [editing, setEditing] = useState<{ key: string; name: string; link: string; archivedId?: string } | null>(null);
+  const [editing, setEditing] = useState<{ name: string; archivedId: string } | null>(null);
   const [editLink, setEditLink] = useState('');
   const [saving, setSaving] = useState(false);
-
-  const { data: linkOverrides = {} } = useQuery({
-    queryKey: ['historical_project_links', workspaceId],
-    queryFn: async () => {
-      if (!workspaceId) return {};
-      const { data, error } = await supabase
-        .from('historical_project_links')
-        .select('history_key, link')
-        .eq('workspace_id', workspaceId);
-      if (error) throw error;
-      const map: Record<string, string> = {};
-      (data || []).forEach((row: any) => {
-        map[row.history_key] = row.link;
-      });
-      return map;
-    },
-    enabled: !!workspaceId,
-  });
 
   const { data: archived = [] } = useQuery({
     queryKey: ['archived_projects', workspaceId],
@@ -55,29 +36,17 @@ export function ProjectHistoryPage() {
     enabled: !!workspaceId,
   });
 
-  const keyOf = (p: { year: string; id: number }) => `${p.year}:${p.id}`;
-
   type HistoryItem = {
     rowKey: string;
     year: string;
     id: number;
     name: string;
     link: string;
-    archivedId?: string;
+    archivedId: string;
   };
 
-  const linkOf = (p: HistoryItem) =>
-    p.archivedId ? p.link : linkOverrides[keyOf(p)] ?? p.link;
-
   const allItems = useMemo<HistoryItem[]>(() => {
-    const staticItems: HistoryItem[] = HISTORICAL_PROJECTS.map((p) => ({
-      rowKey: `s:${p.year}:${p.id}:${p.name}`,
-      year: p.year,
-      id: p.id,
-      name: p.name,
-      link: p.link,
-    }));
-    const archivedItems: HistoryItem[] = archived.map((a: any) => {
+    return archived.map((a: any): HistoryItem => {
       const num = parseInt(String(a.project_number).replace(/\D/g, ''), 10);
       const label = [a.project_number, a.project_name].filter(Boolean).join(' - ');
       return {
@@ -89,7 +58,6 @@ export function ProjectHistoryPage() {
         archivedId: a.id,
       };
     });
-    return [...staticItems, ...archivedItems];
   }, [archived]);
 
   const grouped = useMemo(() => {
@@ -107,16 +75,14 @@ export function ProjectHistoryPage() {
     // sort each group ascending by id
     for (const arr of byYear.values()) arr.sort((a, b) => a.id - b.id);
 
-    // requested order: 1º semestre 2026, 2025, Nativos do Futuro, 2024
-    const order = ['1º semestre 2026', '2025', 'Nativos do Futuro', '2024'];
-    const rank = new Map(order.map((y, i) => [y, i]));
+    // Groups named after a year come first, newest first; the rest alphabetically
+    const yearOf = (g: string) => Number(g.match(/\b(19|20)\d{2}\b/)?.[0] ?? NaN);
     const entries = Array.from(byYear.entries());
     entries.sort(([a], [b]) => {
-      const ra = rank.get(a);
-      const rb = rank.get(b);
-      if (ra !== undefined && rb !== undefined) return ra - rb;
-      if (ra !== undefined) return -1;
-      if (rb !== undefined) return 1;
+      const ya = yearOf(a);
+      const yb = yearOf(b);
+      if (!isNaN(ya) && !isNaN(yb) && ya !== yb) return yb - ya;
+      if (!isNaN(ya) !== !isNaN(yb)) return isNaN(ya) ? 1 : -1;
       return a.localeCompare(b, 'pt-BR');
     });
     return entries;
@@ -137,9 +103,8 @@ export function ProjectHistoryPage() {
   const isValidLink = (l: string) => l && l !== '-' && /^https?:\/\//i.test(l);
 
   const openEdit = (p: HistoryItem) => {
-    const current = linkOf(p);
-    setEditing({ key: keyOf(p), name: p.name, link: current, archivedId: p.archivedId });
-    setEditLink(isValidLink(current) ? current : '');
+    setEditing({ name: p.name, archivedId: p.archivedId });
+    setEditLink(isValidLink(p.link) ? p.link : '');
   };
 
   const saveEdit = async () => {
@@ -151,23 +116,12 @@ export function ProjectHistoryPage() {
     }
     setSaving(true);
     try {
-      if (editing.archivedId) {
-        const { error } = await supabase
-          .from('archived_projects')
-          .update({ link: trimmed })
-          .eq('id', editing.archivedId);
-        if (error) throw error;
-        queryClient.invalidateQueries({ queryKey: ['archived_projects', workspaceId] });
-      } else {
-        const { error } = await supabase
-          .from('historical_project_links')
-          .upsert(
-            { workspace_id: workspaceId, history_key: editing.key, link: trimmed },
-            { onConflict: 'workspace_id,history_key' }
-          );
-        if (error) throw error;
-        queryClient.invalidateQueries({ queryKey: ['historical_project_links', workspaceId] });
-      }
+      const { error } = await supabase
+        .from('archived_projects')
+        .update({ link: trimmed })
+        .eq('id', editing.archivedId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['archived_projects', workspaceId] });
       toast.success('Link atualizado com sucesso');
       setEditing(null);
     } catch (e: any) {
@@ -186,7 +140,7 @@ export function ProjectHistoryPage() {
         <div>
           <h1 className="text-2xl font-bold">Histórico de Projetos</h1>
           <p className="text-sm text-muted-foreground">
-            Arquivo de projetos anteriores importados do Notion
+            Projetos finalizados e arquivados pela sua empresa
           </p>
         </div>
       </div>
@@ -214,7 +168,11 @@ export function ProjectHistoryPage() {
       </div>
 
       {grouped.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhum projeto encontrado.</p>
+        <p className="text-sm text-muted-foreground">
+          {archived.length === 0
+            ? 'Nenhum projeto arquivado ainda. Use "Enviar para Histórico" na Área de Projetos para guardar os projetos finalizados aqui.'
+            : 'Nenhum projeto encontrado.'}
+        </p>
       )}
 
       {grouped.map(([year, projects]) => {
@@ -240,7 +198,7 @@ export function ProjectHistoryPage() {
             <CollapsibleContent>
               <div className="border rounded-lg divide-y overflow-hidden">
                 {projects.map((p) => {
-                  const link = linkOf(p);
+                  const link = p.link;
                   return (
                     <div
                       key={p.rowKey}

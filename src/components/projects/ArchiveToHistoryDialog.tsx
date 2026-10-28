@@ -11,7 +11,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCRM } from '@/contexts/CRMContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { HISTORICAL_PROJECTS } from '@/data/historicalProjects';
 import { toast } from 'sonner';
 
 const NEW_GROUP = '__new__';
@@ -50,14 +49,10 @@ export function ArchiveToHistoryDialog({ open, onOpenChange }: Props) {
     enabled: !!workspaceId && open,
   });
 
-  const existingGroups = useMemo(() => {
-    const staticGroups = Array.from(new Set(HISTORICAL_PROJECTS.map((p) => p.year))).filter(
-      (y) => y !== 'Backlog',
-    );
-    return Array.from(new Set([...staticGroups, ...archivedGroups])).sort((a, b) =>
-      a.localeCompare(b, 'pt-BR'),
-    );
-  }, [archivedGroups]);
+  const existingGroups = useMemo(
+    () => [...archivedGroups].sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [archivedGroups],
+  );
 
   useEffect(() => {
     if (open) {
