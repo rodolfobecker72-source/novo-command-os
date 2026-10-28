@@ -38,7 +38,7 @@ interface AuthContextType {
   role: AppRole | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  signup: (email: string, password: string, name: string, workspaceName: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, name: string, workspaceName: string) => Promise<{ error: string | null; needsEmailConfirmation?: boolean }>;
   logout: () => Promise<void>;
   hasPageAccess: (pageKey: string) => boolean;
 }
@@ -55,7 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const role = membership?.role as AppRole | null;
 
-  const loadUserData = async (userId: string, retries = 3) => {
+  // Only the most recent load may write state, so a slow earlier load can't
+  // overwrite fresher data (e.g. SIGNED_IN racing the workspace creation).
+  const loadSeqRef = useRef(0);
+  const loadPromiseRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
+
+  const loadUserData = async (authUser: SupabaseUser, retries = 3) => {
+    const userId = authUser.id;
+    const seq = ++loadSeqRef.current;
+    const isCurrent = () => seq === loadSeqRef.current;
+
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         // Load profile
@@ -63,32 +72,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
         
         if (profileError) {
           console.error(`[Auth] Attempt ${attempt}: Failed to load profile:`, profileError.message);
           if (attempt < retries) { await new Promise(r => setTimeout(r, 1000 * attempt)); continue; }
         }
-        setProfile(profileData as Profile | null);
 
         // Load workspace membership
-        const { data: memberData, error: memberError } = await supabase
+        const fetchMembership = () => supabase
           .from('workspace_members')
           .select('*')
           .eq('user_id', userId)
+          .order('joined_at', { ascending: true })
           .limit(1)
-          .single();
+          .maybeSingle();
+
+        let { data: memberData, error: memberError } = await fetchMembership();
 
         if (memberError) {
           console.error(`[Auth] Attempt ${attempt}: Failed to load workspace_members:`, memberError.message);
           if (attempt < retries) { await new Promise(r => setTimeout(r, 1000 * attempt)); continue; }
         }
 
-        if (memberData) {
-          setMembership(memberData as unknown as WorkspaceMember);
+        // Self-signup whose workspace wasn't created yet (email confirmation
+        // flow, or the signup request was interrupted): create it now.
+        const pendingWorkspaceName = (authUser.user_metadata?.workspace_name as string | undefined)?.trim();
+        if (!memberData && !memberError && pendingWorkspaceName) {
+          const { error: wsCreateError } = await supabase.rpc('handle_signup_workspace', {
+            workspace_name: pendingWorkspaceName,
+          });
+          if (wsCreateError) {
+            console.error('[Auth] Failed to create workspace for new signup:', wsCreateError.message);
+          }
+          ({ data: memberData, error: memberError } = await fetchMembership());
+        }
 
+        let wsData: Workspace | null = null;
+        if (memberData) {
           // Load workspace
-          const { data: wsData, error: wsError } = await supabase
+          const { data, error: wsError } = await supabase
             .from('workspaces')
             .select('*')
             .eq('id', (memberData as any).workspace_id)
@@ -98,13 +121,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error(`[Auth] Attempt ${attempt}: Failed to load workspace:`, wsError.message);
             if (attempt < retries) { await new Promise(r => setTimeout(r, 1000 * attempt)); continue; }
           }
-
-          setWorkspace(wsData as Workspace | null);
+          wsData = data as Workspace | null;
         } else {
-          setMembership(null);
-          setWorkspace(null);
           console.warn('[Auth] No workspace membership found for user:', userId);
         }
+
+        if (!isCurrent()) return;
+        setProfile(profileData as Profile | null);
+        setMembership((memberData as unknown as WorkspaceMember) ?? null);
+        setWorkspace(wsData);
         // Success — break the retry loop
         return;
       } catch (error) {
@@ -115,42 +140,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.error('[Auth] All retry attempts exhausted for loadUserData');
   };
 
-  // Track whether user data has been loaded at least once to prevent duplicate SIGNED_IN reloads
-  const hasLoadedRef = useRef(false);
-  const loadingUserDataRef = useRef(false);
+  // Single-flight: concurrent callers (SIGNED_IN event, signup) share one load.
+  const ensureUserData = (authUser: SupabaseUser): Promise<void> => {
+    const current = loadPromiseRef.current;
+    if (current && current.userId === authUser.id) return current.promise;
+    const promise = loadUserData(authUser);
+    loadPromiseRef.current = { userId: authUser.id, promise };
+    return promise;
+  };
 
   useEffect(() => {
     let initialLoad = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         // Skip if this is the initial event (handled by getSession below)
         if (initialLoad) return;
 
-        if (event === 'SIGNED_IN') {
-          // If user data is already loaded, do NOT set isLoading=true again
+        if (event === 'SIGNED_IN' && newSession?.user) {
+          // If user data is already loaded (or loading), do NOT set isLoading=true again.
           // This prevents the spinner flash on duplicate SIGNED_IN events (tab focus, session restore)
-          if (hasLoadedRef.current) {
-            return;
-          }
-          // Prevent concurrent loads
-          if (loadingUserDataRef.current) {
-            return;
-          }
-          loadingUserDataRef.current = true;
+          if (loadPromiseRef.current?.userId === newSession.user.id) return;
           setIsLoading(true);
-          try {
-            await loadUserData(newSession!.user.id);
-            hasLoadedRef.current = true;
-          } finally {
-            loadingUserDataRef.current = false;
-            setIsLoading(false);
-          }
+          // Defer Supabase calls out of the auth callback: awaiting them here can
+          // deadlock the auth client's internal lock.
+          const authUser = newSession.user;
+          setTimeout(() => {
+            ensureUserData(authUser).finally(() => setIsLoading(false));
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
-          hasLoadedRef.current = false;
+          loadPromiseRef.current = null;
+          loadSeqRef.current++;
           setProfile(null);
           setWorkspace(null);
           setMembership(null);
@@ -166,18 +189,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       if (initialSession?.user) {
-        loadingUserDataRef.current = true;
-        try {
-          await loadUserData(initialSession.user.id);
-          hasLoadedRef.current = true;
-        } finally {
-          loadingUserDataRef.current = false;
-        }
+        await ensureUserData(initialSession.user);
       }
       setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string): Promise<{ error: string | null }> => {
@@ -191,31 +209,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     name: string,
     workspaceName: string
-  ): Promise<{ error: string | null }> => {
+  ): Promise<{ error: string | null; needsEmailConfirmation?: boolean }> => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name },
+        // workspace_name is consumed by loadUserData, which creates the
+        // workspace on the first session (now, or after email confirmation).
+        data: { name, workspace_name: workspaceName },
         emailRedirectTo: window.location.origin,
       },
     });
 
     if (error) return { error: error.message };
 
-    // If user was auto-confirmed (or email confirm disabled), create workspace
-    if (data.user && data.session) {
-      const { error: wsError } = await supabase.rpc('handle_signup_workspace', {
-        workspace_name: workspaceName,
-      });
-      if (wsError) return { error: wsError.message };
+    if (!data.session || !data.user) {
+      return { error: null, needsEmailConfirmation: true };
     }
 
+    setIsLoading(true);
+    try {
+      await ensureUserData(data.user);
+    } finally {
+      setIsLoading(false);
+    }
     return { error: null };
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
+    loadPromiseRef.current = null;
     setProfile(null);
     setWorkspace(null);
     setMembership(null);

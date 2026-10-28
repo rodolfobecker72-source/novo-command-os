@@ -42,9 +42,12 @@ export function Signup() {
 
     setIsLoading(true);
 
-    const { error } = await signup(email.trim(), password, name.trim(), workspaceName.trim());
+    const { error, needsEmailConfirmation } = await signup(email.trim(), password, name.trim(), workspaceName.trim());
 
-    if (!error) {
+    if (!error && needsEmailConfirmation) {
+      toast.success('Conta criada! Confirme seu e-mail pelo link que enviamos e depois faça login.');
+      navigate('/login');
+    } else if (!error) {
       toast.success('Conta criada com sucesso!');
       navigate('/boas-vindas');
     } else {

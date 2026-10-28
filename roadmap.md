@@ -9,3 +9,7 @@
 - [x] Central de Mídias: projetos em ordem alfabética crescente dentro de cada HD
 - [ ] Publicar o app com o filtro corrigido + ícones — aguardando o usuário clicar em Publicar (deploy recusado no chat; correções só entram no ar no próximo publish)
 - [x] Remover "Termos e Condições" do Layout da Proposta e do PDF gerado (pedido 20/10/2026 22:11)
+
+- [x] Auditoria de acessos e bugs (28/10/2026): redefinição de senha restrita ao dono do próprio workspace, políticas de leads/feedback/logos/avatares isoladas por empresa, cadastro sem tela em branco, PageGuard sem redirecionar para página bloqueada, erros de exclusão no Financeiro visíveis
+- [ ] Aplicar a migration `20261028020000_security_hardening.sql` no banco e publicar as edge functions (reset-user-password)
+- [ ] Decidir permissões por papel no banco (hoje qualquer membro lê/edita financeiro e configurações via API; Visualizador não é somente leitura)

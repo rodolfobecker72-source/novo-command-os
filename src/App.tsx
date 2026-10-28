@@ -44,7 +44,6 @@ import { WelcomePage } from "@/pages/welcome/WelcomePage";
 import { MyCalendarPage } from "@/pages/welcome/MyCalendarPage";
 import GoogleCalendarCallback from "@/pages/GoogleCalendarCallback";
 
-import { MaintenancePage } from "@/pages/MaintenancePage";
 
 import NotFound from "./pages/NotFound";
 

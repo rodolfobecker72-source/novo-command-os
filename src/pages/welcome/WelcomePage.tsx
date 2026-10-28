@@ -258,6 +258,8 @@ export function WelcomePage() {
     let cancelled = false;
     const loadLeadAlerts = async () => {
       if (!workspace || !profile?.id) return;
+      // Alerts open Gestão de Leads; hide them for users without that page.
+      if (!hasPageAccess('prospeccao')) { setLeadAlerts([]); return; }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayStr = today.toISOString().slice(0, 10);

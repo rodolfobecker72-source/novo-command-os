@@ -96,6 +96,14 @@ const ACCOUNT_TYPES = [
 const currencyFmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+// Rows referenced by cashflow entries can't be deleted (FK without cascade).
+function deleteErrorMessage(error: { code?: string; message: string }) {
+  if (error.code === '23503') {
+    return 'Não foi possível excluir: existem lançamentos vinculados a este item.';
+  }
+  return 'Erro ao excluir: ' + error.message;
+}
+
 export function FinancialPage() {
   const { workspace } = useAuth();
   const navigate = useNavigate();
@@ -251,12 +259,14 @@ export function FinancialPage() {
   }
   async function deleteCard(id: string) {
     if (!confirm('Excluir este cartão?')) return;
-    await supabase.from('credit_cards').delete().eq('id', id);
+    const { error } = await supabase.from('credit_cards').delete().eq('id', id);
+    if (error) { toast.error(deleteErrorMessage(error)); return; }
     toast.success('Cartão excluído');
     loadData();
   }
   async function toggleCard(id: string, currentActive: boolean) {
-    await supabase.from('credit_cards').update({ is_active: !currentActive }).eq('id', id);
+    const { error } = await supabase.from('credit_cards').update({ is_active: !currentActive }).eq('id', id);
+    if (error) toast.error('Erro ao atualizar cartão: ' + error.message);
     loadData();
   }
 
@@ -664,14 +674,16 @@ export function FinancialPage() {
   }
 
   async function markEntryAsPaid(id: string) {
-    await supabase.from('cashflow_entries').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await supabase.from('cashflow_entries').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', id);
+    if (error) { toast.error('Erro ao confirmar pagamento: ' + error.message); return; }
     toast.success('Pagamento confirmado');
     loadData();
   }
 
   async function deleteEntry(id: string) {
     if (!confirm('Excluir este lançamento?')) return;
-    await supabase.from('cashflow_entries').delete().eq('id', id);
+    const { error } = await supabase.from('cashflow_entries').delete().eq('id', id);
+    if (error) { toast.error(deleteErrorMessage(error)); return; }
     toast.success('Lançamento excluído');
     loadData();
   }
@@ -741,7 +753,8 @@ export function FinancialPage() {
 
   async function deleteAccount(id: string) {
     if (!confirm('Excluir esta conta?')) return;
-    await supabase.from('financial_accounts').delete().eq('id', id);
+    const { error } = await supabase.from('financial_accounts').delete().eq('id', id);
+    if (error) { toast.error(deleteErrorMessage(error)); return; }
     toast.success('Conta excluída');
     loadData();
   }
@@ -769,13 +782,15 @@ export function FinancialPage() {
   }
 
   async function toggleRevenueCenter(id: string, is_active: boolean) {
-    await supabase.from('revenue_centers').update({ is_active: !is_active }).eq('id', id);
+    const { error } = await supabase.from('revenue_centers').update({ is_active: !is_active }).eq('id', id);
+    if (error) toast.error('Erro ao atualizar centro: ' + error.message);
     loadData();
   }
 
   async function deleteRevenueCenter(id: string) {
     if (!confirm('Excluir este centro de receita?')) return;
-    await supabase.from('revenue_centers').delete().eq('id', id);
+    const { error } = await supabase.from('revenue_centers').delete().eq('id', id);
+    if (error) { toast.error(deleteErrorMessage(error)); return; }
     toast.success('Centro excluído');
     loadData();
   }
@@ -790,13 +805,15 @@ export function FinancialPage() {
   }
 
   async function toggleCostCenter(id: string, is_active: boolean) {
-    await supabase.from('cost_centers').update({ is_active: !is_active }).eq('id', id);
+    const { error } = await supabase.from('cost_centers').update({ is_active: !is_active }).eq('id', id);
+    if (error) toast.error('Erro ao atualizar centro: ' + error.message);
     loadData();
   }
 
   async function deleteCostCenter(id: string) {
     if (!confirm('Excluir este centro de custo?')) return;
-    await supabase.from('cost_centers').delete().eq('id', id);
+    const { error } = await supabase.from('cost_centers').delete().eq('id', id);
+    if (error) { toast.error(deleteErrorMessage(error)); return; }
     toast.success('Centro excluído');
     loadData();
   }

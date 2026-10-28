@@ -341,7 +341,7 @@ export function UsersPage() {
     setIsResettingPassword(true);
     try {
       const response = await supabase.functions.invoke('reset-user-password', {
-        body: { email: resetPasswordMember.email, new_password: newPassword },
+        body: { targetUserId: resetPasswordMember.user_id, new_password: newPassword },
       });
 
       if (response.error) {
