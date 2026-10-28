@@ -64,6 +64,13 @@
       "when": 1793154341919,
       "tag": "0008_role_based_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793154727267,
+      "tag": "0009_remove_visualizador_role",
+      "breakpoints": true
     }
   ]
 }
