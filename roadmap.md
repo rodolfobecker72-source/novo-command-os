@@ -15,3 +15,5 @@
 - [x] Permissões por papel no banco: Financeiro/Patrimônio só Dono e Admin; Configurações leitura para todos e edição só do Dono; custo pago no orçamento só Dono/Admin (migration `20261028030000_role_based_rls.sql`)
 - [x] Papel Visualizador removido (usuários existentes viram Vendedor; migration `20261028040000_remove_visualizador_role.sql`). Time Hero mantém acesso total em Projetos/Mídias
 - [ ] Futuro: esconder valores dos orçamentos do Time Hero na API (hoje só ocultos na tela)
+- [x] Código solto removido: página de captação "Em breve", diálogo de projeto legado, Ficha do Projeto em PDF e arquivos vazios (NavLink, authService)
+- [x] Novo layout do PDF da proposta (capa, seções numeradas, caixas, colunas, bloco de total) com fonte Montserrat, cores editáveis no Layout da Proposta (manual + .md) e botão "Baixar PDF de exemplo"

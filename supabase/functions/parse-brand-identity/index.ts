@@ -9,6 +9,7 @@ const json = (body: unknown, status = 200) =>
 
 const ThemeSchema = z.object({
   primary: z.string().nullable(),
+  highlight: z.string().nullable(),
   secondary: z.string().nullable(),
   accent: z.string().nullable(),
   text: z.string().nullable(),
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
     const result = streamText({
       model: provider.responses("openai/gpt-6-astra"),
       system:
-        "Você extrai a identidade visual de um manual de marca em Markdown para aplicar em documentos PDF. Retorne cores em hex #RRGGBB. primary = cor principal da marca (títulos). secondary = cor secundária (subtítulos/textos de apoio, legível sobre branco). accent = cor de linhas e bordas. text = cor do texto corrido (escura, legível sobre branco). highlightBg = fundo claro para destaques de tabela. fontFamily = sans, serif ou mono conforme a tipografia principal. Use null quando o manual não informar.",
+        "Você extrai a identidade visual de um manual de marca em Markdown para aplicar em documentos PDF. Retorne cores em hex #RRGGBB. primary = cor principal da marca, escura o bastante para títulos e para fundos com texto branco. highlight = cor de destaque/acento da marca (faixas, marcadores e números). secondary = cor secundária (subtítulos/textos de apoio, legível sobre branco). accent = cor de linhas e bordas. text = cor do texto corrido (escura, legível sobre branco). highlightBg = fundo claro para destaques de tabela. fontFamily = sans, serif ou mono conforme a tipografia principal. Use null quando o manual não informar.",
       messages: [{ role: "user", content: markdown }],
       output: Output.object({ schema: ThemeSchema }),
       abortSignal: req.signal,
@@ -75,7 +76,7 @@ Deno.serve(async (req) => {
     }
 
     const theme: Record<string, string | null> = {};
-    for (const k of ["primary", "secondary", "accent", "text", "highlightBg"] as const) {
+    for (const k of ["primary", "highlight", "secondary", "accent", "text", "highlightBg"] as const) {
       const v = out[k];
       theme[k] = v && HEX.test(v) ? v.toLowerCase() : null;
     }

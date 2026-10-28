@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Upload, Save, Trash2, ImageIcon, FileText, Palette } from 'lucide-react';
-import type { BrandTheme } from '@/utils/pdfTheme';
+import { Upload, Save, Trash2, ImageIcon, FileText, Palette, Download, RotateCcw } from 'lucide-react';
+import { BRAND_COLOR_FIELDS, resolveTheme, rgbToHex, type BrandColorKey, type BrandTheme } from '@/utils/pdfTheme';
+import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 
 interface LayoutData {
   logoUrl: string;
@@ -58,7 +59,7 @@ const DEFAULTS: LayoutData = {
 };
 
 export function LayoutPage() {
-  const { workspace } = useAuth();
+  const { workspace, profile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [data, setData] = useState<LayoutData>({ ...DEFAULTS });
@@ -68,6 +69,7 @@ export function LayoutPage() {
   const [existingId, setExistingId] = useState<string | null>(null);
   const [brandTheme, setBrandTheme] = useState<BrandTheme | null>(null);
   const [brandBusy, setBrandBusy] = useState(false);
+  const [sampleBusy, setSampleBusy] = useState(false);
 
   useEffect(() => {
     if (!workspace) return;
@@ -206,15 +208,61 @@ export function LayoutPage() {
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('logos').getPublicUrl(filePath);
       const url = `${pub.publicUrl}?t=${Date.now()}`;
+      // Colors found in the file replace the current ones; the rest are kept
+      const parsed = Object.fromEntries(Object.entries(res.theme || {}).filter(([, v]) => v)) as BrandTheme;
+      const merged = { ...(brandTheme || {}), ...parsed };
       update('brandMdUrl', url);
-      setBrandTheme(res.theme);
-      await persistBrand(url, res.theme);
-      toast.success('Identidade visual aplicada aos documentos!');
+      setBrandTheme(merged);
+      await persistBrand(url, merged);
+      toast.success('Cores da identidade visual aplicadas! Ajuste abaixo se quiser.');
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || 'Erro ao processar identidade visual');
     } finally {
       setBrandBusy(false);
+    }
+  };
+
+  const resolvedColors = resolveTheme(brandTheme);
+  const setColor = (key: BrandColorKey, value: string | null) => {
+    setBrandTheme((prev) => ({ ...(prev || {}), [key]: value }));
+  };
+
+  const currentLayoutSettings = (): PDFLayoutSettings => ({
+    logoUrl: data.logoUrl,
+    companyName: data.companyName,
+    website: data.website,
+    email: data.email,
+    pdfTitle: data.pdfTitle,
+    sectionBriefingTitle: data.sectionBriefingTitle,
+    sectionServicesTitle: data.sectionServicesTitle,
+    sectionOperationalTitle: data.sectionOperationalTitle,
+    sectionInvestmentTitle: data.sectionInvestmentTitle,
+    sectionTotalTitle: data.sectionTotalTitle,
+    validityText: data.validityText,
+    companyCnpj: data.companyCnpj,
+    companyAddress: data.companyAddress,
+    companyCityLine: data.companyCityLine,
+    brandTheme,
+    coverPdfUrl: data.coverPdfUrl || undefined,
+    backPdfUrl: data.backPdfUrl || undefined,
+  });
+
+  const handleSamplePdf = async () => {
+    setSampleBusy(true);
+    try {
+      const [{ generateSampleProposalPDF }, { saveWithCustomPages }] = await Promise.all([
+        import('@/utils/pdfSample'),
+        import('@/utils/pdfGenerator'),
+      ]);
+      const settings = currentLayoutSettings();
+      const doc = await generateSampleProposalPDF(settings, profile?.name);
+      await saveWithCustomPages(doc, settings, 'Proposta_Exemplo.pdf');
+    } catch (err) {
+      console.error('Sample PDF error:', err);
+      toast.error('Erro ao gerar o PDF de exemplo');
+    } finally {
+      setSampleBusy(false);
     }
   };
 
@@ -320,7 +368,7 @@ export function LayoutPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Identidade visual</CardTitle>
-            <CardDescription>Envie o manual da sua marca em .md. A IA lê as cores e a tipografia e aplica em todos os documentos emitidos.</CardDescription>
+            <CardDescription>Escolha as cores da proposta em PDF. Se preferir, envie o manual da sua marca em .md e a IA preenche as cores para você ajustar.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-md border p-3">
@@ -343,26 +391,48 @@ export function LayoutPage() {
                   </Button>
                 </label>
                 {data.brandMdUrl && (
-                  <Button variant="ghost" size="sm" aria-label="Remover identidade" onClick={async () => { update('brandMdUrl', ''); setBrandTheme(null); try { await persistBrand(null, null); toast.success('Identidade removida'); } catch { toast.error('Erro ao remover'); } }} className="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="sm" aria-label="Remover identidade" onClick={async () => { update('brandMdUrl', ''); try { await persistBrand(null, brandTheme); toast.success('Arquivo removido. As cores foram mantidas.'); } catch { toast.error('Erro ao remover'); } }} className="text-destructive hover:text-destructive">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 )}
               </div>
             </div>
-            {brandTheme && (
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-3">
-                  {([['primary', 'Principal'], ['secondary', 'Secundária'], ['accent', 'Linhas'], ['text', 'Texto'], ['highlightBg', 'Fundo destaque']] as const).map(([k, label]) => (
-                    <div key={k} className="flex flex-col items-center gap-1">
-                      <div className="w-10 h-10 rounded-md border" style={{ background: brandTheme[k] || undefined }} />
-                      <span className="text-[11px] text-muted-foreground">{label}</span>
-                      <span className="text-[10px] text-muted-foreground">{brandTheme[k] || 'padrão'}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {BRAND_COLOR_FIELDS.map(({ key, label, hint }) => {
+                const value = rgbToHex(resolvedColors[key]);
+                const custom = Boolean(brandTheme?.[key]);
+                return (
+                  <div key={key} className="flex items-center gap-3 rounded-md border p-2.5">
+                    <label className="relative w-10 h-10 shrink-0 rounded-md border overflow-hidden cursor-pointer" style={{ background: value }}>
+                      <input
+                        type="color"
+                        aria-label={`Cor ${label}`}
+                        value={value}
+                        onChange={(e) => setColor(key, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </label>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{label}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{hint}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">{custom ? value : `${value} (padrão)`}</p>
                     </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">Fonte: {({ sans: 'Sem serifa', serif: 'Com serifa', mono: 'Monoespaçada' } as Record<string, string>)[brandTheme.fontFamily || ''] || 'padrão'}</p>
-              </div>
-            )}
+                    {custom && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={`Voltar ${label} ao padrão`} onClick={() => setColor(key, null)}>
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">Fonte dos documentos: Montserrat. Salve o layout para aplicar as cores nas propostas.</p>
+              <Button variant="outline" size="sm" onClick={handleSamplePdf} disabled={sampleBusy}>
+                <Download className="w-4 h-4 mr-2" />
+                {sampleBusy ? 'Gerando...' : 'Baixar PDF de exemplo'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -454,7 +524,6 @@ export function LayoutPage() {
                 <AccordionTrigger className="text-sm">Editar títulos das seções</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-2">
                   {([
-                    ['sectionClientTitle', 'Seção: Cliente'],
                     ['sectionBriefingTitle', 'Seção: Briefing'],
                     
                     ['sectionServicesTitle', 'Seção: Serviços'],
