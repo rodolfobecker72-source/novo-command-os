@@ -14,7 +14,7 @@
 | E-mail próprio (SMTP via Resend, domínio `mail.command-os.app.br`) | ✅ |
 | Leitura do `.md` de identidade visual com a API da Anthropic | ⏳ próximo |
 | Google Agenda com OAuth próprio | ⏳ |
-| Histórico de projetos fixo no código (ver abaixo) | ⏳ decidir |
+| Histórico de projetos fixo no código: removido, sem importação futura (PR #5) | ✅ |
 | Migração dos dados do sistema atual | ⏳ dezembro |
 
 ## Onde está cada coisa
@@ -51,10 +51,9 @@ um cliente OAuth no Google Cloud. Até lá, a tela mostra "não conectado" e a s
 das atividades fica desligada, sem erro para o usuário.
 
 ### Histórico de projetos fixo no código
-`src/data/historicalProjects.ts` tem 414 projetos da HERO (nomes de clientes e links do
-Drive) que aparecem para qualquer empresa no Histórico, tanto no sistema atual quanto
-no novo. A proposta é tirar a lista do código e, na migração, importá-la em
-`archived_projects` só para o workspace da HERO.
+Resolvido: `src/data/historicalProjects.ts` (414 projetos da HERO, visíveis para qualquer
+empresa) foi removido do sistema novo e não será importado. O sistema atual, no Lovable,
+ficou como está até a virada.
 
 ### Textos fixos da HERO
 O contrato (`contractPDF.ts`) e o relatório financeiro (`financialReportPDF.ts`) usam o
