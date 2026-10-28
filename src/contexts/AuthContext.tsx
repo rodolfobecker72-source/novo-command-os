@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { getAllPageKeys, isRoleRestricted } from '@/config/pages';
 
-export type AppRole = 'owner' | 'admin' | 'vendedor' | 'visualizador' | 'time_hero';
+export type AppRole = 'owner' | 'admin' | 'vendedor' | 'time_hero';
 
 export interface WorkspaceMember {
   id: string;

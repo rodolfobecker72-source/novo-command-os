@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!["admin", "vendedor", "visualizador", "time_hero"].includes(role)) {
+    if (!["admin", "vendedor", "time_hero"].includes(role)) {
       return new Response(JSON.stringify({ error: "Invalid role" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

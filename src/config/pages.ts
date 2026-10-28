@@ -22,27 +22,27 @@ export const APP_PAGES: AppPage[] = [
   // Operação / Projetos
   { key: 'gestao-projetos', label: 'Área de Projetos', href: '/gestao-projetos', group: 'Projetos' },
   
-  { key: 'calendario-time', label: 'Calendário do Time', href: '/calendario-time', group: 'Projetos', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
+  { key: 'calendario-time', label: 'Calendário do Time', href: '/calendario-time', group: 'Projetos', restrictedFrom: ['vendedor', 'time_hero'] },
   { key: 'central-midia', label: 'Central de Mídias', href: '/central-midia', group: 'Projetos' },
   { key: 'historico-projetos', label: 'Histórico', href: '/projetos/historico', group: 'Projetos' },
 
   // Configurações
-  { key: 'categorias', label: 'Categorias de Serviço', href: '/categorias', group: 'Configurações', restrictedFrom: ['admin', 'vendedor', 'visualizador', 'time_hero'] },
-  { key: 'itens-servico', label: 'Itens de Serviço', href: '/itens-servico', group: 'Configurações', restrictedFrom: ['admin', 'vendedor', 'visualizador', 'time_hero'] },
-  { key: 'regras-comerciais', label: 'Regras Comerciais', href: '/configuracoes/regras-comerciais', group: 'Configurações', restrictedFrom: ['admin', 'vendedor', 'visualizador', 'time_hero'] },
-  { key: 'layout', label: 'Layout da Proposta', href: '/configuracoes/layout', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
-  { key: 'contrato', label: 'Minuta de Contrato', href: '/configuracoes/contrato', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
-  { key: 'metas', label: 'Metas', href: '/configuracoes/metas', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'visualizador', 'time_hero'] },
+  { key: 'categorias', label: 'Categorias de Serviço', href: '/categorias', group: 'Configurações', restrictedFrom: ['admin', 'vendedor', 'time_hero'] },
+  { key: 'itens-servico', label: 'Itens de Serviço', href: '/itens-servico', group: 'Configurações', restrictedFrom: ['admin', 'vendedor', 'time_hero'] },
+  { key: 'regras-comerciais', label: 'Regras Comerciais', href: '/configuracoes/regras-comerciais', group: 'Configurações', restrictedFrom: ['admin', 'vendedor', 'time_hero'] },
+  { key: 'layout', label: 'Layout da Proposta', href: '/configuracoes/layout', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'time_hero'] },
+  { key: 'contrato', label: 'Minuta de Contrato', href: '/configuracoes/contrato', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'time_hero'] },
+  { key: 'metas', label: 'Metas', href: '/configuracoes/metas', group: 'Configurações', restrictedFrom: ['vendedor', 'admin', 'time_hero'] },
   
   // Administrativo
-  { key: 'dashboard', label: 'Dashboard', href: '/crm/dashboard', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
-  { key: 'financeiro', label: 'Financeiro', href: '/financeiro', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
-  { key: 'patrimonio', label: 'Patrimônio', href: '/patrimonio', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
-  { key: 'financeiro-time', label: 'Financeiro do Time', href: '/financeiro-time', group: 'Administrativo', restrictedFrom: ['vendedor', 'visualizador', 'time_hero'] },
+  { key: 'dashboard', label: 'Dashboard', href: '/crm/dashboard', group: 'Administrativo', restrictedFrom: ['vendedor', 'time_hero'] },
+  { key: 'financeiro', label: 'Financeiro', href: '/financeiro', group: 'Administrativo', restrictedFrom: ['vendedor', 'time_hero'] },
+  { key: 'patrimonio', label: 'Patrimônio', href: '/patrimonio', group: 'Administrativo', restrictedFrom: ['vendedor', 'time_hero'] },
+  { key: 'financeiro-time', label: 'Financeiro do Time', href: '/financeiro-time', group: 'Administrativo', restrictedFrom: ['vendedor', 'time_hero'] },
   { key: 'meu-financeiro', label: 'Meu Financeiro', href: '/meu-financeiro', group: 'Administrativo' },
 
   // Sistema
-  { key: 'usuarios', label: 'Usuários', href: '/usuarios', group: 'Sistema', restrictedFrom: ['admin', 'vendedor', 'visualizador', 'time_hero'] },
+  { key: 'usuarios', label: 'Usuários', href: '/usuarios', group: 'Sistema', restrictedFrom: ['admin', 'vendedor', 'time_hero'] },
 ];
 
 // Get all page keys (useful for setting "all access" by default)

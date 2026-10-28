@@ -13,3 +13,5 @@
 - [x] Auditoria de acessos e bugs (28/10/2026): redefinição de senha restrita ao dono do próprio workspace, políticas de leads/feedback/logos/avatares isoladas por empresa, cadastro sem tela em branco, PageGuard sem redirecionar para página bloqueada, erros de exclusão no Financeiro visíveis
 - [x] Aplicar a migration `20261028020000_security_hardening.sql` no banco e publicar as edge functions (reset-user-password)
 - [x] Permissões por papel no banco: Financeiro/Patrimônio só Dono e Admin; Configurações leitura para todos e edição só do Dono; custo pago no orçamento só Dono/Admin (migration `20261028030000_role_based_rls.sql`)
+- [x] Papel Visualizador removido (usuários existentes viram Vendedor; migration `20261028040000_remove_visualizador_role.sql`). Time Hero mantém acesso total em Projetos/Mídias
+- [ ] Futuro: esconder valores dos orçamentos do Time Hero na API (hoje só ocultos na tela)
