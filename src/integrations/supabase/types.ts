@@ -2108,6 +2108,10 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { invite_id: string }; Returns: undefined }
+      can_manage_avatar: {
+        Args: { _folder: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_role:
         | {
             Args: { _user_id: string }
