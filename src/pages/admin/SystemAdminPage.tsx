@@ -13,7 +13,7 @@ import {
   Mail,
   RefreshCw,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/lib/edgeFunctions';
 import { useSystemAdmin } from '@/hooks/useSystemAdmin';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,12 +136,10 @@ export function SystemAdminPage() {
   const load = async () => {
     setLoading(true);
     setError(null);
-    const { data: res, error: err } = await supabase.functions.invoke('admin-overview', { body: {} });
+    const { data: res, error: err } = await invokeFunction('admin-overview', { body: {} });
     if (err) {
-      setError('Não foi possível carregar os dados administrativos.');
+      setError(err.status === 401 ? err.message : `Não foi possível carregar os dados administrativos. ${err.message}`);
       console.error('[admin-overview]', err);
-    } else if ((res as any)?.error) {
-      setError((res as any).error);
     } else {
       setData(res as Overview);
     }
@@ -154,11 +152,11 @@ export function SystemAdminPage() {
   }, [isSystemAdmin, checking]);
 
   const updateStatus = async (id: string, status: string) => {
-    const { error: err } = await supabase.functions.invoke('admin-overview', {
+    const { error: err } = await invokeFunction('admin-overview', {
       body: { action: 'update_feedback_status', id, status },
     });
     if (err) {
-      toast({ title: 'Erro ao atualizar', variant: 'destructive' });
+      toast({ title: 'Erro ao atualizar', description: err.message, variant: 'destructive' });
       return;
     }
     setData((prev) =>
