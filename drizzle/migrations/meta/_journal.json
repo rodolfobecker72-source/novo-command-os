@@ -57,6 +57,13 @@
       "when": 1793153507752,
       "tag": "0007_security_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793154341919,
+      "tag": "0008_role_based_rls",
+      "breakpoints": true
     }
   ]
 }
