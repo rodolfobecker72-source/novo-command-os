@@ -15,6 +15,7 @@
 | Leitura do `.md` de identidade visual com a API da Anthropic | ⏳ próximo |
 | Google Agenda com OAuth próprio | ⏳ |
 | Histórico de projetos fixo no código: removido, sem importação futura (PR #5) | ✅ |
+| Referências à empresa de origem no código, PDFs e banco: removidas (PR #6) | ✅ |
 | Migração dos dados do sistema atual | ⏳ dezembro |
 
 ## Onde está cada coisa
@@ -50,24 +51,21 @@ As funções `google-calendar-*` e `_shared/appUserConnector.ts` usam o conector
 um cliente OAuth no Google Cloud. Até lá, a tela mostra "não conectado" e a sincronização
 das atividades fica desligada, sem erro para o usuário.
 
-### Histórico de projetos fixo no código
-Resolvido: `src/data/historicalProjects.ts` (414 projetos da HERO, visíveis para qualquer
-empresa) foi removido do sistema novo e não será importado. O sistema atual, no Lovable,
-ficou como está até a virada.
-
-### Textos fixos da HERO
-O contrato (`contractPDF.ts`) e o relatório financeiro (`financialReportPDF.ts`) usam o
-logo e o rodapé da HERO quando a empresa não configurou o Layout. O `NewBudget.tsx`
-escreve "HERO" num PDF.
+### Histórico de projetos e referências à empresa de origem
+Resolvido. A lista fixa de projetos (PR #5) e todos os logos, rodapés, textos e nomes
+internos da empresa de origem (PR #6) saíram do sistema novo. Identidade visual e textos
+vêm só do Layout da Proposta de cada empresa.
 
 ### Migração dos dados (dezembro)
 - Exportar do Lovable: pg_dump, se disponível em Cloud > Advanced settings, ou CSV por tabela.
 - Recriar os usuários mantendo os mesmos IDs, ou remapear as referências
   (`responsible_user_id`, `assigned_to_user_ids`, `created_by` etc.).
+- Renomeações em relação ao sistema atual: papel `time_hero` → `time_operacional`,
+  coluna `assets.hero_asset_number` → `asset_number`, papel `visualizador` → `vendedor`.
 - Reenviar os arquivos: logos, fotos de perfil e documentos dos orçamentos.
 - Congelar o sistema antigo, importar e avisar a equipe.
 
 ### Melhorias futuras
 - Mover as funções auxiliares de segurança (`has_workspace_access`, `get_user_role` etc.)
   para um schema interno, para que não fiquem chamáveis pela API.
-- Esconder do Time Hero os valores dos orçamentos na API.
+- Esconder do Time Operacional os valores dos orçamentos na API.
