@@ -146,8 +146,13 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
           role: s.role,
           is_default: true,
         }));
+        // ignoreDuplicates: another session may be seeding at the same moment
+        const { error: seedError } = await supabase
+          .from('lead_statuses')
+          .upsert(payload, { onConflict: 'workspace_id,key', ignoreDuplicates: true });
+        if (seedError) throw seedError;
         const { data: seeded } = await supabase
-          .from('lead_statuses').insert(payload).select();
+          .from('lead_statuses').select('*').eq('workspace_id', workspaceId).order('order');
         rows = seeded || [];
       }
       setStatuses(rows.map(statusFromDb).sort((a, b) => a.order - b.order));

@@ -90,6 +90,11 @@ function clientToDb(c: Partial<Client>, workspaceId?: string): any {
   return row;
 }
 
+// Two people opening a new workspace at the same time both see it empty and
+// both seed the defaults; the unique (workspace_id, key) turns the second
+// write into a no-op, and each then reads back the single set of rows.
+const SEED_OPTIONS = { onConflict: 'workspace_id,key', ignoreDuplicates: true } as const;
+
 function kanbanColumnFromDb(row: any): KanbanColumn {
   return { id: row.id, key: row.key, label: row.label, color: row.color, order: row.order, isDefault: row.is_default };
 }
@@ -405,7 +410,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_KANBAN_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data, error } = await supabase.from('kanban_columns').insert(defaults).select();
+        const { error } = await supabase.from('kanban_columns').upsert(defaults, SEED_OPTIONS);
+        const { data } = error ? { data: null } : await supabase.from('kanban_columns').select('*').eq('workspace_id', wsId).order('order');
         if (error) {
           console.error('[CRM] Falha ao criar colunas padrão do kanban:', error.message);
           toast.error('Não foi possível criar as colunas padrão do CRM. Recarregue a página.');
@@ -420,7 +426,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_SERVICE_CATEGORIES.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data, error } = await supabase.from('service_categories').insert(defaults).select();
+        const { error } = await supabase.from('service_categories').upsert(defaults, SEED_OPTIONS);
+        const { data } = error ? { data: null } : await supabase.from('service_categories').select('*').eq('workspace_id', wsId).order('order');
         if (error) {
           console.error('[CRM] Falha ao criar categorias de serviço padrão:', error.message);
           toast.error('Não foi possível criar as categorias de serviço padrão. Recarregue a página.');
@@ -436,7 +443,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         const defaults = DEFAULT_PROJECT_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
-        const { data, error } = await supabase.from('project_columns').insert(defaults).select();
+        const { error } = await supabase.from('project_columns').upsert(defaults, SEED_OPTIONS);
+        const { data } = error ? { data: null } : await supabase.from('project_columns').select('*').eq('workspace_id', wsId).order('order');
         if (error) {
           console.error('[CRM] Falha ao criar colunas padrão de projetos:', error.message);
           toast.error('Não foi possível criar as colunas padrão de Projetos. Recarregue a página.');

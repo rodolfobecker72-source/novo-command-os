@@ -48,6 +48,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { nextColumnColor } from '@/utils/kanbanColors';
 
 interface SortableColumnItemProps {
   column: KanbanColumn;
@@ -170,7 +171,7 @@ export function KanbanColumnManager() {
       toast.error('Já existe um status com este nome');
       return;
     }
-    addKanbanColumn({ key, label: newColumnLabel.trim(), color: 'bg-muted text-muted-foreground border-muted' });
+    addKanbanColumn({ key, label: newColumnLabel.trim(), color: nextColumnColor(kanbanColumns.map(c => c.color)) });
     setNewColumnLabel('');
     setIsAddingNew(false);
     toast.success('Status adicionado!');
