@@ -1,6 +1,6 @@
 # Migração do Command OS: Lovable Cloud → Supabase próprio
 
-Última atualização: 28/10/2026
+Última atualização: 29/10/2026
 
 ## Situação
 
@@ -16,7 +16,7 @@
 | Google Agenda com OAuth próprio | ✅ |
 | Histórico de projetos fixo no código: removido, sem importação futura (PR #5) | ✅ |
 | Referências à empresa de origem no código, PDFs e banco: removidas (PR #6) | ✅ |
-| Migração dos dados do sistema atual | ⏳ dezembro |
+| Migração dos dados do sistema atual | não será feita: o sistema novo começa do zero |
 
 ## Onde está cada coisa
 
@@ -84,14 +84,8 @@ Resolvido. A lista fixa de projetos (PR #5) e todos os logos, rodapés, textos e
 internos da empresa de origem (PR #6) saíram do sistema novo. Identidade visual e textos
 vêm só do Layout da Proposta de cada empresa.
 
-### Migração dos dados (dezembro)
-- Exportar do Lovable: pg_dump, se disponível em Cloud > Advanced settings, ou CSV por tabela.
-- Recriar os usuários mantendo os mesmos IDs, ou remapear as referências
-  (`responsible_user_id`, `assigned_to_user_ids`, `created_by` etc.).
-- Renomeações em relação ao sistema atual: papel `time_hero` → `time_operacional`,
-  coluna `assets.hero_asset_number` → `asset_number`, papel `visualizador` → `vendedor`.
-- Reenviar os arquivos: logos, fotos de perfil e documentos dos orçamentos.
-- Congelar o sistema antigo, importar e avisar a equipe.
+### Dados do sistema atual
+Não serão migrados. O sistema novo começa do zero, e cada empresa cadastra seus dados nele.
 
 ### Melhorias futuras
 - Mover as funções auxiliares de segurança (`has_workspace_access`, `get_user_role` etc.)
