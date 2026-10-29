@@ -18,6 +18,13 @@
 | Referências à empresa de origem no código, PDFs e banco: removidas (PR #6) | ✅ |
 | Migração dos dados do sistema atual | não será feita: o sistema novo começa do zero |
 
+## Pendências para retomar depois
+
+1. Leitura do `.md` de identidade visual com a API da Anthropic (detalhes abaixo).
+2. Verificação de marca do app no Google (opcional; detalhes em "Google Agenda", item 5).
+3. Segurança: mover as funções auxiliares de permissão para um schema interno.
+4. Segurança: esconder do Time Operacional os valores dos orçamentos também na API.
+
 ## Onde está cada coisa
 
 | Item | Valor |
