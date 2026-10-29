@@ -15,6 +15,7 @@ import {
   Package,
   Award,
   Settings,
+  Gauge,
   Scale,
   FileImage,
   LogOut,
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 import commandLogo from '@/assets/command-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSystemAdmin } from '@/hooks/useSystemAdmin';
 import { APP_PAGES } from '@/config/pages';
 import { useNavigate } from 'react-router-dom';
 
@@ -110,6 +112,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const showUsuarios = hasPageAccess('usuarios');
+  // Only the system administrator (Command OS team) sees the company overview
+  const { isSystemAdmin } = useSystemAdmin();
 
   const handleNavClick = () => {
     onNavigate?.();
@@ -181,6 +185,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
       {/* Footer with user info */}
       <div className="px-4 py-4 border-t border-sidebar-border space-y-1">
+        {isSystemAdmin && (
+          <NavLink
+            to="/admin-sistema"
+            onClick={handleNavClick}
+            className={`nav-link w-full ${location.pathname === '/admin-sistema' ? 'active' : ''}`}
+          >
+            <Gauge className="w-5 h-5" />
+            <span className="text-sm font-medium">Painel do Command OS</span>
+          </NavLink>
+        )}
         {showUsuarios && (
           <NavLink
             to="/usuarios"
