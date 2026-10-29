@@ -3,7 +3,7 @@
 // "Command OS" calendar of every connected participant.
 //
 // Called every minute by pg_cron (only when the queue has work), with the
-// shared secret GCAL_WORKER_SECRET in the x-worker-secret header. Several
+// Vault secret gcal_worker_secret in the x-worker-secret header. Several
 // runs can overlap safely: jobs are claimed with FOR UPDATE SKIP LOCKED.
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
@@ -11,7 +11,7 @@ import {
 } from "../_shared/calendarEvents.ts";
 import {
   adminClient, APP_URL, calendarApi, Connection, createAppCalendar, getAccessToken, jsonResponse,
-  NeedsReconnectError, safeEqual,
+  NeedsReconnectError, safeEqual, vaultSecret,
 } from "../_shared/googleCalendar.ts";
 
 const TIME_BUDGET_MS = 45_000;
@@ -217,7 +217,7 @@ async function finishJob(admin: SupabaseClient, job: Job, error: unknown) {
 }
 
 Deno.serve(async (req) => {
-  const secret = Deno.env.get("GCAL_WORKER_SECRET") ?? "";
+  const secret = await vaultSecret("gcal_worker_secret").catch(() => "");
   if (!secret || !safeEqual(req.headers.get("x-worker-secret") ?? "", secret)) {
     return jsonResponse({ error: "forbidden" }, 403);
   }

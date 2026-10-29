@@ -3,11 +3,12 @@
 // Each user grants access to calendars this app creates
 // (calendar.app.created); on connect we create a "Command OS" calendar in
 // their account and only ever write there. Refresh and access tokens are
-// stored AES-GCM encrypted (key in GCAL_TOKEN_KEY) in
-// google_calendar_connections, which only the service role can read.
+// stored AES-GCM encrypted in google_calendar_connections, which only the
+// service role can read. The encryption key is generated in the database
+// and kept in Vault (gcal_token_key).
 //
-// Required secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GCAL_TOKEN_KEY
-// (base64, 32 bytes). Optional: APP_URL (default https://acesso.command-os.app.br).
+// Required secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
+// Optional: APP_URL (default https://acesso.command-os.app.br).
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { TIME_ZONE } from "./calendarEvents.ts";
 
@@ -44,9 +45,7 @@ export async function getCaller(req: Request) {
 }
 
 export function isConfigured(): boolean {
-  return Boolean(
-    Deno.env.get("GOOGLE_CLIENT_ID") && Deno.env.get("GOOGLE_CLIENT_SECRET") && Deno.env.get("GCAL_TOKEN_KEY"),
-  );
+  return Boolean(Deno.env.get("GOOGLE_CLIENT_ID") && Deno.env.get("GOOGLE_CLIENT_SECRET"));
 }
 
 // ============================================================================
@@ -73,15 +72,19 @@ export async function pkceChallenge(verifier: string): Promise<string> {
   return base64url(new Uint8Array(digest));
 }
 
+/** A key kept in Vault (gcal_token_key or gcal_worker_secret). */
+export async function vaultSecret(name: "gcal_token_key" | "gcal_worker_secret"): Promise<string> {
+  const { data, error } = await adminClient().rpc("gcal_secret", { p_name: name });
+  if (error || !data) throw new Error(`vault secret ${name} unavailable`);
+  return data as string;
+}
+
 let tokenKey: Promise<CryptoKey> | null = null;
 function getTokenKey(): Promise<CryptoKey> {
-  tokenKey ??= crypto.subtle.importKey(
-    "raw",
-    fromBase64(Deno.env.get("GCAL_TOKEN_KEY") ?? ""),
-    "AES-GCM",
-    false,
-    ["encrypt", "decrypt"],
+  tokenKey ??= vaultSecret("gcal_token_key").then((raw) =>
+    crypto.subtle.importKey("raw", fromBase64(raw), "AES-GCM", false, ["encrypt", "decrypt"])
   );
+  tokenKey.catch(() => { tokenKey = null; });
   return tokenKey;
 }
 

@@ -60,9 +60,10 @@ OAuth próprio (sem o conector do Lovable). Como funciona:
 - Se a pessoa revogar o acesso no Google, a conexão fica como "conectar de novo" no perfil.
 - Desconectar remove a agenda "Command OS" da conta Google e revoga o acesso.
 
-Segredos (Supabase > Edge Functions > Secrets): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-(do Google Cloud), `GCAL_TOKEN_KEY` e `GCAL_WORKER_SECRET` (gerados). No Vault:
-`gcal_worker_url` e `gcal_worker_secret` (o mesmo valor do segredo da função).
+Segredos (Supabase > Edge Functions > Secrets): `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`
+(do Google Cloud). As chaves internas `gcal_token_key` e `gcal_worker_secret` são geradas pela
+migration no Vault; `gcal_worker_url` (endereço da função `google-calendar-worker`) é criada
+no Vault à parte, por projeto.
 
 Google Cloud (projeto "Command OS"):
 1. Ativar a Google Calendar API.
