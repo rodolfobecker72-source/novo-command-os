@@ -13,7 +13,7 @@
 | Funções: gestão de usuários e painel do administrador (6) | ✅ |
 | E-mail próprio (SMTP via Resend, domínio `mail.command-os.app.br`) | ✅ |
 | Leitura do `.md` de identidade visual com a API da Anthropic | ⏳ próximo |
-| Google Agenda com OAuth próprio | código pronto; falta configurar o Google Cloud |
+| Google Agenda com OAuth próprio | ✅ |
 | Histórico de projetos fixo no código: removido, sem importação futura (PR #5) | ✅ |
 | Referências à empresa de origem no código, PDFs e banco: removidas (PR #6) | ✅ |
 | Migração dos dados do sistema atual | ⏳ dezembro |
@@ -71,10 +71,13 @@ Google Cloud (projeto "Command OS"):
    `openid`, `email` e `https://www.googleapis.com/auth/calendar.app.created`.
 3. Cliente OAuth "Aplicativo da Web" com o URI de redirecionamento
    `https://acesso.command-os.app.br/auth/google-calendar-callback`.
-4. Escala: em modo de teste, só os usuários de teste cadastrados (até 100) conectam, e o
-   acesso expira a cada 7 dias. Para liberar a todos, publicar o app e pedir a verificação
-   do Google: página inicial e política de privacidade no domínio verificado (Search
-   Console) e um vídeo mostrando o uso da agenda.
+4. Feito em 29/10/2026: app publicado ("Em produção"), escopos `openid`, `userinfo.email`
+   e `calendar.app.created`, este último classificado pelo Google como não confidencial
+   (sem verificação de escopo nem limite de 100 usuários). Testado: conectar, criar,
+   editar e apagar atividade e compromisso.
+5. Pendente (opcional): verificação de marca, para o nome e o logo aparecerem na tela de
+   autorização. Exige que `command-os.app.br` tenha link para
+   `https://acesso.command-os.app.br/privacidade` e domínio verificado no Search Console.
 
 ### Histórico de projetos e referências à empresa de origem
 Resolvido. A lista fixa de projetos (PR #5) e todos os logos, rodapés, textos e nomes
