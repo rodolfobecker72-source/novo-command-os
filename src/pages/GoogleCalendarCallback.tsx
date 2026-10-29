@@ -1,36 +1,45 @@
-// Landing page after the gateway completes Google OAuth for the popup.
-// Extracts the code from the URL and posts it to `google-calendar-complete`
-// so the backend can exchange it for the per-user connection_key.
-import { useEffect, useState } from 'react';
+// Google sends the user back here (usually inside the connect popup) with
+// `code` and `state`; the backend finishes the connection.
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Check, Loader2, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { GCAL_CHANNEL } from '@/lib/googleCalendarChannel';
+import { invokeFunction } from '@/lib/edgeFunctions';
 
 export default function GoogleCalendarCallback() {
   const [state, setState] = useState<'working' | 'done' | 'error'>('working');
-  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const started = useRef(false);
 
   useEffect(() => {
+    // StrictMode runs effects twice in development; the code is single-use
+    if (started.current) return;
+    started.current = true;
+
     (async () => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
-      const success = params.get('success');
-      if (!code || success === 'false') {
-        setErrorMsg('Autorização não concluída no Google.');
+      const oauthState = params.get('state');
+      if (params.get('error') || !code || !oauthState) {
+        setErrorMsg(params.get('error') === 'access_denied'
+          ? 'Você cancelou a autorização no Google.'
+          : 'Autorização não concluída no Google.');
         setState('error');
         return;
       }
-      try {
-        const { data, error } = await supabase.functions.invoke('google-calendar-complete', {
-          body: { code },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        setState('done');
-        setTimeout(() => { try { window.close(); } catch { /* ignore */ } }, 1500);
-      } catch (e: any) {
-        setErrorMsg(e?.message ?? String(e));
+      const { error } = await invokeFunction('google-calendar-complete', { body: { code, state: oauthState } });
+      if (error) {
+        setErrorMsg(error.message);
         setState('error');
+        return;
       }
+      setState('done');
+      if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel(GCAL_CHANNEL);
+        channel.postMessage('connected');
+        channel.close();
+      }
+      if (window.opener) setTimeout(() => window.close(), 1500);
     })();
   }, []);
 
@@ -48,9 +57,9 @@ export default function GoogleCalendarCallback() {
             <div className="mx-auto w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
               <Check className="w-6 h-6 text-success" />
             </div>
-            <h1 className="text-lg font-semibold">Google Calendar conectado</h1>
+            <h1 className="text-lg font-semibold">Google Agenda conectado</h1>
             <p className="text-sm text-muted-foreground">
-              Você já pode fechar esta janela e voltar para o Command OS.
+              Seus eventos aparecem na agenda "Command OS" em até 1 minuto.
             </p>
           </>
         )}
@@ -62,6 +71,11 @@ export default function GoogleCalendarCallback() {
             <h1 className="text-lg font-semibold">Não foi possível concluir</h1>
             <p className="text-sm text-muted-foreground break-words">{errorMsg}</p>
           </>
+        )}
+        {state !== 'working' && !window.opener && (
+          <Link to="/boas-vindas" className="inline-block text-sm text-accent hover:underline">
+            Voltar ao Command OS
+          </Link>
         )}
       </div>
     </div>

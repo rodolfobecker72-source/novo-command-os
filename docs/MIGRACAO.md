@@ -13,7 +13,7 @@
 | Funções: gestão de usuários e painel do administrador (6) | ✅ |
 | E-mail próprio (SMTP via Resend, domínio `mail.command-os.app.br`) | ✅ |
 | Leitura do `.md` de identidade visual com a API da Anthropic | ⏳ próximo |
-| Google Agenda com OAuth próprio | ⏳ |
+| Google Agenda com OAuth próprio | código pronto; falta configurar o Google Cloud |
 | Histórico de projetos fixo no código: removido, sem importação futura (PR #5) | ✅ |
 | Referências à empresa de origem no código, PDFs e banco: removidas (PR #6) | ✅ |
 | Migração dos dados do sistema atual | ⏳ dezembro |
@@ -46,10 +46,34 @@ Chaves (Resend, Anthropic, Google) ficam só no painel do Supabase, nunca no rep
 3. Reescrever e publicar `parse-brand-identity`; hoje ela usa o gateway de IA do Lovable.
 
 ### Google Agenda
-As funções `google-calendar-*` e `_shared/appUserConnector.ts` usam o conector do Lovable
-(`connector-gateway.lovable.dev`). É preciso refazer com OAuth próprio, criando um projeto e
-um cliente OAuth no Google Cloud. Até lá, a tela mostra "não conectado" e a sincronização
-das atividades fica desligada, sem erro para o usuário.
+OAuth próprio (sem o conector do Lovable). Como funciona:
+- Cada usuário conecta a própria conta Google no perfil. O sistema cria nela uma agenda
+  "Command OS" e só tem acesso a essa agenda (escopo `calendar.app.created`), nunca aos
+  outros eventos da pessoa.
+- Vão para o Google as atividades de projeto com data (para cada responsável) e os
+  compromissos da Minha Agenda (para quem criou e os participantes).
+- Triggers no banco colocam cada mudança na fila `google_calendar_sync_queue`, mas só quando
+  alguém envolvido está conectado. O pg_cron chama a função `google-calendar-worker` a cada
+  minuto, apenas quando há algo na fila; ela processa em lotes, com novas tentativas e espera
+  crescente em caso de falha ou limite do Google.
+- Os tokens ficam criptografados (AES-GCM) e as tabelas `google_*` só são lidas pelo backend.
+- Se a pessoa revogar o acesso no Google, a conexão fica como "conectar de novo" no perfil.
+- Desconectar remove a agenda "Command OS" da conta Google e revoga o acesso.
+
+Segredos (Supabase > Edge Functions > Secrets): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+(do Google Cloud), `GCAL_TOKEN_KEY` e `GCAL_WORKER_SECRET` (gerados). No Vault:
+`gcal_worker_url` e `gcal_worker_secret` (o mesmo valor do segredo da função).
+
+Google Cloud (projeto "Command OS"):
+1. Ativar a Google Calendar API.
+2. Google Auth Platform: público Externo; domínio autorizado `command-os.app.br`; escopos
+   `openid`, `email` e `https://www.googleapis.com/auth/calendar.app.created`.
+3. Cliente OAuth "Aplicativo da Web" com o URI de redirecionamento
+   `https://acesso.command-os.app.br/auth/google-calendar-callback`.
+4. Escala: em modo de teste, só os usuários de teste cadastrados (até 100) conectam, e o
+   acesso expira a cada 7 dias. Para liberar a todos, publicar o app e pedir a verificação
+   do Google: página inicial e política de privacidade no domínio verificado (Search
+   Console) e um vídeo mostrando o uso da agenda.
 
 ### Histórico de projetos e referências à empresa de origem
 Resolvido. A lista fixa de projetos (PR #5) e todos os logos, rodapés, textos e nomes

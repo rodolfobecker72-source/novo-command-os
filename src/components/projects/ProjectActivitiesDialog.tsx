@@ -44,7 +44,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
-import { syncActivityToGoogle } from '@/utils/googleCalendarSync';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -502,7 +501,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
     setNewCaptacaoByCol(prev => ({ ...prev, [status]: false }));
     setNewFreelaByCol(prev => ({ ...prev, [status]: '' }));
     setExpandedNewByCol(prev => ({ ...prev, [status]: false }));
-    syncActivityToGoogle(data.id, 'upsert');
   };
 
   const handleDelete = async (id: string) => {
@@ -514,7 +512,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       toast.error('Erro ao remover atividade');
       return;
     }
-    syncActivityToGoogle(id, 'delete');
   };
 
   const handleSaveEdit = async (id: string) => {
@@ -552,7 +549,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar responsáveis');
-    else syncActivityToGoogle(id, 'upsert');
   };
 
   const handleUpdateDue = async (id: string, due: string | null) => {
@@ -568,7 +564,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       .update({ due_date: due, end_date: nextEnd } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar prazo');
-    else syncActivityToGoogle(id, 'upsert');
   };
 
   const handleUpdateEnd = async (id: string, end: string | null) => {
@@ -578,7 +573,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       .update({ end_date: end } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar data final');
-    else syncActivityToGoogle(id, 'upsert');
   };
 
   const handleUpdateDelivery = async (id: string, value: boolean) => {
@@ -588,7 +582,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       .update({ is_delivery: value, ...(value ? { end_date: null } : {}) } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar entrega');
-    else syncActivityToGoogle(id, 'upsert');
   };
 
   const handleUpdateCaptacao = async (id: string, value: boolean) => {
@@ -598,7 +591,6 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       .update({ is_captacao: value } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar captação');
-    else syncActivityToGoogle(id, 'upsert');
   };
 
 

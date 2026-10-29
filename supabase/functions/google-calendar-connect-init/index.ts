@@ -1,40 +1,30 @@
-// Starts Google Calendar OAuth. Persists the pending session_id for this user
-// so the callback can complete the exchange.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { startAuthorize, adminClient, jsonResponse, corsHeaders } from "../_shared/appUserConnector.ts";
+// Starts the Google OAuth flow for the logged-in user. Returns the Google
+// consent URL; the state and PKCE verifier are kept server-side for
+// google-calendar-complete.
+import {
+  adminClient, authorizeUrl, corsHeaders, getCaller, isConfigured, jsonResponse, pkceChallenge, randomToken,
+} from "../_shared/googleCalendar.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+    const user = await getCaller(req);
+    if (!user) return jsonResponse({ error: "Não autenticado" }, 401);
+    if (!isConfigured()) return jsonResponse({ error: "A integração com o Google Agenda ainda não foi configurada." }, 503);
 
-    const body = await req.json().catch(() => ({}));
-    const origin: string = body.origin || "https://acesso.command-os.app.br";
-    const returnUrl = `${origin.replace(/\/$/, "")}/auth/google-calendar-callback`;
-
-    const { authorization_url, session_id } = await startAuthorize({
-      appUserId: userData.user.id,
-      returnUrl,
-    });
-
-    // Persist session_id so the callback can exchange the code for the connection_key.
     const admin = adminClient();
-    await admin.from("google_calendar_connections").upsert({
-      user_id: userData.user.id,
-      pending_session_id: session_id,
-      updated_at: new Date().toISOString(),
-    });
+    const state = randomToken();
+    const verifier = randomToken(48);
 
-    return jsonResponse({ url: authorization_url });
+    // Old, never-finished attempts (anyone's) and this user's previous attempt
+    await admin.from("google_oauth_states").delete().lt("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+    await admin.from("google_oauth_states").delete().eq("user_id", user.id);
+    const { error } = await admin.from("google_oauth_states").insert({ state, user_id: user.id, code_verifier: verifier });
+    if (error) throw error;
+
+    return jsonResponse({ url: authorizeUrl(state, await pkceChallenge(verifier)) });
   } catch (e) {
-    console.error("[connect-init]", e);
-    return jsonResponse({ error: String(e) }, 500);
+    console.error("[gcal connect-init]", e);
+    return jsonResponse({ error: "Não foi possível iniciar a conexão com o Google." }, 500);
   }
 });

@@ -1,23 +1,27 @@
-// Returns { connected, email } for the current user's Google Calendar connection.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getConnectionStatus, jsonResponse, corsHeaders } from "../_shared/appUserConnector.ts";
+// Connection state for the logged-in user, read from the database only
+// (no call to Google), so it is cheap to ask for on every screen load.
+import { adminClient, corsHeaders, getCaller, isConfigured, jsonResponse } from "../_shared/googleCalendar.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+    const user = await getCaller(req);
+    if (!user) return jsonResponse({ error: "Não autenticado" }, 401);
 
-    const status = await getConnectionStatus(userData.user.id);
-    return jsonResponse(status);
+    const { data } = await adminClient()
+      .from("google_calendar_connections")
+      .select("email, status")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    return jsonResponse({
+      available: isConfigured(),
+      connected: data?.status === "connected",
+      needsReconnect: data?.status === "needs_reconnect",
+      email: data?.email ?? null,
+    });
   } catch (e) {
-    console.error("[status]", e);
-    return jsonResponse({ error: String(e), connected: false }, 200);
+    console.error("[gcal status]", e);
+    return jsonResponse({ error: "Não foi possível consultar o Google Agenda." }, 500);
   }
 });
