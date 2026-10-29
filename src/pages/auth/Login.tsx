@@ -104,6 +104,10 @@ export function Login() {
           </form>
         </CardContent>
       </Card>
+      <p className="text-xs text-white/70 text-center space-x-4">
+        <Link to="/privacidade" className="hover:underline">Política de Privacidade</Link>
+        <Link to="/termos" className="hover:underline">Termos de Uso</Link>
+      </p>
     </div>
   );
 }

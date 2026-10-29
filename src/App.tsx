@@ -43,6 +43,8 @@ import MyFinancePage from "@/pages/MyFinancePage";
 import { WelcomePage } from "@/pages/welcome/WelcomePage";
 import { MyCalendarPage } from "@/pages/welcome/MyCalendarPage";
 import GoogleCalendarCallback from "@/pages/GoogleCalendarCallback";
+import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
+import TermsOfUse from "@/pages/legal/TermsOfUse";
 
 
 import NotFound from "./pages/NotFound";
@@ -70,6 +72,10 @@ const App = () => (
 
               {/* Google Calendar OAuth popup callback (public — just closes) */}
               <Route path="/auth/google-calendar-callback" element={<GoogleCalendarCallback />} />
+
+              {/* Public legal pages */}
+              <Route path="/privacidade" element={<PrivacyPolicy />} />
+              <Route path="/termos" element={<TermsOfUse />} />
               
               
               

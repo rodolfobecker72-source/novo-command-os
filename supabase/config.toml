@@ -21,3 +21,20 @@ verify_jwt = false
 
 [functions.reset-user-password]
 verify_jwt = false
+
+# Google Agenda: as funções de usuário validam o login como as de cima; o
+# worker é chamado pelo pg_cron e valida o segredo gcal_worker_secret (Vault).
+[functions.google-calendar-connect-init]
+verify_jwt = false
+
+[functions.google-calendar-complete]
+verify_jwt = false
+
+[functions.google-calendar-status]
+verify_jwt = false
+
+[functions.google-calendar-disconnect]
+verify_jwt = false
+
+[functions.google-calendar-worker]
+verify_jwt = false
