@@ -37,7 +37,6 @@ import { ProjectHistoryPage } from "@/pages/projects/ProjectHistoryPage";
 import { FinancialPage } from '@/pages/admin/FinancialPage';
 import { PatrimonioPage } from '@/pages/admin/PatrimonioPage';
 import { TeamFinancePage } from '@/pages/admin/TeamFinancePage';
-import { SystemAdminPage } from '@/pages/admin/SystemAdminPage';
 import { ProspectionProvider } from "@/contexts/ProspectionContext";
 import MyFinancePage from "@/pages/MyFinancePage";
 import { WelcomePage } from "@/pages/welcome/WelcomePage";
@@ -120,7 +119,6 @@ const App = () => (
                   <Route path="/financeiro" element={<PageGuard pageKey="financeiro"><FinancialPage /></PageGuard>} />
                   <Route path="/patrimonio" element={<PageGuard pageKey="patrimonio"><PatrimonioPage /></PageGuard>} />
                   <Route path="/financeiro-time" element={<PageGuard pageKey="financeiro-time"><TeamFinancePage /></PageGuard>} />
-                  <Route path="/admin-sistema" element={<SystemAdminPage />} />
 
                   {/* Users */}
                   <Route path="/usuarios" element={<PageGuard pageKey="usuarios"><UsersPage /></PageGuard>} />

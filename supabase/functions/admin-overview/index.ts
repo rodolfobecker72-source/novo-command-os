@@ -6,6 +6,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function sessionAal(authHeader: string): string | null {
+  try {
+    const payload = authHeader.replace(/^Bearer\s+/i, "").split(".")[1];
+    const b64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4))).aal ?? null;
+  } catch {
+    return null;
+  }
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -38,6 +48,12 @@ Deno.serve(async (req) => {
       .eq("user_id", caller.id)
       .maybeSingle();
     if (!sysAdmin) return json({ error: "Acesso restrito ao administrador do sistema" }, 403);
+
+    // The admin area requires 2-step verification: the session must be aal2.
+    // getUser() above already validated this token with the auth server.
+    if (sessionAal(authHeader) !== "aal2") {
+      return json({ error: "Verificação em duas etapas necessária" }, 403);
+    }
 
     // Optional action: update feedback status
     let body: Record<string, unknown> = {};

@@ -1,8 +1,14 @@
+import { lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import "./index.css";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { isBackendConfigured } from "./lib/backendConfig";
+
+// admin.command-os.app.br serves only the system administration app; every
+// other host serves the regular app. Each one is its own bundle.
+const isAdminHost =
+  window.location.hostname.startsWith("admin.") || import.meta.env.VITE_APP_MODE === "admin";
+const App = lazy(() => (isAdminHost ? import("./admin/AdminApp") : import("./App.tsx")));
 
 // Apply persisted theme (dark/light) before render so every page respects it
 try {
@@ -33,7 +39,9 @@ function BackendUnavailable() {
 createRoot(document.getElementById("root")!).render(
   isBackendConfigured ? (
     <ErrorBoundary>
-      <App />
+      <Suspense fallback={null}>
+        <App />
+      </Suspense>
     </ErrorBoundary>
   ) : (
     <BackendUnavailable />

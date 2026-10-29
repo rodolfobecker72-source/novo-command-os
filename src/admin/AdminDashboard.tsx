@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Building2,
   Users,
   MessageSquareWarning,
   Loader2,
-  ShieldAlert,
   Sparkles,
   FileText,
   LayoutGrid,
@@ -16,8 +14,6 @@ import {
   Search,
 } from 'lucide-react';
 import { invokeFunction } from '@/lib/edgeFunctions';
-import { useSystemAdmin } from '@/hooks/useSystemAdmin';
-import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -139,8 +135,8 @@ function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: str
   );
 }
 
-export function SystemAdminPage() {
-  const { isSystemAdmin, loading: checking } = useSystemAdmin();
+// Shown only after AdminApp confirmed a system admin signed in with 2-step verification
+export function AdminDashboard() {
   const { toast } = useToast();
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -173,9 +169,8 @@ export function SystemAdminPage() {
   };
 
   useEffect(() => {
-    if (isSystemAdmin) load();
-    else if (!checking) setLoading(false);
-  }, [isSystemAdmin, checking]);
+    load();
+  }, []);
 
   const updateStatus = async (id: string, status: string) => {
     const { error: err } = await invokeFunction('admin-overview', {
@@ -191,45 +186,29 @@ export function SystemAdminPage() {
     toast({ title: 'Status atualizado' });
   };
 
-  if (checking || loading) {
+  if (loading) {
     return (
-      <>
-        <Header title="Painel do Command OS" subtitle="Empresas clientes, usuários e uso do sistema" />
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      </>
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
-  if (!isSystemAdmin || error) {
+  if (error) {
     return (
-      <>
-        <Header title="Painel do Command OS" subtitle="Empresas clientes, usuários e uso do sistema" />
-        <div className="p-4 md:p-6">
-          <Card>
-            <CardContent className="p-8 text-center space-y-3">
-              <ShieldAlert className="w-10 h-10 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground">
-                {error || 'Esta área é restrita ao administrador do sistema.'}
-              </p>
-              <Button variant="outline" asChild>
-                <Link to="/boas-vindas">Voltar</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </>
+      <Card>
+        <CardContent className="p-8 text-center space-y-3">
+          <p className="text-muted-foreground">{error}</p>
+          <Button variant="outline" onClick={load}>Tentar de novo</Button>
+        </CardContent>
+      </Card>
     );
   }
 
   const t = data?.totals ?? {};
 
   return (
-    <>
-      <Header title="Painel do Command OS" subtitle="Empresas clientes, usuários e uso do sistema" />
-
-      <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={load}>
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -458,9 +437,6 @@ export function SystemAdminPage() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
-    </>
+    </div>
   );
 }
-
-export default SystemAdminPage;
