@@ -192,7 +192,8 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
    WHERE c.workspace_id = (SELECT private.my_workspace_id())
      AND (EXISTS (SELECT 1 FROM public.budgets b
                    WHERE b.client_id = c.id AND b.status = 'aprovada')
-          OR EXISTS (SELECT 1 FROM public.legacy_projects l WHERE l.client_id = c.id))
+          -- legacy_projects.client_id é texto
+          OR EXISTS (SELECT 1 FROM public.legacy_projects l WHERE l.client_id = c.id::text))
    ORDER BY c.company_name
 $$;
 
