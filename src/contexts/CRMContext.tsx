@@ -479,6 +479,9 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Signed out: drop the cache marker so the next sign-in (maybe another
+    // user of the same workspace) always loads fresh data.
+    if (!workspaceId) lastLoadedWorkspaceRef.current = null;
     loadAll(false);
   }, [workspaceId, loadAll]);
 

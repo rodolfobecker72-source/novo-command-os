@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { canAccessPage } from '@/config/pages';
@@ -46,6 +47,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -257,9 +259,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setWorkspace(null);
     setMembership(null);
-    // Full page load on the login screen: no screen or data of the previous
-    // user stays in memory.
-    window.location.replace('/login');
+    // In-app navigation (no page reload, so the screen doesn't flash). The
+    // data contexts reset when the workspace goes away.
+    navigate('/login', { replace: true });
   };
 
   const hasPageAccess = (pageKey: string): boolean => canAccessPage(pageKey, membership);
