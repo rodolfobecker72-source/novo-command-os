@@ -12,7 +12,7 @@ import {
   formatCNPJ,
   formatPhone,
   formatCurrency,
-  LEAD_ORIGIN_LABELS,
+  leadOriginLabel,
   SERVICE_TYPE_LABELS,
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
@@ -267,7 +267,7 @@ export function ClientDetail() {
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-medium">{LEAD_ORIGIN_LABELS[client.leadOrigin]}</p>
+                    <p className="font-medium">{leadOriginLabel(client.leadOrigin)}</p>
                     <p className="text-xs text-muted-foreground">Origem do lead</p>
                   </div>
                 </div>

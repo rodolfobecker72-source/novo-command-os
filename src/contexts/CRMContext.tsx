@@ -48,7 +48,7 @@ function clientFromDb(row: any): Client {
     legalRepresentativeCpf: row.legal_representative_cpf || '',
     email: row.email,
     phone: row.phone,
-    leadOrigin: row.lead_origin as LeadOrigin,
+    leadOrigin: (row.lead_origin as LeadOrigin | null) ?? null,
     sector: row.sector || '',
     score: row.score,
     address: row.address || '',

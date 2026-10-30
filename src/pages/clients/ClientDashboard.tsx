@@ -9,7 +9,7 @@ import {
   formatCNPJ,
   formatPhone,
   formatCurrency,
-  LEAD_ORIGIN_LABELS,
+  leadOriginLabel,
 } from '@/types/crm';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -236,7 +236,7 @@ export function ClientDashboard() {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
-                            {LEAD_ORIGIN_LABELS[client.leadOrigin]}
+                            {leadOriginLabel(client.leadOrigin)}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -309,7 +309,7 @@ export function ClientDashboard() {
                         {formatPhone(client.phone)}
                       </a>
                       <p className="text-xs text-muted-foreground">
-                        {LEAD_ORIGIN_LABELS[client.leadOrigin]} · {projectCount} projeto(s)
+                        {leadOriginLabel(client.leadOrigin)} · {projectCount} projeto(s)
                       </p>
                     </div>
                     <div className="flex items-center justify-end gap-1 pt-1 border-t border-border/40">

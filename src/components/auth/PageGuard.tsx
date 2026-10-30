@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,6 @@ interface PageGuardProps {
 
 export function PageGuard({ pageKey, children }: PageGuardProps) {
   const { hasPageAccess, isLoading, membership, logout } = useAuth();
-  const navigate = useNavigate();
   const allowed = isLoading ? true : hasPageAccess(pageKey);
   // Redirect to the first page the user can open. Always targeting
   // /boas-vindas left users without that permission on a blank screen.
@@ -38,10 +37,7 @@ export function PageGuard({ pageKey, children }: PageGuardProps) {
   }
 
   if (!allowed) {
-    const handleLogout = async () => {
-      await logout();
-      navigate('/login');
-    };
+    const handleLogout = () => logout();
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">

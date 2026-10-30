@@ -1,6 +1,5 @@
 // Lead Origin Types
-export type LeadOrigin = 
-  | 'cliente_antigo'
+export type LeadOrigin =
   | 'indicacao'
   | 'organico'
   | 'site'
@@ -11,7 +10,6 @@ export type LeadOrigin =
   | 'parceria';
 
 export const LEAD_ORIGIN_LABELS: Record<LeadOrigin, string> = {
-  cliente_antigo: 'Cliente antigo',
   indicacao: 'Indicação',
   organico: 'Orgânico (Redes Sociais)',
   site: 'Site',
@@ -21,6 +19,11 @@ export const LEAD_ORIGIN_LABELS: Record<LeadOrigin, string> = {
   evento_feira: 'Evento / Feira',
   parceria: 'Parceria',
 };
+
+/** Label for a client's lead origin, which is optional. */
+export function leadOriginLabel(origin: LeadOrigin | null | undefined): string {
+  return origin ? LEAD_ORIGIN_LABELS[origin] ?? origin : 'Não informada';
+}
 
 // Service Type (now dynamic, kept as string for flexibility)
 export type ServiceType = string;
@@ -170,7 +173,7 @@ export interface Client {
   legalRepresentativeCpf?: string;
   email: string;
   phone: string;
-  leadOrigin: LeadOrigin;
+  leadOrigin: LeadOrigin | null;
   sector: string;
   score: number;
   address?: string;

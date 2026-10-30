@@ -237,11 +237,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    // 'local' ends only this browser's session (other devices stay signed in).
+    // Don't let a slow request keep the user on a signed-in screen.
+    const { error } = await Promise.race([
+      supabase.auth.signOut({ scope: 'local' }),
+      new Promise<{ error: Error }>((resolve) =>
+        setTimeout(() => resolve({ error: new Error('signOut timeout') }), 4000),
+      ),
+    ]);
+    if (error) {
+      console.warn('[Auth] signOut did not finish, clearing the stored session:', error.message);
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+        .forEach((k) => localStorage.removeItem(k));
+    }
     loadPromiseRef.current = null;
+    setSession(null);
+    setUser(null);
     setProfile(null);
     setWorkspace(null);
     setMembership(null);
+    // Full page load on the login screen: no screen or data of the previous
+    // user stays in memory.
+    window.location.replace('/login');
   };
 
   const hasPageAccess = (pageKey: string): boolean => canAccessPage(pageKey, membership);
