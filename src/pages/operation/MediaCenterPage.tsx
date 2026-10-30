@@ -111,23 +111,15 @@ export function MediaCenterPage() {
     enabled: !!workspaceId,
   });
 
-  // Active clients: clients with approved budgets OR legacy projects
+  // Active clients: clients with approved budgets OR legacy projects. Comes from
+  // the database without budget data, so the operational team can use it too.
   const { data: activeClients = [] } = useQuery({
     queryKey: ['active_clients', workspaceId],
     queryFn: async () => {
       if (!workspaceId) return [];
-      const [clientsRes, budgetsRes, legacyRes] = await Promise.all([
-        supabase.from('clients').select('id, company_name').eq('workspace_id', workspaceId),
-        supabase.from('budgets').select('client_id').eq('workspace_id', workspaceId).eq('status', 'aprovada'),
-        supabase.from('legacy_projects').select('client_id').eq('workspace_id', workspaceId),
-      ]);
-      const activeIds = new Set<string>();
-      (budgetsRes.data || []).forEach((b: any) => b.client_id && activeIds.add(b.client_id));
-      (legacyRes.data || []).forEach((l: any) => l.client_id && activeIds.add(l.client_id));
-      return (clientsRes.data || [])
-        .filter((c: any) => activeIds.has(c.id))
-        .map((c: any) => ({ id: c.id, name: c.company_name }))
-        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const { data, error } = await supabase.rpc('media_center_clients' as any);
+      if (error) throw error;
+      return ((data || []) as { id: string; name: string }[]).map((c) => ({ id: c.id, name: c.name }));
     },
     enabled: !!workspaceId,
   });

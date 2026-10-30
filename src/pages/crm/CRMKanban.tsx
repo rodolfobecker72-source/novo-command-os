@@ -20,6 +20,8 @@ import { KanbanListRow } from '@/components/crm/KanbanListRow';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { useCRM } from '@/contexts/CRMContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { isManagerRole } from '@/config/permissions';
 import { CRMCard, CRMStatus, REJECTION_REASONS } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,6 +99,7 @@ function ListColumn({ columnKey, label, color, cards, total, hideValues }: { col
 
 export function CRMKanban() {
   const { getCRMCards, moveCard, kanbanColumns, approveBudget, updateBudget } = useCRM();
+  const { role } = useAuth();
   const navigate = useNavigate();
   const [activeCard, setActiveCard] = useState<CRMCard | null>(null);
   const [monthFilter, setMonthFilter] = useState<string>('all');
@@ -311,7 +314,7 @@ export function CRMKanban() {
             <p className="text-sm text-muted-foreground">
               {filteredCards.length} projeto(s)
             </p>
-            <KanbanColumnManager />
+            {isManagerRole(role) && <KanbanColumnManager />}
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input

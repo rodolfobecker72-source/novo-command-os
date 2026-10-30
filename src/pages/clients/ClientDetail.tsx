@@ -67,6 +67,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { isManagerRole } from '@/config/permissions';
 import {
   Collapsible,
   CollapsibleContent,
@@ -77,6 +79,7 @@ export function ClientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getClient, budgets, getClientScoreBreakdown, legacyProjects, hardDrives, getClientScoreHistory, deleteClient } = useCRM();
+  const canDelete = isManagerRole(useAuth().role);
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -180,14 +183,16 @@ export function ClientDetail() {
               <Pencil className="w-4 h-4 mr-2" />
               Editar Cliente
             </Button>
-            <Button
-              variant="outline"
-              className="text-destructive border-destructive/50 hover:bg-destructive/10"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Excluir
-            </Button>
+            {canDelete && (
+              <Button
+                variant="outline"
+                className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
+            )}
           </div>
         </div>
 

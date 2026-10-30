@@ -10,6 +10,7 @@ import {
   DEFAULT_LEAD_STATUSES,
 } from '@/types/prospection';
 import { computeLeadTemperature } from '@/utils/leadTemperature';
+import { isCommercialRole, isManagerRole } from '@/config/permissions';
 
 function statusFromDb(row: any): LeadStatus {
   return {
@@ -122,8 +123,10 @@ export function useProspection() {
 }
 
 export function ProspectionProvider({ children }: { children: ReactNode }) {
-  const { workspace } = useAuth();
-  const workspaceId = workspace?.id;
+  const { workspace, role } = useAuth();
+  // Leads are commercial data: the operational team neither loads nor receives them
+  const workspaceId = isCommercialRole(role) ? workspace?.id : undefined;
+  const canSeedStatuses = isManagerRole(role);
   const [leads, setLeads] = useState<ProspectionLead[]>([]);
   const [statuses, setStatuses] = useState<LeadStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,7 +138,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
         .from('lead_statuses').select('*').eq('workspace_id', workspaceId).order('order');
       if (error) throw error;
       let rows = data || [];
-      if (rows.length === 0) {
+      if (rows.length === 0 && canSeedStatuses) {
         // Seed dos status padrão para workspaces novos
         const payload = DEFAULT_LEAD_STATUSES.map(s => ({
           workspace_id: workspaceId,
@@ -159,7 +162,7 @@ export function ProspectionProvider({ children }: { children: ReactNode }) {
     } catch (e: any) {
       console.error('Error loading lead statuses:', e);
     }
-  }, [workspaceId]);
+  }, [workspaceId, canSeedStatuses]);
 
   const load = useCallback(async (silent = false) => {
     if (!workspaceId) {

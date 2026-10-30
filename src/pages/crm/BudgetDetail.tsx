@@ -125,6 +125,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { isManagerRole } from '@/config/permissions';
 
 const SERVICE_ICONS: Record<string, typeof Film> = {
   CINE: Film,
@@ -1049,38 +1050,40 @@ export function BudgetDetail() {
                 Ir para Execução
               </Button>
             )}
-            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Excluir
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Excluir Proposta</DialogTitle>
-                  <DialogDescription>
-                    Tem certeza que deseja excluir a proposta "{budget.projectName}"? Esta ação não pode ser desfeita.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => {
-                      deleteBudget(budget.id);
-                      toast.success('Proposta excluída com sucesso!');
-                      navigate('/crm');
-                    }}
-                  >
+            {isManagerRole(role) && (
+              <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
                     <Trash2 className="w-4 h-4 mr-2" />
                     Excluir
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Excluir Proposta</DialogTitle>
+                    <DialogDescription>
+                      Tem certeza que deseja excluir a proposta "{budget.projectName}"? Esta ação não pode ser desfeita.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => {
+                        deleteBudget(budget.id);
+                        toast.success('Proposta excluída com sucesso!');
+                        navigate('/crm');
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Excluir
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
 
             <Select value={budget.status} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-56">

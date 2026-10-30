@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRM } from '@/contexts/CRMContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -30,52 +31,37 @@ interface Entry {
 }
 
 export default function MyFinancePage() {
-  const { profile, role } = useAuth();
-  const { budgets, clients } = useCRM();
+  const { user, role } = useAuth();
   const { enabled: teamFinanceEnabled, loading: settingsLoading } = useTeamFinanceEnabled();
 
-  const myName = profile?.name || '';
+  // Only this person's own entries come from the database (matched by name in the
+  // execution costs), so team members never receive other budget values.
+  const { data: rows = [] } = useQuery({
+    queryKey: ['my_finance_entries', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('my_finance_entries' as any);
+      if (error) throw error;
+      return (data || []) as {
+        budget_id: string; proposal_id: string; project_name: string; client_name: string;
+        description: string; real_value: number; payment_status: string; payment_date: string | null; month: string;
+      }[];
+    },
+    enabled: !!user,
+  });
 
   const entries = useMemo<Entry[]>(() => {
-    if (!myName) return [];
-    const list: Entry[] = [];
-    const matches = (supplier?: string) => {
-      if (!supplier) return false;
-      // Members are stored as raw name; freelas as "Freela: Name"
-      return supplier === myName;
-    };
-
-    const clientMap = new Map(clients.map((c) => [c.id, c.companyName]));
-
-    for (const b of budgets) {
-      const ex = b.execution;
-      if (!ex) continue;
-      const month = b.executionMonth || (b.approvalDate ? new Date(b.approvalDate).toISOString().slice(0, 7) : '—');
-      const clientName = clientMap.get(b.clientId) || '';
-
-      const pushIfMine = (cost: any, descPrefix?: string) => {
-        if (!matches(cost.supplier)) return;
-        list.push({
-          budgetId: b.id,
-          proposalId: b.proposalId,
-          projectName: b.projectName,
-          clientName,
-          description: descPrefix ? `${descPrefix} — ${cost.description}` : cost.description,
-          realValue: Number(cost.realValue) || 0,
-          paymentStatus: cost.paymentStatus || 'pendente',
-          paymentDate: cost.paymentDate ? new Date(cost.paymentDate) : null,
-          month,
-          isFreela: false,
-        });
-      };
-
-      ex.services?.forEach((svc) => {
-        svc.costs?.forEach((c) => pushIfMine(c));
-        svc.extraCosts?.forEach((c) => pushIfMine(c, 'Extra'));
-      });
-      ex.operationalCosts?.forEach((c) => pushIfMine(c, 'Operacional'));
-      ex.extraOperationalCosts?.forEach((c) => pushIfMine(c, 'Operacional Extra'));
-    }
+    const list: Entry[] = rows.map((r) => ({
+      budgetId: r.budget_id,
+      proposalId: r.proposal_id,
+      projectName: r.project_name,
+      clientName: r.client_name,
+      description: r.description,
+      realValue: Number(r.real_value) || 0,
+      paymentStatus: r.payment_status || 'pendente',
+      paymentDate: r.payment_date ? new Date(r.payment_date) : null,
+      month: r.month,
+      isFreela: false,
+    }));
 
     // Sort: month desc, then status (pendente first)
     return list.sort((a, b) => {
@@ -83,7 +69,7 @@ export default function MyFinancePage() {
       if (a.paymentStatus !== b.paymentStatus) return a.paymentStatus === 'pendente' ? -1 : 1;
       return 0;
     });
-  }, [budgets, clients, myName]);
+  }, [rows]);
 
   const totals = useMemo(() => {
     let pago = 0, pendente = 0, mesAtual = 0;

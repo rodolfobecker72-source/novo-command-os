@@ -59,9 +59,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { isManagerRole } from '@/config/permissions';
 
 export function ClientDashboard() {
   const { clients, budgets, getClient, legacyProjects, deleteClient } = useCRM();
+  const canDelete = isManagerRole(useAuth().role);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -262,14 +265,16 @@ export function ClientDashboard() {
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => setClientToDelete({ id: client.id, name: client.companyName })}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {canDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setClientToDelete({ id: client.id, name: client.companyName })}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </motion.tr>
@@ -319,14 +324,16 @@ export function ClientDashboard() {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/clientes/${client.id}/editar`)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => setClientToDelete({ id: client.id, name: client.companyName })}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => setClientToDelete({ id: client.id, name: client.companyName })}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
