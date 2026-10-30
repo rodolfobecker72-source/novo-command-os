@@ -41,6 +41,7 @@ import {
   FUNNEL_STATUS_ORDER, getStatusColor,
 } from '@/types/prospection';
 import { ManageLeadStatusesDialog } from '@/components/prospection/ManageLeadStatusesDialog';
+import { isManagerRole } from '@/config/permissions';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -467,9 +468,11 @@ export function ProspectionPage() {
         <div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setManageStatusOpen(true)} size="default" className="gap-2 rounded-xl w-full sm:w-auto">
-            <Settings2 className="w-4 h-4" /> Gerenciar Status
-          </Button>
+          {isManagerRole(auth.role) && (
+            <Button variant="outline" onClick={() => setManageStatusOpen(true)} size="default" className="gap-2 rounded-xl w-full sm:w-auto">
+              <Settings2 className="w-4 h-4" /> Gerenciar Status
+            </Button>
+          )}
           <Button onClick={openCreate} size="default" className="gap-2 rounded-xl shadow-sm w-full sm:w-auto">
             <Plus className="w-4 h-4" /> Novo Lead
           </Button>
@@ -577,14 +580,16 @@ export function ProspectionPage() {
                                   </div>
                                 </div>
                               <div className="flex items-center gap-1 shrink-0">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-6 w-6 text-destructive"
-                                  onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
+                                {isManagerRole(auth.role) && (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-destructive"
+                                    onClick={e => { e.stopPropagation(); setDeleteConfirm(lead.id); }}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
                               </div>
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">

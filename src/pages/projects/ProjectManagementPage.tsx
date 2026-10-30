@@ -81,7 +81,7 @@ function formatMonthLabel(ym: string | null): string {
 }
 
 export function ProjectManagementPage() {
-  const { projectColumns, projectCards, updateProjectCard, deleteProjectCard, budgets, updateBudget } = useCRM();
+  const { projectColumns, projectCards, updateProjectCard, deleteProjectCard, budgetSchedules, setBudgetExecutionMonth } = useCRM();
   const { workspace, role } = useAuth();
   const canDelete = role === 'owner' || role === 'admin';
   const [manageOpen, setManageOpen] = useState(false);
@@ -189,12 +189,6 @@ export function ProjectManagementPage() {
     return map;
   }, [projectColumns]);
 
-  const budgetById = useMemo(() => {
-    const m: Record<string, typeof budgets[number]> = {};
-    for (const b of budgets) m[b.id] = b;
-    return m;
-  }, [budgets]);
-
   // status -> month(YYYY-MM | '__none__') -> cards
   const cardsByStatusAndMonth = useMemo(() => {
     const numOf = (c: typeof projectCards[number]) => {
@@ -225,7 +219,7 @@ export function ProjectManagementPage() {
     const filteredCards = searchQuery
       ? projectCards.filter(card => {
           const q = normalize(searchQuery);
-          const month = budgetById[card.budgetId]?.executionMonth ?? null;
+          const month = budgetSchedules[card.budgetId]?.executionMonth ?? null;
           return (
             normalize(card.projectName || '').includes(q) ||
             normalize(card.clientName || '').includes(q) ||
@@ -241,7 +235,7 @@ export function ProjectManagementPage() {
       if (!statusKey) {
         if (!result[card.status]) result[card.status] = [];
       }
-      const month = budgetById[card.budgetId]?.executionMonth ?? null;
+      const month = budgetSchedules[card.budgetId]?.executionMonth ?? null;
       const bucketKey = month || '__none__';
       let bucket = result[card.status].find(b => (b.month || '__none__') === bucketKey);
       if (!bucket) {
@@ -264,13 +258,13 @@ export function ProjectManagementPage() {
       });
     }
     return result;
-  }, [projectColumns, projectCards, budgetById, searchQuery]);
+  }, [projectColumns, projectCards, budgetSchedules, searchQuery]);
 
   const toggle = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const handleMonthChange = (budgetId: string | undefined, value: string) => {
     if (!budgetId) return;
-    updateBudget(budgetId, { executionMonth: value || null });
+    setBudgetExecutionMonth(budgetId, value || null);
   };
 
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -346,10 +340,12 @@ export function ProjectManagementPage() {
               Enviar para Histórico
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>
-            <Settings2 className="w-4 h-4 mr-2" />
-            Gerenciar status
-          </Button>
+          {canDelete && (
+            <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>
+              <Settings2 className="w-4 h-4 mr-2" />
+              Gerenciar status
+            </Button>
+          )}
         </div>
       </div>
 
@@ -389,7 +385,7 @@ export function ProjectManagementPage() {
                       <div key={bucket.month || '__none__'} className="space-y-1">
                         <ul className="space-y-1 md:overflow-x-auto -mx-2 px-2">
                           {bucket.cards.map((card) => {
-                            const budget = budgetById[card.budgetId];
+                            const budget = budgetSchedules[card.budgetId];
                             const counts = activityCounts[card.id] || { total: 0, done: 0 };
                             const pct = counts.total > 0 ? Math.round((counts.done / counts.total) * 100) : 0;
                             const rawLinks = (card as any).materialLinks;

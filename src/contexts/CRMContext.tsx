@@ -3,6 +3,7 @@ import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { isCommercialRole, isManagerRole } from '@/config/permissions';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Client,
@@ -229,6 +230,11 @@ function projectCardFromDb(row: any): ProjectCard {
 
 // ============= Context type =============
 
+export interface BudgetSchedule {
+  executionMonth: string | null;
+  isRecurring: boolean;
+}
+
 interface CRMContextType {
   isLoading: boolean;
   clients: Client[];
@@ -290,6 +296,9 @@ interface CRMContextType {
   deleteLegacyProject: (id: string) => Promise<void>;
   getLegacyProject: (id: string) => LegacyProject | undefined;
   getHDForBudget: (budgetId: string) => { hdLabel: string; hdId: string } | null;
+  /** Execution month and recurrence per budget id, available to every role (no values). */
+  budgetSchedules: Record<string, BudgetSchedule>;
+  setBudgetExecutionMonth: (budgetId: string, month: string | null) => Promise<void>;
 
   scoreHistory: ScoreHistoryEntry[];
   getClientScoreHistory: (clientId: string) => ScoreHistoryEntry[];
@@ -346,6 +355,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [projectCards, setProjectCards] = useState<ProjectCard[]>([]);
   const [projectColumns, setProjectColumns] = useState<ProjectColumn[]>([]);
+  const [budgetSchedules, setBudgetSchedules] = useState<Record<string, BudgetSchedule>>({});
   const [clientContacts, setClientContacts] = useState<{ id: string; client_id: string; workspace_id: string; name: string; phone: string; is_primary: boolean }[]>([]);
 
   const loadAll = useCallback(async (force = false) => {
@@ -363,24 +373,30 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }, 15000);
     try {
+      // Commercial data (and its values) is only fetched by roles allowed to see
+      // it; the database refuses it to the others anyway.
+      const commercial = isCommercialRole(roleRef.current);
+      const none = Promise.resolve({ data: [] as any[], error: null });
       const [
         clientsRes, contactsRes, kanbanRes, catRes, objRes, projColRes,
         budgetsRes, versionsRes, projectCardsRes,
-        assetsRes, hdRes, legacyRes, scoreRes,
+        assetsRes, hdRes, legacyRes, scoreRes, schedulesRes,
       ] = await Promise.all([
-        supabase.from('clients').select('*').eq('workspace_id', wsId),
-        supabase.from('client_contacts').select('*').eq('workspace_id', wsId),
-        supabase.from('kanban_columns').select('*').eq('workspace_id', wsId).order('order'),
+        commercial ? supabase.from('clients').select('*').eq('workspace_id', wsId) : none,
+        commercial ? supabase.from('client_contacts').select('*').eq('workspace_id', wsId) : none,
+        commercial ? supabase.from('kanban_columns').select('*').eq('workspace_id', wsId).order('order') : none,
         supabase.from('service_categories').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('service_objectives').select('*').eq('workspace_id', wsId).order('order'),
         supabase.from('project_columns').select('*').eq('workspace_id', wsId).order('order'),
-        supabase.from('budgets').select('*').eq('workspace_id', wsId),
-        supabase.from('budget_versions').select('*').eq('workspace_id', wsId),
+        commercial ? supabase.from('budgets').select('*').eq('workspace_id', wsId) : none,
+        commercial ? supabase.from('budget_versions').select('*').eq('workspace_id', wsId) : none,
         supabase.from('project_cards').select('*').eq('workspace_id', wsId).is('archived_at', null),
         supabase.from('assets').select('*').eq('workspace_id', wsId),
         supabase.from('hard_drives').select('*').eq('workspace_id', wsId),
         supabase.from('legacy_projects').select('*').eq('workspace_id', wsId),
-        supabase.from('score_history').select('*').eq('workspace_id', wsId),
+        commercial ? supabase.from('score_history').select('*').eq('workspace_id', wsId) : none,
+        // Execution month of each budget, without values (Área de Projetos)
+        supabase.rpc('budget_schedules' as any),
       ]);
 
       const errors: string[] = [];
@@ -397,6 +413,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (legacyRes.error) errors.push('projetos legados');
       if (scoreRes.error) errors.push('histórico de score');
       if (contactsRes.error) errors.push('responsáveis das empresas');
+      if (schedulesRes.error) errors.push('meses de execução');
 
       if (errors.length > 0) {
         console.error('[CRM] Falha ao carregar:', errors.join(', '));
@@ -406,7 +423,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setClients((clientsRes.data || []).map(clientFromDb).sort((a, b) => a.companyName.localeCompare(b.companyName, 'pt-BR')));
 
       let kanbanData = kanbanRes.data || [];
-      if (kanbanData.length === 0 && !force) {
+      // Defaults are created by a manager (the others can't write board settings)
+      if (kanbanData.length === 0 && !force && isManagerRole(roleRef.current)) {
         const defaults = DEFAULT_KANBAN_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
@@ -439,7 +457,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setServiceObjectives((objRes.data || []).map(serviceObjectiveFromDb));
 
       let projColData = projColRes.data || [];
-      if (projColData.length === 0 && !force) {
+      if (projColData.length === 0 && !force && isManagerRole(roleRef.current)) {
         const defaults = DEFAULT_PROJECT_COLUMNS.map(c => ({
           workspace_id: wsId, key: c.key, label: c.label, color: c.color, order: c.order, is_default: c.isDefault || false,
         }));
@@ -467,6 +485,10 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       setHardDrives((hdRes.data || []).map(hardDriveFromDb));
       setLegacyProjects((legacyRes.data || []).map(legacyProjectFromDb));
       setScoreHistory((scoreRes.data || []).map(scoreHistoryFromDb));
+      setBudgetSchedules(Object.fromEntries(
+        ((schedulesRes.data || []) as { budget_id: string; execution_month: string | null; is_recurring: boolean }[])
+          .map(r => [r.budget_id, { executionMonth: r.execution_month, isRecurring: r.is_recurring }]),
+      ));
       setClientContacts(contactsRes.data || []);
     } catch (error) {
       console.error('Error loading CRM data:', error);
@@ -980,6 +1002,17 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     return createdCount;
   };
 
+  // Any role working on projects may set the execution month, without access to the budget itself
+  const setBudgetExecutionMonth = async (budgetId: string, month: string | null) => {
+    const { error } = await supabase.rpc('set_budget_execution_month' as any, { p_budget_id: budgetId, p_month: month });
+    if (error) {
+      toast.error('Não foi possível salvar o mês de execução.');
+      return;
+    }
+    setBudgetSchedules(prev => ({ ...prev, [budgetId]: { isRecurring: false, ...prev[budgetId], executionMonth: month } }));
+    setBudgets(prev => prev.map(b => (b.id === budgetId ? { ...b, executionMonth: month } : b)));
+  };
+
   const updateBudget = async (id: string, updates: Partial<Budget>) => {
     try {
       const dbUpdates: any = {};
@@ -1018,6 +1051,10 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       if (updates.hideNfInPdf !== undefined) dbUpdates.hide_nf_in_pdf = updates.hideNfInPdf;
       if (updates.hideOperationalInPdf !== undefined) dbUpdates.hide_operational_in_pdf = updates.hideOperationalInPdf;
       if (updates.hideNfObservationInPdf !== undefined) dbUpdates.hide_nf_observation_in_pdf = updates.hideNfObservationInPdf;
+
+      if (updates.executionMonth !== undefined) {
+        setBudgetSchedules(prev => ({ ...prev, [id]: { isRecurring: false, ...prev[id], executionMonth: updates.executionMonth ?? null } }));
+      }
 
       if (Object.keys(dbUpdates).length > 0) {
         const { error } = await supabase.from('budgets').update(dbUpdates).eq('id', id);
@@ -1787,6 +1824,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     addServiceObjective, updateServiceObjective, deleteServiceObjective, reorderServiceObjectives, getObjectivesForCategory, getCategoryLabel,
     hardDrives, addHardDrive, updateHardDrive, deleteHardDrive, allocateProjectToHD, removeProjectFromHD,
     legacyProjects, deleteLegacyProject, getLegacyProject, getHDForBudget,
+    budgetSchedules, setBudgetExecutionMonth,
     scoreHistory, getClientScoreHistory,
     assets, addAsset, updateAsset, deleteAsset,
     projectCards, projectColumns, updateProjectCard, deleteProjectCard, archiveProjectCards, addProjectColumn, updateProjectColumn, deleteProjectColumn, reorderProjectColumns,
@@ -1797,6 +1835,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     workspaceId, session,
     isLoading, clients, budgets, kanbanColumns, serviceCategories, serviceObjectives,
     hardDrives, legacyProjects, scoreHistory, assets, projectCards, projectColumns, clientContacts,
+    budgetSchedules,
   ]);
 
   return <CRMContext.Provider value={value}>{children}</CRMContext.Provider>;
