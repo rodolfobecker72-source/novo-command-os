@@ -24,8 +24,8 @@ Situação de cada item: ⏳ pendente · 🔧 em andamento · ✅ feito
 
 | # | Achado | Risco | Fase | Situação |
 |---|---|---|---|---|
-| 1 | Permissões por papel existem só na tela. No banco, qualquer membro lê, edita e apaga clientes, orçamentos, leads e projetos pela API, e o app carrega todos os orçamentos (com valores) no navegador de qualquer usuário. | Alto | 2 | ⏳ |
-| 2 | Arquivos de orçamentos e contratos (`budget-documents`) abertos a qualquer membro. | Alto | 2 | ⏳ |
+| 1 | Permissões por papel existem só na tela. No banco, qualquer membro lê, edita e apaga clientes, orçamentos, leads e projetos pela API, e o app carrega todos os orçamentos (com valores) no navegador de qualquer usuário. | Alto | 2 | ✅ |
+| 2 | Arquivos de orçamentos e contratos (`budget-documents`) abertos a qualquer membro. | Alto | 2 | ✅ |
 | 3 | Nada impede a empresa de ficar sem proprietário (o proprietário pode rebaixar a si mesmo) ou de ter dois. | Médio | 1 | ✅ |
 | 4 | Convites aceitam Administrador, mas criar, editar e remover membros é só do Proprietário. Decisão: só o Proprietário. | Médio | 1 | ✅ |
 | 5 | Uma pessoa, uma empresa: hoje é só suposição do código (`.single()`), sem regra no banco. Decisão: manter e travar no banco. | Baixo | 1 | ✅ |
@@ -72,7 +72,28 @@ proprietário não pode ser rebaixado nem removido; não há segundo proprietár
 não altera configurações nem convida; ninguém de fora da empresa vê os dados dela; as funções
 antigas não são mais chamáveis.
 
-Fica para a Fase 2: `team_finance_access` ainda tem duas regras de leitura sobrepostas.
+
+## Fase 2: concluída em 30/10/2026
+
+Migration `20261030020000_fase2_hierarquia` (aplicada pelo SQL Editor) e ajustes no app.
+
+| | Proprietário / Administrador | Vendedor | Time Operacional |
+|---|---|---|---|
+| Clientes, leads, orçamentos | vê, cria, edita, apaga | vê, cria, edita, não apaga | não vê |
+| Valores, metas, regras comerciais, preços, minuta, documentos de orçamento | vê | vê (sem Financeiro) | não vê |
+| Colunas do CRM, status de leads, colunas de projetos | altera | usa | usa as de projetos |
+| Projetos, atividades, agenda, Central de Mídias, Histórico | ✅ | ✅ | ✅ |
+
+O que as telas de projeto precisam do comercial vem de funções sem valores:
+`budget_schedules` (mês de execução e recorrência), `set_budget_execution_month`,
+`media_center_clients` (id e nome) e `my_finance_entries` (só os pagamentos da própria pessoa,
+se liberado). O app não pede dados comerciais para o Time Operacional e só mostra excluir e
+configurar quadros para gestores. `team_finance_access` ficou com uma única regra de leitura.
+
+Conferido no banco: o proprietário vê o mesmo de antes; o Time Operacional deixou de ver
+orçamentos, versões, clientes, contatos, histórico de score, colunas do CRM e status de leads, e
+segue com projetos, agenda e as funções acima; o vendedor edita mas não apaga cliente nem
+orçamento, não altera colunas do CRM e não vê o financeiro.
 
 ## Fases
 
