@@ -20,6 +20,8 @@
 
 ## Pendências para retomar depois
 
+A auditoria de hierarquia e escala, com as fases de correção, está em `docs/AUDITORIA.md`.
+
 1. Leitura do `.md` de identidade visual com a API da Anthropic (detalhes abaixo).
 2. Verificação de marca do app no Google (opcional; detalhes em "Google Agenda", item 5).
 3. Segurança: mover as funções auxiliares de permissão para um schema interno.
