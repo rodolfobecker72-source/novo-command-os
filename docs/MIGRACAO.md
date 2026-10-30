@@ -27,7 +27,7 @@
 | Vercel | projeto `novo-command-os`, variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` |
 | Domínio | `acesso.command-os.app.br` (DNS na Cloudflare) |
 | SMTP | Resend, remetente `nao-responda@mail.command-os.app.br`, host `smtp.resend.com:465` |
-| Administrador do sistema | `rodolfobecker72@gmail.com` (tabela `system_admins`) |
+| Administração do sistema | `https://admin.command-os.app.br`: conta própria (sem empresa), listada em `system_admins`, com verificação em duas etapas obrigatória |
 
 Chaves (Resend, Anthropic, Google) ficam só no painel do Supabase, nunca no repositório.
 

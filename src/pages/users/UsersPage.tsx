@@ -46,6 +46,7 @@ import {
 import { Pencil, Trash2, UserPlus, Crown, ShieldCheck, Briefcase, Camera, Users, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { ROLE_LABELS } from '@/config/roles';
 
 interface MemberWithProfile {
   id: string;
@@ -55,13 +56,6 @@ interface MemberWithProfile {
   email: string;
   profile: Profile | null;
 }
-
-const ROLE_LABELS: Record<AppRole, string> = {
-  owner: 'Proprietário',
-  admin: 'Administrador',
-  vendedor: 'Vendedor',
-  time_operacional: 'Time Operacional',
-};
 
 const ROLE_ICONS: Record<AppRole, typeof Crown> = {
   owner: Crown,
