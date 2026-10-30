@@ -40,10 +40,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     // not inside outlet context
   }
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const handleLogout = () => logout();
 
   const getInitials = (name: string) => {
     return name

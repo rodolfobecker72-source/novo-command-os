@@ -31,6 +31,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ClientContactsEditor, saveContactDrafts, type ContactDraft } from '@/components/client/ClientContactsEditor';
 import { syncPrimaryContact, useClientContacts } from '@/hooks/useClientContacts';
 
+
+// Select items can't have an empty value; this one clears the optional origin
+const NO_ORIGIN = 'nao_informada';
+
 export function NewClient() {
   const { addClient, isLoading: crmLoading } = useCRM();
   const { workspace } = useAuth();
@@ -86,10 +90,6 @@ export function NewClient() {
       newErrors.phone = 'Telefone é obrigatório';
     }
 
-    if (!formData.leadOrigin) {
-      newErrors.leadOrigin = 'Origem do lead é obrigatória';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -111,7 +111,7 @@ export function NewClient() {
         legalRepresentativeCpf: formData.legalRepresentativeCpf.replace(/\D/g, ''),
         email: formData.email.trim(),
         phone: formData.phone.replace(/\D/g, ''),
-        leadOrigin: formData.leadOrigin as LeadOrigin,
+        leadOrigin: formData.leadOrigin || null,
         sector: formData.sector || '',
         score: 0,
         address: formData.address,
@@ -339,19 +339,18 @@ export function NewClient() {
 
                 {/* Lead Origin */}
                 <div className="space-y-2">
-                  <Label htmlFor="leadOrigin">Origem do Lead *</Label>
+                  <Label htmlFor="leadOrigin">Origem do Lead</Label>
                   <Select
-                    value={formData.leadOrigin}
+                    value={formData.leadOrigin || NO_ORIGIN}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, leadOrigin: value as LeadOrigin })
+                      setFormData({ ...formData, leadOrigin: value === NO_ORIGIN ? '' : (value as LeadOrigin) })
                     }
                   >
-                    <SelectTrigger
-                      className={errors.leadOrigin ? 'border-destructive' : ''}
-                    >
+                    <SelectTrigger>
                       <SelectValue placeholder="Selecione a origem" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value={NO_ORIGIN}>Não informada</SelectItem>
                       {Object.entries(LEAD_ORIGIN_LABELS).map(([value, label]) => (
                         <SelectItem key={value} value={value}>
                           {label}
@@ -359,9 +358,6 @@ export function NewClient() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.leadOrigin && (
-                    <p className="text-sm text-destructive">{errors.leadOrigin}</p>
-                  )}
                 </div>
 
                 {/* Legal Representative */}

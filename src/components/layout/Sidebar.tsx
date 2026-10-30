@@ -30,7 +30,6 @@ import {
 import commandLogo from '@/assets/command-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { APP_PAGES } from '@/config/pages';
-import { useNavigate } from 'react-router-dom';
 
 interface NavGroup {
   label: string;
@@ -94,7 +93,6 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { hasPageAccess, role, profile, logout } = useAuth();
 
   const isParentActive = (href: string) => location.pathname.startsWith(href);
@@ -115,10 +113,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     onNavigate?.();
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const handleLogout = () => logout();
 
   const getInitials = (name: string) =>
     name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
