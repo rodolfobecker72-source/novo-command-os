@@ -47,6 +47,7 @@ import { Pencil, Trash2, UserPlus, Crown, ShieldCheck, Briefcase, Camera, Users,
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { ROLE_LABELS } from '@/config/roles';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface MemberWithProfile {
   id: string;
@@ -75,6 +76,8 @@ export function UsersPage() {
   const { workspace, role: currentRole } = useAuth();
   const [members, setMembers] = useState<MemberWithProfile[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const { data: subscription } = useSubscription();
+  const atUserLimit = !!subscription?.maxUsers && members.length >= subscription.maxUsers;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<MemberWithProfile | null>(null);
   const [deletingMember, setDeletingMember] = useState<MemberWithProfile | null>(null);
@@ -378,14 +381,16 @@ export function UsersPage() {
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Membros ({members.length})</CardTitle>
+            <CardTitle>
+              Membros ({members.length}{subscription?.maxUsers ? ` de ${subscription.maxUsers} do plano` : ''})
+            </CardTitle>
             {canManage && (
               <Dialog open={isCreateOpen} onOpenChange={(open) => {
                 setIsCreateOpen(open);
                 if (!open) setCreateForm({ name: '', email: '', password: '', role: 'vendedor', birthDate: '' });
               }}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button disabled={atUserLimit} title={atUserLimit ? 'Limite de usuários do plano atingido' : undefined}>
                     <UserPlus className="w-4 h-4 mr-2" />
                     Novo Membro
                   </Button>

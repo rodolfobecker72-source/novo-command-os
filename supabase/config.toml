@@ -38,3 +38,14 @@ verify_jwt = false
 
 [functions.google-calendar-worker]
 verify_jwt = false
+
+# Cobrança (Asaas): as funções do proprietário validam o login; o webhook valida o
+# token asaas-access-token configurado no Asaas.
+[functions.billing-checkout]
+verify_jwt = false
+
+[functions.billing-cancel]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false

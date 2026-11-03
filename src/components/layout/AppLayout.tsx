@@ -5,6 +5,7 @@ import { ScrollToTop } from './ScrollToTop';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { SubscriptionBanner } from '@/components/billing/SubscriptionBanner';
 
 export function AppLayout() {
   const isMobile = useIsMobile();
@@ -27,6 +28,7 @@ export function AppLayout() {
       )}
 
       <main className={`min-h-screen ${isMobile ? 'ml-0' : 'ml-64'}`}>
+        <SubscriptionBanner />
         <ErrorBoundary key={location.pathname}>
           <Outlet context={{ onOpenMobileMenu: () => setMobileOpen(true) }} />
         </ErrorBoundary>

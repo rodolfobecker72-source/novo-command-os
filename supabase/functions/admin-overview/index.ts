@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
     type OverviewUser = { user_id: string; last_seen_at: string | null };
     type OverviewWorkspace = {
       users: OverviewUser[];
+      subscription: { status: string; access: string; price: number } | null;
       last_seen_at: string | null;
       clients: number;
       budgets: number;
@@ -133,6 +134,13 @@ Deno.serve(async (req) => {
       budgets: sum("budgets"),
       leads: sum("leads"),
       projects: sum("projects"),
+      // Billing: paying = active or within the grace period of an unpaid invoice
+      paying: workspaces.filter((w) => w.subscription && ["active", "past_due"].includes(w.subscription.status)).length,
+      trialing: workspaces.filter((w) => w.subscription?.status === "trialing").length,
+      readOnly: workspaces.filter((w) => w.subscription?.access === "read_only").length,
+      mrr: workspaces
+        .filter((w) => w.subscription && ["active", "past_due"].includes(w.subscription.status))
+        .reduce((acc, w) => acc + Number(w.subscription!.price ?? 0), 0),
       landingLeads: landingLeads?.length ?? 0,
       feedback: feedback?.length ?? 0,
       openFeedback: (feedback ?? []).filter((f) => f.status === "aberto").length,

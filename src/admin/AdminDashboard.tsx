@@ -12,6 +12,9 @@ import {
   RefreshCw,
   Activity,
   Search,
+  CreditCard,
+  Lock,
+  TrendingUp,
 } from 'lucide-react';
 import { invokeFunction } from '@/lib/edgeFunctions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +45,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ROLE_LABELS } from '@/config/roles';
+import { formatCurrency } from '@/types/crm';
 import type { AppRole } from '@/contexts/AuthContext';
 
 interface WorkspaceUser {
@@ -62,6 +66,7 @@ interface WorkspaceStat {
   active_users: number;
   last_seen_at: string | null;
   active: boolean;
+  subscription: { status: string; access: string; trial_ends_at: string; current_period_end: string | null; price: number } | null;
   clients: number;
   budgets: number;
   leads: number;
@@ -105,6 +110,13 @@ const fmtDate = (v?: string | null) =>
 
 const fmtDateTime = (v?: string | null) =>
   v ? new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Nunca';
+
+const SUBSCRIPTION_LABEL: Record<string, string> = {
+  trialing: 'Teste grátis',
+  active: 'Pagante',
+  past_due: 'Pagamento pendente',
+  canceled: 'Cancelada',
+};
 
 const TYPE_LABEL: Record<string, string> = {
   bug: 'Erro',
@@ -223,6 +235,23 @@ export function AdminDashboard() {
           <StatCard icon={Activity} label="Usuários ativos (30 dias)" value={t.activeUsers} />
         </div>
 
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard icon={CreditCard} label="Empresas pagantes" value={t.paying} />
+          <StatCard icon={Sparkles} label="Em teste grátis" value={t.trialing} />
+          <StatCard icon={Lock} label="Em somente leitura" value={t.readOnly} />
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl font-bold leading-none">{formatCurrency(t.mrr ?? 0)}</p>
+                <p className="text-xs text-muted-foreground truncate">Receita mensal recorrente</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <StatCard icon={Users} label="Clientes das empresas" value={t.clients} />
           <StatCard icon={FileText} label="Orçamentos" value={t.budgets} />
@@ -287,6 +316,13 @@ export function AdminDashboard() {
                               </div>
                               <div className="flex flex-wrap items-center gap-2 shrink-0">
                                 <Badge variant={w.active ? 'default' : 'outline'}>{w.active ? 'Ativa' : 'Inativa'}</Badge>
+                                {w.subscription && (
+                                  <Badge variant={w.subscription.access === 'read_only' ? 'destructive' : 'secondary'}>
+                                    {w.subscription.access === 'read_only'
+                                      ? 'Somente leitura'
+                                      : SUBSCRIPTION_LABEL[w.subscription.status] ?? w.subscription.status}
+                                  </Badge>
+                                )}
                                 <Badge variant="secondary">
                                   {w.active_users} de {w.user_count} {w.user_count === 1 ? 'usuário ativo' : 'usuários ativos'}
                                 </Badge>
