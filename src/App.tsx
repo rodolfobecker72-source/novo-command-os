@@ -42,6 +42,7 @@ import MyFinancePage from "@/pages/MyFinancePage";
 import { WelcomePage } from "@/pages/welcome/WelcomePage";
 import { MyCalendarPage } from "@/pages/welcome/MyCalendarPage";
 import GoogleCalendarCallback from "@/pages/GoogleCalendarCallback";
+import { SubscriptionPage } from '@/pages/settings/SubscriptionPage';
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import TermsOfUse from "@/pages/legal/TermsOfUse";
 
@@ -122,6 +123,7 @@ const App = () => (
 
                   {/* Users */}
                   <Route path="/usuarios" element={<PageGuard pageKey="usuarios"><UsersPage /></PageGuard>} />
+                  <Route path="/assinatura" element={<PageGuard pageKey="assinatura"><SubscriptionPage /></PageGuard>} />
                   
                   {/* Settings */}
                   <Route path="/configuracoes/regras-comerciais" element={<PageGuard pageKey="regras-comerciais"><CommercialRulesPage /></PageGuard>} />

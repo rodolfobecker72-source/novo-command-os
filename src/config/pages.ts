@@ -43,6 +43,7 @@ export const APP_PAGES: AppPage[] = [
 
   // Sistema
   { key: 'usuarios', label: 'Usuários', href: '/usuarios', group: 'Sistema', restrictedFrom: ['admin', 'vendedor', 'time_operacional'] },
+  { key: 'assinatura', label: 'Assinatura', href: '/assinatura', group: 'Sistema', restrictedFrom: ['admin', 'vendedor', 'time_operacional'] },
 ];
 
 // Get all page keys (useful for setting "all access" by default)
