@@ -89,7 +89,9 @@ export function SubscriptionPage() {
   }
 
   const info = statusInfo(sub);
-  const canSubscribe = !sub.hasCard || sub.status === 'canceled' || sub.access === 'read_only';
+  const canSubscribe = !sub.hasCard || sub.status === 'canceled';
+  // Card on file but a charge failed: pay it on its Asaas page
+  const canPayPending = sub.hasCard && sub.status === 'past_due';
   const canCancel = sub.hasCard && (sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due');
   const waiting = returnedFromCheckout && !sub.hasCard;
 
@@ -135,6 +137,12 @@ export function SubscriptionPage() {
                 <Button onClick={subscribe} disabled={busy || waiting}>
                   {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                   {sub.status === 'trialing' && sub.access === 'full' ? 'Assinar agora' : 'Assinar'}
+                </Button>
+              )}
+              {canPayPending && (
+                <Button onClick={subscribe} disabled={busy}>
+                  {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
+                  Pagar mensalidade pendente
                 </Button>
               )}
               {canCancel && (

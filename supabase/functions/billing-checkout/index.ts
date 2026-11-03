@@ -19,11 +19,13 @@ Deno.serve(async (req) => {
 
     const { data: sub, error } = await admin
       .from("workspace_subscriptions")
-      .select("status, trial_ends_at, asaas_subscription_id, billing_plans(name, price)")
+      .select("status, trial_ends_at, asaas_subscription_id, checkout_url, billing_plans(name, price)")
       .eq("workspace_id", workspaceId)
       .single();
     if (error || !sub) throw error ?? new Error("subscription row missing");
-    if (sub.asaas_subscription_id && (sub.status === "active" || sub.status === "past_due")) {
+    if (sub.asaas_subscription_id && sub.status !== "canceled") {
+      // Overdue charge: pay it on its Asaas page instead of starting a second subscription
+      if (sub.status === "past_due" && sub.checkout_url) return jsonResponse({ url: sub.checkout_url });
       return jsonResponse({ error: "A assinatura já está ativa." }, 409);
     }
     const plan = sub.billing_plans as unknown as { name: string; price: number };
