@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, CreditCard, Loader2, Lock, Users } from 'lucide-react';
+import { CheckCircle2, CreditCard, Loader2, Lock, MessageCircle, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { formatCurrency } from '@/types/crm';
 import { invokeFunction } from '@/lib/edgeFunctions';
 import { daysUntil, Subscription, useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/contexts/AuthContext';
+import { CANCELLATION_REASONS, CancellationReason, supportWhatsAppUrl } from '@/config/cancellation';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const fmtDate = (d: Date | null) => (d ? d.toLocaleDateString('pt-BR') : '—');
 
@@ -41,6 +43,12 @@ export function SubscriptionPage() {
   const [params, setParams] = useSearchParams();
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [reason, setReason] = useState<CancellationReason | ''>('');
+  const [note, setNote] = useState('');
+  const { workspace } = useAuth();
+  const whatsappUrl = supportWhatsAppUrl(
+    `Olá! Quero cancelar a assinatura do Command OS${workspace?.name ? ` da empresa ${workspace.name}` : ''}.`,
+  );
 
   // Back from Asaas: the confirmation arrives by webhook a few seconds later
   const returnedFromCheckout = params.get('retorno') === 'sucesso';
@@ -67,14 +75,15 @@ export function SubscriptionPage() {
   };
 
   const cancel = async () => {
-    setConfirmCancel(false);
+    if (!reason) return;
     setBusy(true);
-    const { error } = await invokeFunction('billing-cancel');
+    const { error } = await invokeFunction('billing-cancel', { body: { reason, note } });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+    setConfirmCancel(false);
     toast.success('Assinatura cancelada.');
     queryClient.invalidateQueries({ queryKey: ['subscription'] });
   };
@@ -164,23 +173,58 @@ export function SubscriptionPage() {
         </Card>
       </div>
 
-      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancelar a assinatura?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Não haverá novas cobranças. A empresa continua com acesso completo até {fmtDate(sub.status === 'trialing' ? sub.trialEndsAt : sub.currentPeriodEnd ?? sub.trialEndsAt)} e
-              depois passa para somente leitura. Dá para assinar de novo quando quiser.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction onClick={cancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Cancelar assinatura
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar a assinatura</DialogTitle>
+            <DialogDescription>
+              Antes de ir, conta pra gente o motivo. Isso nos ajuda a melhorar o Command OS.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <RadioGroup value={reason} onValueChange={(v) => setReason(v as CancellationReason)} className="space-y-2">
+              {CANCELLATION_REASONS.map((r) => (
+                <div key={r.value} className="flex items-center gap-2">
+                  <RadioGroupItem id={`motivo-${r.value}`} value={r.value} />
+                  <Label htmlFor={`motivo-${r.value}`} className="font-normal cursor-pointer">{r.label}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+            <Textarea
+              placeholder="Quer contar mais? (opcional)"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={2000}
+              rows={3}
+            />
+
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <p className="text-sm">Prefere conversar antes? A gente pode ajudar a resolver.</p>
+              <Button variant="outline" size="sm" asChild>
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Falar com a gente no WhatsApp
+                </a>
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Não haverá novas cobranças. A empresa continua com acesso completo até{' '}
+              {fmtDate(sub.status === 'trialing' ? sub.trialEndsAt : sub.currentPeriodEnd ?? sub.trialEndsAt)} e depois passa para
+              somente leitura. Dá para assinar de novo quando quiser.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmCancel(false)}>Voltar</Button>
+            <Button variant="destructive" onClick={cancel} disabled={!reason || busy}>
+              {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
