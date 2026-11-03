@@ -46,6 +46,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ROLE_LABELS } from '@/config/roles';
 import { formatCurrency } from '@/types/crm';
+import { CANCELLATION_REASON_LABEL } from '@/config/cancellation';
 import type { AppRole } from '@/contexts/AuthContext';
 
 interface WorkspaceUser {
@@ -98,11 +99,21 @@ interface FeedbackItem {
   imageUrls: string[];
 }
 
+interface Cancellation {
+  id: string;
+  workspace_id: string;
+  workspace_name: string;
+  reason: string;
+  note: string;
+  created_at: string;
+}
+
 interface Overview {
   totals: Record<string, number>;
   workspaces: WorkspaceStat[];
   landingLeads: LandingLead[];
   feedback: FeedbackItem[];
+  cancellations: Cancellation[];
 }
 
 const fmtDate = (v?: string | null) =>
@@ -265,6 +276,7 @@ export function AdminDashboard() {
             <TabsTrigger value="empresas">Empresas ({data?.workspaces.length ?? 0})</TabsTrigger>
             <TabsTrigger value="leads">Leads do site ({data?.landingLeads.length ?? 0})</TabsTrigger>
             <TabsTrigger value="reports">Reports ({data?.feedback.length ?? 0})</TabsTrigger>
+            <TabsTrigger value="cancelamentos">Cancelamentos ({data?.cancellations?.length ?? 0})</TabsTrigger>
           </TabsList>
 
           {/* Empresas */}
@@ -410,6 +422,46 @@ export function AdminDashboard() {
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                           Nenhum cadastro ainda.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Cancelamentos */}
+          <TabsContent value="cancelamentos" className="mt-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Motivos de cancelamento</CardTitle>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Empresa</TableHead>
+                      <TableHead>Motivo</TableHead>
+                      <TableHead>Comentário</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(data?.cancellations ?? []).map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="whitespace-nowrap">{fmtDate(c.created_at)}</TableCell>
+                        <TableCell className="font-medium">{c.workspace_name || '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{CANCELLATION_REASON_LABEL[c.reason] ?? c.reason}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-pre-wrap min-w-[200px]">{c.note || '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                    {(data?.cancellations?.length ?? 0) === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          Nenhum cancelamento.
                         </TableCell>
                       </TableRow>
                     )}

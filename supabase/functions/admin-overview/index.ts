@@ -110,6 +110,21 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(200);
 
+    // --- Cancelamentos (motivo informado pelo proprietário) ---
+    const { data: cancellationRows } = await admin
+      .from("subscription_cancellations")
+      .select("id, workspace_id, reason, note, created_at, workspaces(name)")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    const cancellations = (cancellationRows ?? []).map((c) => ({
+      id: c.id,
+      workspace_id: c.workspace_id,
+      workspace_name: (c.workspaces as unknown as { name: string } | null)?.name ?? "",
+      reason: c.reason,
+      note: c.note,
+      created_at: c.created_at,
+    }));
+
     // All attachment links in one request
     const allPaths = (feedback ?? []).flatMap((f) => (Array.isArray(f.images) ? (f.images as string[]) : []));
     const signedByPath = new Map<string, string>();
@@ -151,6 +166,7 @@ Deno.serve(async (req) => {
       workspaces: workspaceStats,
       landingLeads: landingLeads ?? [],
       feedback: signedFeedback,
+      cancellations,
     });
   } catch (err) {
     console.error("[admin-overview]", err);
