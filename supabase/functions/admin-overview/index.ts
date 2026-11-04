@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       projects: number;
     };
     const workspaces = (overview?.workspaces ?? []) as OverviewWorkspace[];
-    const workspaceStats = workspaces.map((w) => ({ ...w, active: isActive(w.last_seen_at) }));
+    const workspaceStats = workspaces.map((w) => ({ ...w, active: isActive(w.last_seen_at), ai_uses_30d: 0 }));
 
     const activeUsers = new Set<string>();
     for (const w of workspaces) {
@@ -125,6 +125,22 @@ Deno.serve(async (req) => {
       created_at: c.created_at,
     }));
 
+    // --- Uso de IA nos últimos 30 dias (Claude Haiku 5.5: US$ 0,10 / 0,50 por milhão de tokens) ---
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: aiRows } = await admin
+      .from("ai_usage")
+      .select("workspace_id, input_tokens, output_tokens")
+      .gte("created_at", since)
+      .limit(100000);
+    const aiByWorkspace = new Map<string, number>();
+    let aiInput = 0;
+    let aiOutput = 0;
+    for (const r of aiRows ?? []) {
+      aiByWorkspace.set(r.workspace_id, (aiByWorkspace.get(r.workspace_id) ?? 0) + 1);
+      aiInput += r.input_tokens ?? 0;
+      aiOutput += r.output_tokens ?? 0;
+    }
+
     // All attachment links in one request
     const allPaths = (feedback ?? []).flatMap((f) => (Array.isArray(f.images) ? (f.images as string[]) : []));
     const signedByPath = new Map<string, string>();
@@ -159,7 +175,10 @@ Deno.serve(async (req) => {
       landingLeads: landingLeads?.length ?? 0,
       feedback: feedback?.length ?? 0,
       openFeedback: (feedback ?? []).filter((f) => f.status === "aberto").length,
+      aiUses30d: aiRows?.length ?? 0,
+      aiCostUsd30d: Math.round(((aiInput * 0.10 + aiOutput * 0.50) / 1_000_000) * 100) / 100,
     };
+    for (const w of workspaceStats) w.ai_uses_30d = aiByWorkspace.get((w as unknown as { id: string }).id) ?? 0;
 
     return json({
       totals,

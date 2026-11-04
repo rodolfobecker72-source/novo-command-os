@@ -67,6 +67,7 @@ interface WorkspaceStat {
   active_users: number;
   last_seen_at: string | null;
   active: boolean;
+  ai_uses_30d: number;
   subscription: { status: string; access: string; trial_ends_at: string; current_period_end: string | null; price: number } | null;
   clients: number;
   budgets: number;
@@ -271,6 +272,10 @@ export function AdminDashboard() {
           <StatCard icon={MessageSquareWarning} label="Reports abertos" value={t.openFeedback} />
         </div>
 
+        <p className="text-xs text-muted-foreground">
+          IA nos últimos 30 dias: {t.aiUses30d ?? 0} usos de "Melhorar com IA", custo estimado de US$ {(t.aiCostUsd30d ?? 0).toFixed(2)}.
+        </p>
+
         <Tabs defaultValue="empresas">
           <TabsList className="w-full overflow-x-auto justify-start">
             <TabsTrigger value="empresas">Empresas ({data?.workspaces.length ?? 0})</TabsTrigger>
@@ -349,6 +354,7 @@ export function AdminDashboard() {
                               <Badge variant="outline">{w.budgets} orçamentos</Badge>
                               <Badge variant="outline">{w.leads} leads</Badge>
                               <Badge variant="outline">{w.projects} projetos</Badge>
+                              <Badge variant="outline">{w.ai_uses_30d ?? 0} usos de IA (30 dias)</Badge>
                             </div>
                             <div className="overflow-x-auto">
                               <Table>
