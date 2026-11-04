@@ -19,21 +19,35 @@ import { Textarea } from '@/components/ui/textarea';
 
 const fmtDate = (d: Date | null) => (d ? d.toLocaleDateString('pt-BR') : '—');
 
-function statusInfo(sub: Subscription): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; detail: string } {
+// Light tint so the customer sees the state at a glance: green all good,
+// yellow trial or waiting, red overdue or no charges happening
+type Tone = 'ok' | 'pending' | 'problem';
+const TONE_CARD: Record<Tone, string> = {
+  ok: 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20',
+  pending: 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20',
+  problem: 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20',
+};
+const TONE_BADGE: Record<Tone, string> = {
+  ok: 'border-transparent bg-emerald-600 text-white hover:bg-emerald-600',
+  pending: 'border-transparent bg-amber-500 text-white hover:bg-amber-500',
+  problem: 'border-transparent bg-red-600 text-white hover:bg-red-600',
+};
+
+function statusInfo(sub: Subscription): { label: string; tone: Tone; detail: string } {
   if (sub.access === 'read_only') {
-    return { label: 'Somente leitura', variant: 'destructive', detail: 'Assine para voltar a criar e editar.' };
+    return { label: 'Somente leitura', tone: 'problem', detail: 'Assine para voltar a criar e editar.' };
   }
   switch (sub.status) {
     case 'trialing':
       return sub.hasCard
-        ? { label: 'Assinada', variant: 'default', detail: `A primeira cobrança acontece em ${fmtDate(sub.trialEndsAt)}, no fim do teste.` }
-        : { label: 'Teste grátis', variant: 'secondary', detail: `Termina em ${fmtDate(sub.trialEndsAt)} (${daysUntil(sub.trialEndsAt)} dias).` };
+        ? { label: 'Assinada', tone: 'ok', detail: `A primeira cobrança acontece em ${fmtDate(sub.trialEndsAt)}, no fim do teste.` }
+        : { label: 'Teste grátis', tone: 'pending', detail: `Termina em ${fmtDate(sub.trialEndsAt)} (${daysUntil(sub.trialEndsAt)} dias).` };
     case 'active':
-      return { label: 'Ativa', variant: 'default', detail: `Próxima cobrança em ${fmtDate(sub.currentPeriodEnd)}, no cartão cadastrado.` };
+      return { label: 'Ativa', tone: 'ok', detail: `Próxima cobrança em ${fmtDate(sub.currentPeriodEnd)}, no cartão cadastrado.` };
     case 'past_due':
-      return { label: 'Pagamento pendente', variant: 'destructive', detail: `Regularize até ${fmtDate(sub.readOnlyAt)} para não passar a somente leitura.` };
+      return { label: 'Pagamento em atraso', tone: 'problem', detail: `Regularize até ${fmtDate(sub.readOnlyAt)} para não passar a somente leitura.` };
     case 'canceled':
-      return { label: 'Cancelada', variant: 'outline', detail: `Acesso completo até ${fmtDate(sub.readOnlyAt)}.` };
+      return { label: 'Cancelada', tone: 'problem', detail: `Sem cobranças. Acesso completo até ${fmtDate(sub.readOnlyAt)}.` };
   }
 }
 
@@ -103,16 +117,18 @@ export function SubscriptionPage() {
   const canPayPending = sub.hasCard && sub.status === 'past_due';
   const canCancel = sub.hasCard && (sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due');
   const waiting = returnedFromCheckout && !sub.hasCard;
+  // Payment sent but not confirmed yet: still pending
+  const tone: Tone = waiting ? 'pending' : info.tone;
 
   return (
     <>
       <Header title="Assinatura" subtitle="Plano e pagamento do Command OS" />
       <div className="p-4 md:p-6 max-w-3xl space-y-4">
-        <Card>
+        <Card className={TONE_CARD[tone]}>
           <CardHeader className="pb-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-base">{sub.planName}</CardTitle>
-              <Badge variant={info.variant}>{info.label}</Badge>
+              <Badge className={TONE_BADGE[tone]}>{info.label}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
