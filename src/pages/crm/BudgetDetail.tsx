@@ -2348,7 +2348,15 @@ export function BudgetDetail() {
                                                   </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                  <Label>Descrição</Label>
+                                                  <div className="flex items-center justify-between gap-2">
+                                                    <Label>Descrição</Label>
+                                                    <ImproveWithAiButton
+                                                      kind="service"
+                                                      serviceName={service.serviceType}
+                                                      text={service.description}
+                                                      onAccept={(t) => updateNewVersionService(service.id, { description: t })}
+                                                    />
+                                                  </div>
                                                   <Textarea
                                                     value={service.description}
                                                     onChange={(e) =>
