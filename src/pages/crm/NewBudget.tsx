@@ -88,6 +88,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImproveWithAiButton } from '@/components/ai/ImproveWithAiButton';
 
 const SERVICE_ICONS: Record<string, typeof Film> = {
   CINE: Film,
@@ -694,7 +695,14 @@ export function NewBudget() {
 
                   {/* Project Description */}
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="projectDescription">Briefing do Projeto</Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Label htmlFor="projectDescription">Briefing do Projeto</Label>
+                      <ImproveWithAiButton
+                        kind="briefing"
+                        text={formData.projectDescription}
+                        onAccept={(t) => setFormData((prev) => ({ ...prev, projectDescription: t }))}
+                      />
+                    </div>
                     <Textarea
                       id="projectDescription"
                       placeholder="Descreva o projeto de forma geral..."
@@ -1006,7 +1014,15 @@ export function NewBudget() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Descrição do Serviço</Label>
+                          <div className="flex items-center justify-between gap-2">
+                            <Label>Descrição do Serviço</Label>
+                            <ImproveWithAiButton
+                              kind="service"
+                              serviceName={service.serviceType}
+                              text={service.description}
+                              onAccept={(t) => updateService(service.id, { description: t })}
+                            />
+                          </div>
                           <Textarea
                             placeholder="Descreva os detalhes deste serviço..."
                             value={service.description}

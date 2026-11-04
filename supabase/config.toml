@@ -49,3 +49,7 @@ verify_jwt = false
 
 [functions.asaas-webhook]
 verify_jwt = false
+
+# IA: valida o login e o papel no workspace por conta própria.
+[functions.ai-improve-text]
+verify_jwt = false

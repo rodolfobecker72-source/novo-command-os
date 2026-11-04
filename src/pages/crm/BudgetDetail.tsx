@@ -126,6 +126,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { isManagerRole } from '@/config/permissions';
+import { ImproveWithAiButton } from '@/components/ai/ImproveWithAiButton';
 
 const SERVICE_ICONS: Record<string, typeof Film> = {
   CINE: Film,
@@ -1300,7 +1301,16 @@ export function BudgetDetail() {
 
                     {/* Descrição Geral do Projeto */}
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Briefing do Projeto</p>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="text-sm text-muted-foreground">Briefing do Projeto</p>
+                        {isEditing && (
+                          <ImproveWithAiButton
+                            kind="briefing"
+                            text={editedProjectDescription}
+                            onAccept={setEditedProjectDescription}
+                          />
+                        )}
+                      </div>
                       {isEditing ? (
                         <Textarea
                           value={editedProjectDescription}
@@ -1784,13 +1794,23 @@ export function BudgetDetail() {
                                 )}
                               </div>
                               {isEditingVersion && (
-                                <Textarea
-                                  value={service.description}
-                                  onChange={(e) => updateEditService(service.id, { description: e.target.value })}
-                                  placeholder="Descrição do serviço..."
-                                  rows={3}
-                                  className="mt-3 w-full"
-                                />
+                                <div className="mt-3 space-y-1">
+                                  <div className="flex justify-end">
+                                    <ImproveWithAiButton
+                                      kind="service"
+                                      serviceName={service.serviceType}
+                                      text={service.description}
+                                      onAccept={(t) => updateEditService(service.id, { description: t })}
+                                    />
+                                  </div>
+                                  <Textarea
+                                    value={service.description}
+                                    onChange={(e) => updateEditService(service.id, { description: e.target.value })}
+                                    placeholder="Descrição do serviço..."
+                                    rows={3}
+                                    className="w-full"
+                                  />
+                                </div>
                               )}
                             </CardHeader>
                             <CardContent>
