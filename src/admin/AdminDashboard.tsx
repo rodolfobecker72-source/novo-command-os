@@ -128,6 +128,7 @@ const SUBSCRIPTION_LABEL: Record<string, string> = {
   active: 'Pagante',
   past_due: 'Pagamento pendente',
   canceled: 'Cancelada',
+  courtesy: 'Cortesia',
 };
 
 const TYPE_LABEL: Record<string, string> = {

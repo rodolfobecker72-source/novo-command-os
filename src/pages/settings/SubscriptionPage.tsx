@@ -48,6 +48,8 @@ function statusInfo(sub: Subscription): { label: string; tone: Tone; detail: str
       return { label: 'Pagamento em atraso', tone: 'problem', detail: `Regularize até ${fmtDate(sub.readOnlyAt)} para não passar a somente leitura.` };
     case 'canceled':
       return { label: 'Cancelada', tone: 'problem', detail: `Sem cobranças. Acesso completo até ${fmtDate(sub.readOnlyAt)}.` };
+    case 'courtesy':
+      return { label: 'Cortesia', tone: 'ok', detail: 'Acesso completo, sem cobrança. Cortesia do Command OS.' };
   }
 }
 
@@ -112,7 +114,8 @@ export function SubscriptionPage() {
   }
 
   const info = statusInfo(sub);
-  const canSubscribe = !sub.hasCard || sub.status === 'canceled';
+  const courtesy = sub.status === 'courtesy';
+  const canSubscribe = !courtesy && (!sub.hasCard || sub.status === 'canceled');
   // Card on file but a charge failed: pay it on its Asaas page
   const canPayPending = sub.hasCard && sub.status === 'past_due';
   const canCancel = sub.hasCard && (sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due');
@@ -133,10 +136,17 @@ export function SubscriptionPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-3xl font-bold">
-                {formatCurrency(sub.price)}
-                <span className="text-sm font-normal text-muted-foreground"> /mês</span>
-              </p>
+              {courtesy ? (
+                <p className="text-3xl font-bold">
+                  Cortesia
+                  <span className="text-sm font-normal text-muted-foreground"> sem cobrança</span>
+                </p>
+              ) : (
+                <p className="text-3xl font-bold">
+                  {formatCurrency(sub.price)}
+                  <span className="text-sm font-normal text-muted-foreground"> /mês</span>
+                </p>
+              )}
               <p className="text-sm text-muted-foreground mt-1">{info.detail}</p>
             </div>
 
@@ -145,10 +155,12 @@ export function SubscriptionPage() {
                 <Users className="w-4 h-4 text-muted-foreground" />
                 {sub.memberCount} de {sub.maxUsers ?? '∞'} usuários
               </span>
-              <span className="flex items-center gap-1.5">
-                <CreditCard className="w-4 h-4 text-muted-foreground" />
-                Cartão de crédito, cobrança mensal automática
-              </span>
+              {!courtesy && (
+                <span className="flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-muted-foreground" />
+                  Cartão de crédito, cobrança mensal automática
+                </span>
+              )}
             </div>
 
             {waiting && (
@@ -181,10 +193,12 @@ export function SubscriptionPage() {
                 Assinando durante o teste, a primeira cobrança só acontece quando o teste terminar.
               </p>
             )}
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Lock className="w-3 h-3" />
-              O cartão é digitado na página segura do Asaas; o Command OS não recebe os dados do cartão.
-            </p>
+            {!courtesy && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Lock className="w-3 h-3" />
+                O cartão é digitado na página segura do Asaas; o Command OS não recebe os dados do cartão.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
