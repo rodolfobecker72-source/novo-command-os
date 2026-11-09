@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled';
+/** courtesy: full access with no charge, granted by the Command OS team */
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'courtesy';
 
 export interface Subscription {
   status: SubscriptionStatus;

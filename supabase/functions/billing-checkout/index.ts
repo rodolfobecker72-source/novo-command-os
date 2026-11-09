@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
       .eq("workspace_id", workspaceId)
       .single();
     if (error || !sub) throw error ?? new Error("subscription row missing");
+    if (sub.status === "courtesy") return jsonResponse({ error: "Esta empresa tem cortesia: não há o que pagar." }, 409);
     if (sub.asaas_subscription_id && sub.status !== "canceled") {
       // Overdue charge: pay it on its Asaas page instead of starting a second subscription
       if (sub.status === "past_due" && sub.checkout_url) return jsonResponse({ url: sub.checkout_url });
