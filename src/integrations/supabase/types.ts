@@ -1925,6 +1925,12 @@ export type Database = {
           updated_at: string
           validity_text: string
           website: string
+          corner_style: string
+          cover_image_url: string | null
+          cover_style: string
+          next_steps: Json | null
+          proposal_style: string
+          whatsapp: string | null
           workspace_id: string
         }
         Insert: {
@@ -1959,6 +1965,12 @@ export type Database = {
           updated_at?: string
           validity_text?: string
           website?: string
+          corner_style?: string
+          cover_image_url?: string | null
+          cover_style?: string
+          next_steps?: Json | null
+          proposal_style?: string
+          whatsapp?: string | null
           workspace_id: string
         }
         Update: {
@@ -1993,6 +2005,12 @@ export type Database = {
           updated_at?: string
           validity_text?: string
           website?: string
+          corner_style?: string
+          cover_image_url?: string | null
+          cover_style?: string
+          next_steps?: Json | null
+          proposal_style?: string
+          whatsapp?: string | null
           workspace_id?: string
         }
         Relationships: [

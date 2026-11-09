@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
+import { normalizeNextSteps } from '@/utils/proposalStyle';
 
 /** Workspace "Layout da Proposta" settings in the shape the PDF generators expect. */
 export async function fetchLayoutSettings(workspaceId: string | undefined | null): Promise<PDFLayoutSettings | null> {
@@ -32,6 +33,12 @@ export async function fetchLayoutSettings(workspaceId: string | undefined | null
       companyCnpj: d.company_cnpj || '',
       companyAddress: d.company_address || '',
       companyCityLine: d.company_city_line || '',
+      proposalStyle: d.proposal_style === 'moderno' ? 'moderno' : 'classico',
+      coverStyle: d.cover_style || 'cor',
+      coverImageUrl: d.cover_image_url || undefined,
+      cornerStyle: d.corner_style || 'arredondado',
+      nextSteps: d.next_steps ? normalizeNextSteps(d.next_steps) : null,
+      whatsapp: d.whatsapp || '',
     };
   } catch (err) {
     console.warn('Could not load layout settings:', err);

@@ -86,3 +86,8 @@ export const BRAND_COLOR_FIELDS = [
 ] as const;
 
 export type BrandColorKey = (typeof BRAND_COLOR_FIELDS)[number]['key'];
+
+/** Blend of `a` toward `b` (t = 0 keeps `a`, t = 1 gives `b`). */
+export function mix(a: RGB, b: RGB, t: number): RGB {
+  return [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * t)) as RGB;
+}

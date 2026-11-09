@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,17 @@ import { toast } from 'sonner';
 import { Upload, Save, Trash2, ImageIcon, FileText, Palette, Download, RotateCcw } from 'lucide-react';
 import { BRAND_COLOR_FIELDS, resolveTheme, rgbToHex, type BrandColorKey, type BrandTheme } from '@/utils/pdfTheme';
 import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
+import { DEFAULT_NEXT_STEPS, normalizeNextSteps } from '@/utils/proposalStyle';
+import { ProposalStyleCard, type ProposalStyleOptions } from '@/components/settings/ProposalStyleCard';
+
+const DEFAULT_STYLE: ProposalStyleOptions = {
+  proposalStyle: 'classico',
+  coverStyle: 'cor',
+  coverImageUrl: '',
+  cornerStyle: 'arredondado',
+  nextSteps: DEFAULT_NEXT_STEPS,
+  whatsapp: '',
+};
 
 interface LayoutData {
   logoUrl: string;
@@ -70,6 +82,7 @@ export function LayoutPage() {
   const [brandTheme, setBrandTheme] = useState<BrandTheme | null>(null);
   const [brandBusy, setBrandBusy] = useState(false);
   const [sampleBusy, setSampleBusy] = useState(false);
+  const [style, setStyle] = useState<ProposalStyleOptions>(DEFAULT_STYLE);
 
   useEffect(() => {
     if (!workspace) return;
@@ -119,6 +132,14 @@ export function LayoutPage() {
           companyCityLine: d.company_city_line || '',
         });
         setBrandTheme(d.brand_theme || null);
+        setStyle({
+          proposalStyle: d.proposal_style === 'moderno' ? 'moderno' : 'classico',
+          coverStyle: d.cover_style || 'cor',
+          coverImageUrl: d.cover_image_url || '',
+          cornerStyle: d.corner_style || 'arredondado',
+          nextSteps: normalizeNextSteps(d.next_steps),
+          whatsapp: d.whatsapp || '',
+        });
       }
     } catch (err) {
       console.error('Error loading layout:', err);
@@ -246,6 +267,12 @@ export function LayoutPage() {
     brandTheme,
     coverPdfUrl: data.coverPdfUrl || undefined,
     backPdfUrl: data.backPdfUrl || undefined,
+    proposalStyle: style.proposalStyle,
+    coverStyle: style.coverStyle,
+    coverImageUrl: style.coverImageUrl || undefined,
+    cornerStyle: style.cornerStyle,
+    nextSteps: normalizeNextSteps(style.nextSteps),
+    whatsapp: style.whatsapp.trim(),
   });
 
   const handleSamplePdf = async () => {
@@ -292,6 +319,12 @@ export function LayoutPage() {
         section_investment_title: data.sectionInvestmentTitle,
         section_total_title: data.sectionTotalTitle,
         validity_text: data.validityText,
+        proposal_style: style.proposalStyle,
+        cover_style: style.coverStyle,
+        cover_image_url: style.coverImageUrl || null,
+        corner_style: style.cornerStyle,
+        next_steps: normalizeNextSteps(style.nextSteps) as unknown as Json,
+        whatsapp: style.whatsapp.trim() || null,
       };
 
       if (existingId) {
@@ -327,6 +360,18 @@ export function LayoutPage() {
       <Header title="Layout da Proposta" subtitle="Configurações de identidade visual para documentos" />
 
       <div className="p-4 md:p-6 max-w-2xl space-y-4 md:space-y-6">
+        {workspace && (
+          <ProposalStyleCard
+            value={style}
+            onChange={setStyle}
+            workspaceId={workspace.id}
+            primary={rgbToHex(resolvedColors.primary)}
+            highlight={rgbToHex(resolvedColors.highlight)}
+            onSample={handleSamplePdf}
+            sampleBusy={sampleBusy}
+          />
+        )}
+
         {/* Logo Upload */}
         <Card>
           <CardHeader>
