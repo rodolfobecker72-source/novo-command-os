@@ -49,11 +49,6 @@ Chaves (Resend, Anthropic, Google) ficam só no painel do Supabase, nunca no rep
 
 ## Pendências
 
-### Leitura do `.md` (Anthropic)
-1. Criar a chave em console.anthropic.com.
-2. Salvar como secret `ANTHROPIC_API_KEY` em Supabase > Edge Functions > Secrets.
-3. Reescrever e publicar `parse-brand-identity`; hoje ela usa o gateway de IA do Lovable.
-
 ### Google Agenda
 OAuth próprio (sem o conector do Lovable). Como funciona:
 - Cada usuário conecta a própria conta Google no perfil. O sistema cria nela uma agenda

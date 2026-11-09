@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Upload, Save, Trash2, ImageIcon, FileText, Palette, Download, RotateCcw } from 'lucide-react';
+import { Upload, Save, Trash2, ImageIcon, FileText, Download, RotateCcw } from 'lucide-react';
 import { BRAND_COLOR_FIELDS, resolveTheme, rgbToHex, type BrandColorKey, type BrandTheme } from '@/utils/pdfTheme';
 import type { PDFLayoutSettings } from '@/utils/pdfGenerator';
 import { DEFAULT_NEXT_STEPS, normalizeNextSteps } from '@/utils/proposalStyle';
@@ -42,7 +42,6 @@ interface LayoutData {
   validityText: string;
   coverPdfUrl: string;
   backPdfUrl: string;
-  brandMdUrl: string;
   companyCnpj: string;
   companyAddress: string;
   companyCityLine: string;
@@ -64,7 +63,6 @@ const DEFAULTS: LayoutData = {
   validityText: 'Validade: 30 dias',
   coverPdfUrl: '',
   backPdfUrl: '',
-  brandMdUrl: '',
   companyCnpj: '',
   companyAddress: '',
   companyCityLine: '',
@@ -80,7 +78,6 @@ export function LayoutPage() {
   const [uploading, setUploading] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
   const [brandTheme, setBrandTheme] = useState<BrandTheme | null>(null);
-  const [brandBusy, setBrandBusy] = useState(false);
   const [sampleBusy, setSampleBusy] = useState(false);
   const [style, setStyle] = useState<ProposalStyleOptions>(DEFAULT_STYLE);
 
@@ -126,7 +123,6 @@ export function LayoutPage() {
           validityText: d.validity_text || DEFAULTS.validityText,
           coverPdfUrl: d.cover_pdf_url || '',
           backPdfUrl: d.back_pdf_url || '',
-          brandMdUrl: d.brand_md_url || '',
           companyCnpj: d.company_cnpj || '',
           companyAddress: d.company_address || '',
           companyCityLine: d.company_city_line || '',
@@ -198,52 +194,6 @@ export function LayoutPage() {
     }
   };
 
-  const persistBrand = async (url: string | null, theme: BrandTheme | null) => {
-    if (!workspace) return;
-    const fields = { brand_md_url: url, brand_theme: theme as any };
-    if (existingId) {
-      const { error } = await supabase.from('workspace_layout').update(fields).eq('id', existingId);
-      if (error) throw error;
-    } else {
-      const { data: row, error } = await supabase.from('workspace_layout').insert({ workspace_id: workspace.id, ...fields }).select('id').single();
-      if (error) throw error;
-      setExistingId(row.id);
-    }
-  };
-
-  const handleBrandUpload = async (file?: File) => {
-    if (!file || !workspace) return;
-    if (!/\.(md|markdown|txt)$/i.test(file.name)) { toast.error('Selecione um arquivo .md'); return; }
-    if (file.size > 1024 * 1024) { toast.error('O arquivo deve ter no máximo 1 MB'); return; }
-    setBrandBusy(true);
-    try {
-      const markdown = await file.text();
-      const { data: res, error } = await supabase.functions.invoke('parse-brand-identity', { body: { markdown } });
-      if (error) {
-        let msg = 'Erro ao interpretar o arquivo';
-        try { const b = await (error as any).context?.json(); if (b?.error) msg = b.error; } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      const filePath = `${workspace.id}/brand.md`;
-      const { error: upErr } = await supabase.storage.from('logos').upload(filePath, file, { upsert: true, contentType: 'text/markdown' });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('logos').getPublicUrl(filePath);
-      const url = `${pub.publicUrl}?t=${Date.now()}`;
-      // Colors found in the file replace the current ones; the rest are kept
-      const parsed = Object.fromEntries(Object.entries(res.theme || {}).filter(([, v]) => v)) as BrandTheme;
-      const merged = { ...(brandTheme || {}), ...parsed };
-      update('brandMdUrl', url);
-      setBrandTheme(merged);
-      await persistBrand(url, merged);
-      toast.success('Cores da identidade visual aplicadas! Ajuste abaixo se quiser.');
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || 'Erro ao processar identidade visual');
-    } finally {
-      setBrandBusy(false);
-    }
-  };
-
   const resolvedColors = resolveTheme(brandTheme);
   const setColor = (key: BrandColorKey, value: string | null) => {
     setBrandTheme((prev) => ({ ...(prev || {}), [key]: value }));
@@ -302,7 +252,6 @@ export function LayoutPage() {
         logo_url: data.logoUrl,
         cover_pdf_url: data.coverPdfUrl || null,
         back_pdf_url: data.backPdfUrl || null,
-        brand_md_url: data.brandMdUrl || null,
         company_cnpj: data.companyCnpj || null,
         company_address: data.companyAddress || null,
         company_city_line: data.companyCityLine || null,
@@ -413,35 +362,9 @@ export function LayoutPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Identidade visual</CardTitle>
-            <CardDescription>Escolha as cores da proposta em PDF. Se preferir, envie o manual da sua marca em .md e a IA preenche as cores para você ajustar.</CardDescription>
+            <CardDescription>Escolha as cores da proposta em PDF.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-md border p-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">Manual da marca (.md)</p>
-                  {data.brandMdUrl ? (
-                    <a href={data.brandMdUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Ver arquivo enviado</a>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Nenhum arquivo — visual padrão</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <label>
-                  <input type="file" accept=".md,.markdown,text/markdown,text/plain" className="hidden" onChange={(e) => { handleBrandUpload(e.target.files?.[0]); e.target.value = ''; }} />
-                  <Button variant="outline" size="sm" asChild disabled={brandBusy}>
-                    <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />{brandBusy ? 'Lendo com IA...' : data.brandMdUrl ? 'Trocar' : 'Enviar .md'}</span>
-                  </Button>
-                </label>
-                {data.brandMdUrl && (
-                  <Button variant="ghost" size="sm" aria-label="Remover identidade" onClick={async () => { update('brandMdUrl', ''); try { await persistBrand(null, brandTheme); toast.success('Arquivo removido. As cores foram mantidas.'); } catch { toast.error('Erro ao remover'); } }} className="text-destructive hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {BRAND_COLOR_FIELDS.map(({ key, label, hint }) => {
                 const value = rgbToHex(resolvedColors[key]);
