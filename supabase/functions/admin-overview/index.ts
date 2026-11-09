@@ -69,6 +69,47 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    // Optional action: grant or remove courtesy (full access with no charge)
+    if (body.action === "set_courtesy") {
+      const workspaceId = String(body.workspace_id ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(workspaceId) || typeof body.courtesy !== "boolean") {
+        return json({ error: "Parâmetros inválidos" }, 400);
+      }
+      const { data: sub, error: subError } = await admin
+        .from("workspace_subscriptions")
+        .select("status, asaas_subscription_id")
+        .eq("workspace_id", workspaceId)
+        .maybeSingle();
+      if (subError) return json({ error: subError.message }, 400);
+      if (!sub) return json({ error: "Empresa não encontrada" }, 404);
+
+      if (body.courtesy) {
+        if (sub.status === "courtesy") return json({ ok: true });
+        // A live Asaas subscription would keep charging and its events would undo the courtesy
+        if (sub.asaas_subscription_id && sub.status !== "canceled") {
+          return json({ error: "Esta empresa tem uma assinatura ativa no Asaas. Cancele a assinatura antes de dar cortesia." }, 409);
+        }
+        const { error } = await admin.from("workspace_subscriptions")
+          .update({ status: "courtesy", past_due_since: null, checkout_url: null })
+          .eq("workspace_id", workspaceId);
+        if (error) return json({ error: error.message }, 400);
+        return json({ ok: true });
+      }
+
+      if (sub.status !== "courtesy") return json({ ok: true });
+      // Back to a 7-day trial, so the owner has time to subscribe
+      const { error } = await admin.from("workspace_subscriptions")
+        .update({
+          status: "trialing",
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          current_period_end: null,
+          canceled_at: null,
+        })
+        .eq("workspace_id", workspaceId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
     // --- Empresas e usuários (calculado no banco) ---
     const { data: overview, error: overviewError } = await admin.rpc("admin_workspace_overview");
     if (overviewError) throw overviewError;
@@ -168,6 +209,7 @@ Deno.serve(async (req) => {
       // Billing: paying = active or within the grace period of an unpaid invoice
       paying: workspaces.filter((w) => w.subscription && ["active", "past_due"].includes(w.subscription.status)).length,
       trialing: workspaces.filter((w) => w.subscription?.status === "trialing").length,
+      courtesy: workspaces.filter((w) => w.subscription?.status === "courtesy").length,
       readOnly: workspaces.filter((w) => w.subscription?.access === "read_only").length,
       mrr: workspaces
         .filter((w) => w.subscription && ["active", "past_due"].includes(w.subscription.status))

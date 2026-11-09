@@ -43,6 +43,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ROLE_LABELS } from '@/config/roles';
 import { formatCurrency } from '@/types/crm';
@@ -196,6 +200,21 @@ export function AdminDashboard() {
   useEffect(() => {
     load();
   }, []);
+
+  const [courtesyBusy, setCourtesyBusy] = useState<string | null>(null);
+  const setCourtesy = async (workspaceId: string, courtesy: boolean) => {
+    setCourtesyBusy(workspaceId);
+    const { error: err } = await invokeFunction('admin-overview', {
+      body: { action: 'set_courtesy', workspace_id: workspaceId, courtesy },
+    });
+    setCourtesyBusy(null);
+    if (err) {
+      toast({ title: 'Não foi possível alterar', description: err.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: courtesy ? 'Empresa marcada como cortesia' : 'Cortesia removida' });
+    load();
+  };
 
   const updateStatus = async (id: string, status: string) => {
     const { error: err } = await invokeFunction('admin-overview', {
@@ -357,6 +376,46 @@ export function AdminDashboard() {
                               <Badge variant="outline">{w.projects} projetos</Badge>
                               <Badge variant="outline">{w.ai_uses_30d ?? 0} usos de IA (30 dias)</Badge>
                             </div>
+                            {w.subscription && (() => {
+                              const isCourtesy = w.subscription.status === 'courtesy';
+                              return (
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-md border p-3">
+                                  <div>
+                                    <p className="text-sm font-medium">Cortesia</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {isCourtesy
+                                        ? 'Esta empresa usa o Command OS sem cobrança.'
+                                        : 'Libera o acesso completo sem cobrança, sem prazo.'}
+                                    </p>
+                                  </div>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant={isCourtesy ? 'outline' : 'default'} size="sm" disabled={courtesyBusy === w.id}>
+                                        {courtesyBusy === w.id ? 'Salvando...' : isCourtesy ? 'Remover cortesia' : 'Tornar cortesia'}
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          {isCourtesy ? `Remover a cortesia de ${w.name}?` : `Tornar ${w.name} cortesia?`}
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          {isCourtesy
+                                            ? 'A empresa volta para o teste grátis com 7 dias para assinar. Depois disso, sem assinatura, passa para somente leitura.'
+                                            : 'A empresa passa a ter acesso completo sem cobrança, sem prazo, até você remover a cortesia.'}
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Voltar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => setCourtesy(w.id, !isCourtesy)}>
+                                          {isCourtesy ? 'Remover cortesia' : 'Tornar cortesia'}
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              );
+                            })()}
                             <div className="overflow-x-auto">
                               <Table>
                                 <TableHeader>
