@@ -1496,65 +1496,6 @@ export function BudgetDetail() {
                       )}
                     </div>
 
-                    {/* Material Bruto */}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Material Bruto na Entrega</p>
-                      {isEditing ? (
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="editIncludesRawMaterial"
-                            checked={editedIncludesRawMaterial}
-                            onCheckedChange={(checked) => setEditedIncludesRawMaterial(checked === true)}
-                          />
-                          <Label htmlFor="editIncludesRawMaterial" className="text-sm font-normal cursor-pointer">
-                            Material bruto incluso
-                          </Label>
-                        </div>
-                      ) : (
-                        <p className="font-medium">{budget.includesRawMaterial ? 'Incluso' : 'Não incluso'}</p>
-                      )}
-                    </div>
-
-                    {/* Inclusões na proposta */}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">O que está incluso na proposta</p>
-                      {isEditing ? (
-                        <div className="flex flex-wrap gap-x-4 gap-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox id="editIncludesTax" checked={editedIncludesTax} onCheckedChange={(c) => setEditedIncludesTax(c === true)} />
-                            <Label htmlFor="editIncludesTax" className="text-sm font-normal cursor-pointer">Imposto incluso</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox id="editIncludesLogistics" checked={editedIncludesLogistics} onCheckedChange={(c) => setEditedIncludesLogistics(c === true)} />
-                            <Label htmlFor="editIncludesLogistics" className="text-sm font-normal cursor-pointer">Logística inclusa</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox id="editIncludesAccommodation" checked={editedIncludesAccommodation} onCheckedChange={(c) => setEditedIncludesAccommodation(c === true)} />
-                            <Label htmlFor="editIncludesAccommodation" className="text-sm font-normal cursor-pointer">Hospedagem inclusa</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox id="editIncludesMeals" checked={editedIncludesMeals} onCheckedChange={(c) => setEditedIncludesMeals(c === true)} />
-                            <Label htmlFor="editIncludesMeals" className="text-sm font-normal cursor-pointer">Alimentação da equipe inclusa</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox id="editIncludesTechnicalVisit" checked={editedIncludesTechnicalVisit} onCheckedChange={(c) => setEditedIncludesTechnicalVisit(c === true)} />
-                            <Label htmlFor="editIncludesTechnicalVisit" className="text-sm font-normal cursor-pointer">Visita técnica inclusa</Label>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {budget.includesTax && <Badge variant="secondary" className="text-xs">Imposto</Badge>}
-                          {budget.includesLogistics && <Badge variant="secondary" className="text-xs">Logística</Badge>}
-                          {budget.includesAccommodation && <Badge variant="secondary" className="text-xs">Hospedagem</Badge>}
-                          {budget.includesMeals && <Badge variant="secondary" className="text-xs">Alimentação</Badge>}
-                          {budget.includesTechnicalVisit && <Badge variant="secondary" className="text-xs">Visita técnica</Badge>}
-                          {!budget.includesTax && !budget.includesLogistics && !budget.includesAccommodation && !budget.includesMeals && !budget.includesTechnicalVisit && (
-                            <span className="text-sm text-muted-foreground">Nenhuma inclusão</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
                     {isEditing && (
                       <div className="flex gap-2 pt-2">
                         <Button size="sm" onClick={handleSaveEdit}>

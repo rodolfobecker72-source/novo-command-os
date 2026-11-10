@@ -24,6 +24,7 @@ interface CostSettings {
   default_fixed_cost_percentage: number;
   default_nf_percentage: number;
   default_target_margin_percentage: number;
+  proposal_validity_days: number;
 }
 
 export function CommercialRulesPage() {
@@ -36,6 +37,7 @@ export function CommercialRulesPage() {
     default_fixed_cost_percentage: 20,
     default_nf_percentage: 13,
     default_target_margin_percentage: 25,
+    proposal_validity_days: 30,
   });
   const [costLoading, setCostLoading] = useState(false);
 
@@ -77,6 +79,7 @@ export function CommercialRulesPage() {
         default_fixed_cost_percentage: Number(data.default_fixed_cost_percentage),
         default_nf_percentage: Number(data.default_nf_percentage),
         default_target_margin_percentage: Number(data.default_target_margin_percentage),
+        proposal_validity_days: Number(data.proposal_validity_days ?? 30),
       });
     }
   }
@@ -265,14 +268,14 @@ export function CommercialRulesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Percent className="w-5 h-5" />
-              Configurações de Custo
+              Configurações da Proposta
             </CardTitle>
             <CardDescription>
-              Defina os percentuais padrão aplicados automaticamente em novas propostas
+              Percentuais padrão aplicados automaticamente em novas propostas e a validade impressa no PDF
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="nfCost">Custo NF (%)</Label>
                 <div className="relative">
@@ -313,6 +316,28 @@ export function CommercialRulesPage() {
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="validity">Validade da proposta</Label>
+                <div className="relative">
+                  <Input
+                    id="validity"
+                    type="number"
+                    min={1}
+                    max={365}
+                    step={1}
+                    value={costSettings.proposal_validity_days}
+                    onChange={(e) =>
+                      setCostSettings(prev => ({
+                        ...prev,
+                        proposal_validity_days: Math.min(365, Math.max(1, parseInt(e.target.value, 10) || 1)),
+                      }))
+                    }
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">dias</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Aparece no PDF como "Validade: {costSettings.proposal_validity_days} dias".</p>
               </div>
             </div>
 
