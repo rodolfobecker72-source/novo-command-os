@@ -6,6 +6,7 @@ import { invokeFunction } from '@/lib/edgeFunctions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -100,6 +101,8 @@ export function UsersPage() {
     role: 'vendedor' as AppRole,
     birthDate: '',
   });
+  // Off: the person gets an invitation e-mail and creates their own password
+  const [setPasswordNow, setSetPasswordNow] = useState(false);
 
   const [editForm, setEditForm] = useState({
     name: '',
@@ -112,7 +115,7 @@ export function UsersPage() {
   const isCreateFormValid =
     createForm.name.trim().length > 0 &&
     createForm.email.trim().length > 0 &&
-    createForm.password.length >= 6;
+    (!setPasswordNow || createForm.password.length >= 6);
 
   const loadMembers = async () => {
     if (!workspace) return;
@@ -166,7 +169,7 @@ export function UsersPage() {
       const response = await invokeFunction('create-member', {
         body: {
           email: createForm.email.trim(),
-          password: createForm.password,
+          password: setPasswordNow ? createForm.password : undefined,
           name: createForm.name.trim(),
           role: createForm.role,
           birthDate: createForm.birthDate || null,
@@ -186,9 +189,12 @@ export function UsersPage() {
         return;
       }
 
-      toast.success(`Membro ${createForm.name.trim()} criado com sucesso!`);
+      toast.success(setPasswordNow
+        ? `Membro ${createForm.name.trim()} criado com sucesso!`
+        : `Convite enviado para ${createForm.email.trim()}.`);
       setIsCreateOpen(false);
       setCreateForm({ name: '', email: '', password: '', role: 'vendedor', birthDate: '' });
+      setSetPasswordNow(false);
       loadMembers();
     } catch (err: any) {
       toast.error('Erro ao criar membro: ' + err.message);
@@ -387,7 +393,10 @@ export function UsersPage() {
             {canManage && (
               <Dialog open={isCreateOpen} onOpenChange={(open) => {
                 setIsCreateOpen(open);
-                if (!open) setCreateForm({ name: '', email: '', password: '', role: 'vendedor', birthDate: '' });
+                if (!open) {
+                  setCreateForm({ name: '', email: '', password: '', role: 'vendedor', birthDate: '' });
+                  setSetPasswordNow(false);
+                }
               }}>
                 <DialogTrigger asChild>
                   <Button disabled={atUserLimit} title={atUserLimit ? 'Limite de usuários do plano atingido' : undefined}>
@@ -399,7 +408,9 @@ export function UsersPage() {
                   <DialogHeader>
                     <DialogTitle>Cadastrar Membro</DialogTitle>
                     <DialogDescription>
-                      Crie uma conta para um novo membro da equipe.
+                      {setPasswordNow
+                        ? 'Crie a conta já com a senha. Nenhum e-mail é enviado; passe o acesso para a pessoa.'
+                        : 'A pessoa recebe um e-mail de boas-vindas para criar a própria senha e entrar.'}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleCreate} className="space-y-4">
@@ -425,20 +436,26 @@ export function UsersPage() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="create-password">Senha <span className="text-destructive">*</span></Label>
-                      <PasswordInput
-                        id="create-password"
-                        placeholder="Mínimo 6 caracteres"
-                        value={createForm.password}
-                        onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
-                        required
-                        minLength={6}
-                      />
-                      {createForm.password.length > 0 && createForm.password.length < 6 && (
-                        <p className="text-xs text-destructive">A senha deve ter no mínimo 6 caracteres</p>
-                      )}
-                    </div>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                      <Checkbox checked={setPasswordNow} onCheckedChange={(v) => setSetPasswordNow(v === true)} />
+                      Definir a senha agora (sem e-mail de convite)
+                    </label>
+                    {setPasswordNow && (
+                      <div className="space-y-2">
+                        <Label htmlFor="create-password">Senha <span className="text-destructive">*</span></Label>
+                        <PasswordInput
+                          id="create-password"
+                          placeholder="Mínimo 6 caracteres"
+                          value={createForm.password}
+                          onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
+                          required
+                          minLength={6}
+                        />
+                        {createForm.password.length > 0 && createForm.password.length < 6 && (
+                          <p className="text-xs text-destructive">A senha deve ter no mínimo 6 caracteres</p>
+                        )}
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="create-birth">Data de nascimento</Label>
                       <Input
@@ -469,7 +486,7 @@ export function UsersPage() {
                         Cancelar
                       </Button>
                       <Button type="submit" disabled={isCreating || !isCreateFormValid}>
-                        {isCreating ? 'Criando...' : 'Criar Membro'}
+                        {isCreating ? (setPasswordNow ? 'Criando...' : 'Enviando convite...') : (setPasswordNow ? 'Criar Membro' : 'Enviar convite')}
                       </Button>
                     </DialogFooter>
                   </form>

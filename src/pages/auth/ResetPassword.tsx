@@ -14,24 +14,26 @@ export function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  // Opened from the invitation e-mail of a new member (not a password reset)
+  const [isInvite] = useState(() => window.location.hash.includes('type=invite'));
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+    // Listen for PASSWORD_RECOVERY event (reset) or the session of an invitation link
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (isInvite && session)) {
         setIsReady(true);
       }
     });
 
     // Also check if already in recovery via hash
     const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
+    if (hash.includes('type=recovery') || hash.includes('type=invite')) {
       setIsReady(true);
     }
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isInvite]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +54,10 @@ export function ResetPassword() {
 
     if (error) {
       toast.error(error.message);
+    } else if (isInvite) {
+      // The invitation link already signed them in
+      toast.success('Senha criada! Bem-vindo ao Command OS.');
+      navigate('/', { replace: true });
     } else {
       toast.success('Senha redefinida com sucesso!');
       navigate('/login');
@@ -66,11 +72,13 @@ export function ResetPassword() {
 
       <Card className="w-full max-w-md bg-card border-border">
         <CardHeader className="text-center space-y-1.5 pb-2">
-          <CardTitle className="text-2xl text-foreground">Redefinir senha</CardTitle>
+          <CardTitle className="text-2xl text-foreground">{isInvite ? 'Bem-vindo ao Command OS' : 'Redefinir senha'}</CardTitle>
           <CardDescription className="text-muted-foreground leading-relaxed">
-            {isReady
-              ? 'Digite sua nova senha abaixo.'
-              : 'Aguardando validação do link...'}
+            {!isReady
+              ? 'Aguardando validação do link...'
+              : isInvite
+                ? 'Crie a senha que você vai usar para entrar.'
+                : 'Digite sua nova senha abaixo.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,7 +105,7 @@ export function ResetPassword() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : 'Redefinir senha'}
+                {isLoading ? 'Salvando...' : isInvite ? 'Criar senha e entrar' : 'Redefinir senha'}
               </Button>
             </form>
           ) : (

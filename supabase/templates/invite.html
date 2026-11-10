@@ -1,0 +1,24 @@
+<!-- Supabase > Authentication > Emails > "Invite user"
+     Assunto: Você foi convidado para o Command OS
+     Variáveis vindas do create-member: .Data.name, .Data.workspace_name,
+     .Data.invited_by, .Data.role_label -->
+<div style="margin:0;padding:32px 16px;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1c2230">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px">
+    <p style="margin:0 0 4px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6b7280">Command OS</p>
+    <h1 style="margin:0 0 16px;font-size:22px">Bem-vindo, {{ .Data.name }}!</h1>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.6">
+      {{ if .Data.invited_by }}{{ .Data.invited_by }} convidou você{{ else }}Você foi convidado{{ end }}
+      para usar o Command OS{{ if .Data.workspace_name }} na <strong>{{ .Data.workspace_name }}</strong>{{ end }}{{ if .Data.role_label }}, como <strong>{{ .Data.role_label }}</strong>{{ end }}.
+    </p>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Para começar, crie a sua senha:</p>
+    <p style="margin:0 0 24px">
+      <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">Criar minha senha e entrar</a>
+    </p>
+    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b7280">
+      Depois, é só entrar em <a href="https://acesso.command-os.app.br" style="color:#111827">acesso.command-os.app.br</a> com o seu e-mail ({{ .Email }}) e a senha criada.
+    </p>
+    <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280">
+      Se o botão não funcionar mais, use "Esqueci minha senha" na tela de login.
+    </p>
+  </div>
+</div>

@@ -1,4 +1,15 @@
+// Adds a member to the caller's company. Without a password the person gets
+// an invitation e-mail (Supabase Auth "Invite user" template) and creates
+// their own password on /reset-password; with a password the account is
+// ready to use and no e-mail is sent.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const APP_URL = (Deno.env.get("APP_URL") ?? "https://acesso.command-os.app.br").replace(/\/$/, "");
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  vendedor: "Vendedor",
+  time_operacional: "Time Operacional",
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,7 +64,7 @@ Deno.serve(async (req) => {
 
     const { email, password, name, role, birthDate } = await req.json();
 
-    if (!email || !password || !name || !role) {
+    if (!email || !name || !role) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -76,21 +87,40 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate password length
-    if (password.length < 6) {
+    // Validate password length (only when the owner sets it now)
+    if (password && String(password).length < 6) {
       return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Create user via admin API
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { name },
-    });
+    let newUser: { user: { id: string } | null } | null = null;
+    let createError: { message: string } | null = null;
+    if (password) {
+      // Password set by the owner: ready to use, no e-mail
+      ({ data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name },
+      }));
+    } else {
+      // Invitation: the welcome e-mail names the company, who invited and the role
+      const [{ data: ws }, { data: inviter }] = await Promise.all([
+        supabaseAdmin.from("workspaces").select("name").eq("id", callerMember.workspace_id).single(),
+        supabaseAdmin.from("profiles").select("name").eq("id", caller.id).single(),
+      ]);
+      ({ data: newUser, error: createError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: {
+          name,
+          workspace_name: ws?.name ?? "",
+          invited_by: inviter?.name ?? "",
+          role_label: ROLE_LABELS[role] ?? role,
+        },
+        redirectTo: `${APP_URL}/reset-password`,
+      }));
+    }
 
     if (createError) {
       return new Response(JSON.stringify({ error: createError.message }), {
@@ -126,7 +156,7 @@ Deno.serve(async (req) => {
         .eq("id", newUser.user!.id);
     }
 
-    return new Response(JSON.stringify({ success: true, userId: newUser.user!.id }), {
+    return new Response(JSON.stringify({ success: true, userId: newUser.user!.id, invited: !password }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
