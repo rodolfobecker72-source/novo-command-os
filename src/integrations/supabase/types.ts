@@ -25,6 +25,7 @@ export type Database = {
           created_by: string
           description: string
           end_at: string | null
+          guest_emails: string[]
           id: string
           kind: Database["public"]["Enums"]["appointment_kind"]
           lead_id: string | null
@@ -44,6 +45,7 @@ export type Database = {
           created_by: string
           description?: string
           end_at?: string | null
+          guest_emails?: string[]
           id?: string
           kind?: Database["public"]["Enums"]["appointment_kind"]
           lead_id?: string | null
@@ -63,6 +65,7 @@ export type Database = {
           created_by?: string
           description?: string
           end_at?: string | null
+          guest_emails?: string[]
           id?: string
           kind?: Database["public"]["Enums"]["appointment_kind"]
           lead_id?: string | null
