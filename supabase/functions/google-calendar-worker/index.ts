@@ -1,13 +1,20 @@
-// Processes google_calendar_sync_queue: for each queued activity or
-// appointment, creates, updates or removes the matching event in the
-// "Command OS" calendar of every connected participant.
+// Two jobs, both called by pg_cron with the Vault secret gcal_worker_secret in
+// the x-worker-secret header:
 //
-// Called every minute by pg_cron (only when the queue has work), with the
-// Vault secret gcal_worker_secret in the x-worker-secret header. Several
-// runs can overlap safely: jobs are claimed with FOR UPDATE SKIP LOCKED.
+// - Queue (every minute, only when google_calendar_sync_queue has work): for
+//   each queued activity or appointment, creates, updates or removes the
+//   matching event in the "Command OS" calendar of every connected
+//   participant. Several runs can overlap safely: jobs are claimed with
+//   FOR UPDATE SKIP LOCKED.
+// - Pull (body {"mode":"pull"}, every two minutes while someone is
+//   connected): reads what changed in each "Command OS" calendar since the
+//   last pull (Google's sync token). Events people typed there become
+//   appointments; edits and deletions of appointments made in Google are
+//   applied in Command OS. Activities are only ever written from Command OS.
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
-  activityEvent, activityRecipients, appointmentEvent, appointmentRecipients, GoogleEvent,
+  activityEvent, activityRecipients, appointmentEvent, appointmentFromGoogle, appointmentRecipients,
+  commandSourceOf, eventMatches, GoogleEvent, GoogleEventIn,
 } from "../_shared/calendarEvents.ts";
 import {
   adminClient, APP_URL, calendarApi, Connection, createAppCalendar, getAccessToken, jsonResponse,
@@ -18,6 +25,10 @@ const TIME_BUDGET_MS = 45_000;
 const BATCH_SIZE = 20;
 const CONCURRENCY = 4;
 const MAX_ATTEMPTS = 8;
+const DAY_MS = 24 * 60 * 60 * 1000;
+// Events typed in Google are imported only around today
+const IMPORT_PAST_MS = 30 * DAY_MS;
+const IMPORT_FUTURE_MS = 366 * DAY_MS;
 
 type SourceType = "activity" | "appointment";
 
@@ -189,10 +200,174 @@ class Sync {
 
   private async recreateCalendar(conn: Connection, token: string) {
     conn.calendar_id = await createAppCalendar(token);
-    await this.admin.from("google_calendar_connections").update({ calendar_id: conn.calendar_id }).eq("user_id", conn.user_id);
+    await this.admin.from("google_calendar_connections")
+      .update({ calendar_id: conn.calendar_id, sync_token: null })
+      .eq("user_id", conn.user_id);
     await this.admin.from("google_calendar_sync_map").delete().eq("user_id", conn.user_id);
     await this.admin.rpc("gcal_enqueue_user_backfill", { p_user: conn.user_id });
   }
+}
+
+// ============================================================================
+// Pull: Google -> Command OS
+// ============================================================================
+type PullConnection = Connection & { sync_token: string | null };
+
+interface PulledMap {
+  id: string;
+  source_type: SourceType;
+  source_id: string;
+  google_event_id: string;
+}
+
+class Pull {
+  private workspaces = new Map<string, string | null>();
+
+  constructor(private admin: SupabaseClient) {}
+
+  private async workspaceOf(userId: string): Promise<string | null> {
+    if (!this.workspaces.has(userId)) {
+      const { data } = await this.admin.from("workspace_members").select("workspace_id").eq("user_id", userId).maybeSingle();
+      this.workspaces.set(userId, data?.workspace_id ?? null);
+    }
+    return this.workspaces.get(userId)!;
+  }
+
+  /** Reads everything that changed in the user's calendar since the last pull. */
+  async pullConnection(conn: PullConnection) {
+    const token = await getAccessToken(this.admin, conn);
+    const path = `/calendars/${encodeURIComponent(conn.calendar_id)}/events`;
+    let syncToken = conn.sync_token;
+    let pageToken: string | undefined;
+    let restarted = false;
+
+    for (;;) {
+      const q = new URLSearchParams({ singleEvents: "true", maxResults: "250" });
+      if (syncToken) q.set("syncToken", syncToken);
+      if (pageToken) q.set("pageToken", pageToken);
+      const r = await calendarApi(token, `${path}?${q}`);
+      if (r.status === 410 && !restarted) {
+        // Token expired on Google's side: read the whole calendar again
+        syncToken = null;
+        pageToken = undefined;
+        restarted = true;
+        continue;
+      }
+      // Calendar deleted: the queue recreates it on the next write
+      if (r.status === 404) return;
+      if (!r.ok) throw new Error(`list events ${r.status}: ${JSON.stringify(r.data)}`);
+
+      await this.applyPage(conn, (r.data?.items ?? []) as GoogleEventIn[]);
+
+      if (r.data?.nextPageToken) {
+        pageToken = r.data.nextPageToken;
+        continue;
+      }
+      await this.admin.from("google_calendar_connections")
+        .update({ sync_token: r.data?.nextSyncToken ?? null, pulled_at: new Date().toISOString() })
+        .eq("user_id", conn.user_id);
+      return;
+    }
+  }
+
+  private async applyPage(conn: PullConnection, items: GoogleEventIn[]) {
+    if (!items.length) return;
+    const { data: maps, error } = await this.admin
+      .from("google_calendar_sync_map")
+      .select("id, source_type, source_id, google_event_id")
+      .eq("user_id", conn.user_id)
+      .in("google_event_id", items.map((e) => e.id));
+    if (error) throw error;
+    const byEvent = new Map(((maps ?? []) as PulledMap[]).map((m) => [m.google_event_id, m]));
+    for (const e of items) {
+      try {
+        await this.applyEvent(conn, e, byEvent.get(e.id));
+      } catch (err) {
+        // One bad event must not hold back the rest of the calendar
+        console.error("[gcal pull]", conn.user_id, e.id, err);
+      }
+    }
+  }
+
+  private async applyEvent(conn: PullConnection, e: GoogleEventIn, m: PulledMap | undefined) {
+    if (m) {
+      // Activities are written only from Command OS
+      if (m.source_type !== "appointment") return;
+      const { data: ap, error } = await this.admin.from("appointments").select("*").eq("id", m.source_id).maybeSingle();
+      if (error) throw error;
+      if (!ap) return;
+
+      if (e.status === "cancelled") {
+        // The organizer deleting it cancels it for everyone; a participant only leaves it
+        if (ap.created_by === conn.user_id) {
+          await this.admin.from("appointments").delete().eq("id", ap.id);
+        } else {
+          const assigned = ((ap.assigned_to ?? []) as string[]).filter((u) => u !== conn.user_id);
+          await this.admin.from("appointments").update({ assigned_to: assigned }).eq("id", ap.id);
+        }
+        return;
+      }
+      // Our own write coming back
+      if (eventMatches(e, appointmentEvent(ap, APP_URL))) return;
+      const fields = appointmentFromGoogle(e, ap.kind);
+      if (fields) await this.admin.from("appointments").update(fields).eq("id", ap.id);
+      return;
+    }
+
+    if (e.status === "cancelled" || commandSourceOf(e)) return;
+    const fields = appointmentFromGoogle(e);
+    if (!fields) return;
+    const start = new Date(fields.start_at).getTime();
+    if (start < Date.now() - IMPORT_PAST_MS || start > Date.now() + IMPORT_FUTURE_MS) return;
+    const workspaceId = await this.workspaceOf(conn.user_id);
+    if (!workspaceId) return;
+
+    // Map first, so the queue updates this same Google event instead of creating another
+    const id = crypto.randomUUID();
+    const { error: mapError } = await this.admin.from("google_calendar_sync_map").insert({
+      user_id: conn.user_id,
+      workspace_id: workspaceId,
+      source_type: "appointment",
+      source_id: id,
+      google_event_id: e.id,
+      origin: "google",
+      last_synced_at: new Date().toISOString(),
+    });
+    if (mapError) throw mapError;
+    const { error } = await this.admin.from("appointments").insert({
+      id,
+      workspace_id: workspaceId,
+      created_by: conn.user_id,
+      assigned_to: [],
+      kind: "outro",
+      ...fields,
+    });
+    if (error) {
+      await this.admin.from("google_calendar_sync_map").delete().eq("user_id", conn.user_id).eq("source_id", id);
+      throw error;
+    }
+  }
+}
+
+async function runPull(admin: SupabaseClient, started: number): Promise<number> {
+  const { data, error } = await admin
+    .from("google_calendar_connections")
+    .select("*")
+    .eq("status", "connected")
+    .order("pulled_at", { ascending: true, nullsFirst: true });
+  if (error) throw error;
+  const pull = new Pull(admin);
+  let done = 0;
+  for (const conn of (data ?? []) as PullConnection[]) {
+    if (Date.now() - started > TIME_BUDGET_MS) break;
+    try {
+      await pull.pullConnection(conn);
+      done++;
+    } catch (e) {
+      if (!(e instanceof NeedsReconnectError)) console.error("[gcal pull]", conn.user_id, e);
+    }
+  }
+  return done;
 }
 
 async function finishJob(admin: SupabaseClient, job: Job, error: unknown) {
@@ -223,8 +398,14 @@ Deno.serve(async (req) => {
   }
 
   const admin = adminClient();
-  const sync = new Sync(admin);
   const started = Date.now();
+  let body: { mode?: string } = {};
+  try { body = await req.json(); } catch { /* no body */ }
+  if (body.mode === "pull") {
+    return jsonResponse({ pulled: await runPull(admin, started) });
+  }
+
+  const sync = new Sync(admin);
   let processed = 0;
 
   while (Date.now() - started < TIME_BUDGET_MS) {

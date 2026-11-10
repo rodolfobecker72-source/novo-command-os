@@ -41,6 +41,8 @@ interface PersonalEvent {
   leadId?: string;
   isDelivery?: boolean;
   isCaptacao?: boolean;
+  /** "HH:MM" for activities with a set time */
+  time?: string;
   /** Raw id used to persist date updates when dragging. */
   sourceId: string;
 }
@@ -102,7 +104,7 @@ export function MyCalendarPage() {
       const [activitiesRes, leadsRes, notesRes] = await Promise.all([
         supabase
           .from('project_activities')
-          .select('id, title, status, due_date, end_date, is_delivery, is_captacao, project_card_id, assigned_to_user_ids')
+          .select('id, title, status, due_date, end_date, start_time, is_delivery, is_captacao, project_card_id, assigned_to_user_ids')
           .eq('workspace_id', workspace.id)
           .contains('assigned_to_user_ids', [user.id])
           .not('due_date', 'is', null),
@@ -161,6 +163,7 @@ export function MyCalendarPage() {
             budgetId: card?.budgetId,
             isDelivery: !!a.is_delivery,
             isCaptacao: !!a.is_captacao,
+            time: a.start_time ? String(a.start_time).slice(0, 5) : undefined,
           });
           cur.setDate(cur.getDate() + 1);
         }
@@ -772,7 +775,10 @@ function DraggableEvent({ ev, userId, onOpen }: { ev: PersonalEvent; userId?: st
             : <Phone className="w-3 h-3 shrink-0" />}
         <span className="truncate">{ev.kind === 'project' ? ev.subtitle : ev.title}</span>
       </div>
-      <div className="truncate opacity-80">{ev.kind === 'project' ? ev.title : ev.subtitle}</div>
+      <div className="truncate opacity-80">
+        {ev.time && <span className="font-semibold mr-1">{ev.time}</span>}
+        {ev.kind === 'project' ? ev.title : ev.subtitle}
+      </div>
       {ev.kind === 'project' && ev.clientName && (
         <div className="truncate opacity-60 text-[9px] md:text-[10px]">{ev.clientName}</div>
       )}

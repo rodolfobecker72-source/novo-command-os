@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  activityEvent, activityRecipients, addDays, appointmentEvent, appointmentRecipients,
-  type ActivityRow, type AppointmentRow,
+  activityEvent, activityRecipients, addDays, appointmentEvent, appointmentFromGoogle, appointmentRecipients,
+  commandSourceOf, eventMatches, plainText, type ActivityRow, type AppointmentRow, type GoogleEventIn,
 } from '../../supabase/functions/_shared/calendarEvents';
 
 const APP = 'https://app.example';
@@ -60,5 +60,78 @@ describe('calendar events', () => {
 
   it('sends appointments to the creator and every participant once', () => {
     expect(appointmentRecipients(appointment({ assigned_to: ['u2', 'u1'] }))).toEqual(['u1', 'u2']);
+  });
+
+  it('gives activities with a start time hours in Google', () => {
+    const ev = activityEvent(activity({ start_time: '14:30:00', end_time: '16:00:00' }), null, APP)!;
+    expect(ev.start).toEqual({ dateTime: '2026-11-10T14:30:00', timeZone: 'America/Sao_Paulo' });
+    expect(ev.end).toEqual({ dateTime: '2026-11-10T16:00:00', timeZone: 'America/Sao_Paulo' });
+  });
+
+  it('makes a timed activity last one hour when the end time is missing or earlier', () => {
+    expect(activityEvent(activity({ start_time: '09:00' }), null, APP)!.end)
+      .toEqual({ dateTime: '2026-11-10T10:00:00', timeZone: 'America/Sao_Paulo' });
+    expect(activityEvent(activity({ start_time: '09:00', end_time: '08:00' }), null, APP)!.end)
+      .toEqual({ dateTime: '2026-11-10T10:00:00', timeZone: 'America/Sao_Paulo' });
+  });
+
+  it('runs a timed multi-day activity from the first day to the last', () => {
+    const ev = activityEvent(activity({ end_date: '2026-11-12', start_time: '18:00', end_time: '10:00' }), null, APP)!;
+    expect(ev.end).toEqual({ dateTime: '2026-11-12T10:00:00', timeZone: 'America/Sao_Paulo' });
+  });
+
+  it('tags the events it creates so they are never imported back', () => {
+    expect(commandSourceOf(appointmentEvent(appointment(), APP) as unknown as GoogleEventIn)).toBe('appointment:p1');
+    expect(commandSourceOf(activityEvent(activity(), null, APP) as unknown as GoogleEventIn)).toBe('activity:a1');
+  });
+});
+
+describe('reading Google events back', () => {
+  const g = (over: Partial<GoogleEventIn> = {}): GoogleEventIn => ({
+    id: 'g1', status: 'confirmed', summary: 'Almoço com fornecedor',
+    start: { dateTime: '2026-11-10T12:00:00-03:00' }, end: { dateTime: '2026-11-10T13:30:00-03:00' }, ...over,
+  });
+
+  it('turns a timed Google event into an appointment', () => {
+    expect(appointmentFromGoogle(g({ location: ' Centro ', description: 'Levar portfólio' }))).toEqual({
+      title: 'Almoço com fornecedor', description: 'Levar portfólio', location: 'Centro',
+      start_at: '2026-11-10T15:00:00.000Z', end_at: '2026-11-10T16:30:00.000Z', all_day: false,
+    });
+  });
+
+  it('turns an all-day Google event into the same days in Command OS', () => {
+    const f = appointmentFromGoogle(g({ start: { date: '2026-11-10' }, end: { date: '2026-11-12' } }))!;
+    expect(f).toMatchObject({ all_day: true, start_at: '2026-11-10T00:00:00-03:00', end_at: '2026-11-11T23:59:00-03:00' });
+    // Sending it back gives Google the same dates
+    const back = appointmentEvent(appointment({ ...f, kind: 'outro', description: '' }), APP);
+    expect(back.start).toEqual({ date: '2026-11-10' });
+    expect(back.end).toEqual({ date: '2026-11-12' });
+  });
+
+  it('recognizes its own write coming back, so it does not loop', () => {
+    const f = appointmentFromGoogle(g({ description: 'Levar portfólio' }))!;
+    const sent = appointmentEvent(appointment({ ...f, kind: 'outro' }), APP);
+    const echoed = g({
+      summary: sent.summary, description: sent.description,
+      start: { dateTime: '2026-11-10T12:00:00-03:00' }, end: { dateTime: '2026-11-10T13:30:00-03:00' },
+    });
+    expect(eventMatches(echoed, sent)).toBe(true);
+    expect(eventMatches({ ...echoed, summary: 'Outro título' }, sent)).toBe(false);
+    expect(eventMatches({ ...echoed, end: { dateTime: '2026-11-10T14:00:00-03:00' } }, sent)).toBe(false);
+  });
+
+  it('drops the kind label Command OS writes on top of the description', () => {
+    expect(appointmentFromGoogle(g({ description: 'Reunião\n\nPauta: orçamento' }), 'reuniao')!.description).toBe('Pauta: orçamento');
+    expect(appointmentFromGoogle(g({ description: 'Reunião' }), 'reuniao')!.description).toBe('');
+    expect(appointmentFromGoogle(g({ description: 'Outro\n\nTexto' }), 'outro')!.description).toBe('Texto');
+  });
+
+  it('reads the simple HTML of Google descriptions as text', () => {
+    expect(plainText('Linha 1<br>Linha 2 &amp; mais<br><b>fim</b>')).toBe('Linha 1\nLinha 2 & mais\nfim');
+    expect(plainText('sem html')).toBe('sem html');
+  });
+
+  it('names events without a title', () => {
+    expect(appointmentFromGoogle(g({ summary: '  ' }))!.title).toBe('(sem título)');
   });
 });

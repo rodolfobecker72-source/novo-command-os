@@ -20,6 +20,7 @@ import {
 } from '@/types/appointment';
 import { useCRM } from '@/contexts/CRMContext';
 import { toast } from 'sonner';
+import { TimeSelect, addMinutesToTime, minutesBetween } from '@/components/common/TimeSelect';
 
 interface AppointmentDialogProps {
   open: boolean;
@@ -40,6 +41,14 @@ function toLocalInputDate(d: Date): string {
 
 function toLocalInputTime(d: Date): string {
   return format(d, 'HH:mm');
+}
+
+/** Start time for a new appointment: 09:00 on a picked day, else the next full hour today. */
+function defaultStartTime(day: Date | null | undefined): string {
+  if (day) return '09:00';
+  const next = new Date();
+  next.setHours(next.getHours() + 1, 0, 0, 0);
+  return next.getDate() === new Date().getDate() ? format(next, 'HH:mm') : '23:00';
 }
 
 function combineDateTime(dateStr: string, timeStr: string): Date {
@@ -71,13 +80,15 @@ export function AppointmentDialog({
     if (!open) return;
     const seedDate = initial?.startAt ?? defaultDate ?? new Date();
     const seedEnd = initial?.endAt ?? null;
+    // New appointments start at a sensible hour and last one hour
+    const start = initial ? toLocalInputTime(seedDate) : defaultStartTime(defaultDate);
     setTitle(initial?.title ?? '');
     setKind((initial?.kind as AppointmentKind) ?? 'reuniao');
     setAllDay(initial?.allDay ?? false);
     setStartDate(toLocalInputDate(seedDate));
-    setStartTime(toLocalInputTime(seedDate));
+    setStartTime(start);
     setEndDate(seedEnd ? toLocalInputDate(seedEnd) : toLocalInputDate(seedDate));
-    setEndTime(seedEnd ? toLocalInputTime(seedEnd) : toLocalInputTime(seedDate));
+    setEndTime(seedEnd ? toLocalInputTime(seedEnd) : addMinutesToTime(start, 60));
     setLocation(initial?.location ?? '');
     setDescription(initial?.description ?? '');
     setBudgetId(initial?.budgetId ?? 'none');
@@ -92,6 +103,15 @@ export function AppointmentDialog({
     () => [...clients].sort((a, b) => a.companyName.localeCompare(b.companyName, 'pt-BR')),
     [clients],
   );
+
+  // Moving the start keeps the duration when it all happens on one day
+  const changeStartTime = (value: string) => {
+    if (endDate === startDate && startTime && endTime) {
+      const duration = minutesBetween(startTime, endTime);
+      setEndTime(addMinutesToTime(value, duration > 0 ? duration : 60));
+    }
+    setStartTime(value);
+  };
 
   const handleSave = async () => {
     if (!title.trim()) { toast.error('Informe um título'); return; }
@@ -175,7 +195,7 @@ export function AppointmentDialog({
             {!allDay && (
               <div>
                 <Label>Hora início</Label>
-                <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                <TimeSelect value={startTime} onChange={changeStartTime} aria-label="Hora de início" />
               </div>
             )}
           </div>
@@ -188,7 +208,7 @@ export function AppointmentDialog({
             {!allDay && (
               <div>
                 <Label>Hora fim</Label>
-                <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                <TimeSelect value={endTime} onChange={setEndTime} aria-label="Hora de término" />
               </div>
             )}
           </div>
