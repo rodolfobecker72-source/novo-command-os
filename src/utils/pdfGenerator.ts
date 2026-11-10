@@ -881,7 +881,7 @@ export async function generateProposalPDF({
   const hideNf = !!budget.hideNfInPdf;
   const hideOp = !!budget.hideOperationalInPdf;
   const hideNfObs = !!budget.hideNfObservationInPdf;
-  const preNfPct = version.nfCostPercentage || 13;
+  const preNfPct = version.nfCostPercentage ?? 13; // 0% is a valid rate (no invoice)
   const preMarginPct = version.margin || 0;
   const preOpTotal = (version.operationalCosts || []).reduce((sum, c) => sum + c.value, 0);
   const preTotalCosts = totalProductionCost + preOpTotal;
@@ -1005,7 +1005,7 @@ export async function generateProposalPDF({
   // ============================================
   // 03 — INVESTMENT
   // ============================================
-  const versionNfPercentage = version.nfCostPercentage || 13;
+  const versionNfPercentage = version.nfCostPercentage ?? 13;
   const versionMarginPct = version.margin || 0;
 
   const totalCosts = totalProductionCost + operationalTotal;
