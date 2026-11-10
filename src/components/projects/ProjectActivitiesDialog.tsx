@@ -22,7 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
-import { Plus, Trash2, Loader2, ExternalLink, Copy, User, Calendar, FileText, ChevronDown, ChevronRight, MessageSquare, Send, GripVertical, X, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, ExternalLink, Copy, User, Calendar, FileText, ChevronDown, ChevronRight, MessageSquare, Send, GripVertical, X, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { TimeSelect, addMinutesToTime } from '@/components/common/TimeSelect';
 
 type ActivityStatus = 'nao_iniciado' | 'em_andamento' | 'concluido';
 
@@ -58,6 +59,9 @@ interface Activity {
   assignedToUserIds: string[];
   dueDate: string | null;
   endDate: string | null;
+  /** "HH:MM"; without it the activity takes the whole day */
+  startTime: string | null;
+  endTime: string | null;
   isDelivery: boolean;
   isCaptacao: boolean;
   freelaName: string | null;
@@ -264,6 +268,8 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
               : (d.assigned_to_user_id ? [d.assigned_to_user_id] : []),
             dueDate: d.due_date ?? null,
             endDate: d.end_date ?? null,
+            startTime: d.start_time ? String(d.start_time).slice(0, 5) : null,
+            endTime: d.end_time ? String(d.end_time).slice(0, 5) : null,
             isDelivery: !!d.is_delivery,
             isCaptacao: !!d.is_captacao,
             freelaName: d.freela_name ?? null,
@@ -297,6 +303,8 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
             : (d.assigned_to_user_id ? [d.assigned_to_user_id] : []),
           dueDate: d.due_date ?? null,
           endDate: d.end_date ?? null,
+          startTime: d.start_time ? String(d.start_time).slice(0, 5) : null,
+          endTime: d.end_time ? String(d.end_time).slice(0, 5) : null,
           isDelivery: !!d.is_delivery,
           isCaptacao: !!d.is_captacao,
           freelaName: d.freela_name ?? null,
@@ -489,6 +497,8 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
         : ((data as any).assigned_to_user_id ? [(data as any).assigned_to_user_id] : []),
       dueDate: (data as any).due_date ?? null,
       endDate: (data as any).end_date ?? null,
+      startTime: null,
+      endTime: null,
       isDelivery: !!(data as any).is_delivery,
       isCaptacao: !!(data as any).is_captacao,
       freelaName: (data as any).freela_name ?? null,
@@ -573,6 +583,17 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
       .update({ end_date: end } as any)
       .eq('id', id);
     if (error) toast.error('Erro ao atualizar data final');
+  };
+
+  const handleUpdateTime = async (id: string, start: string | null, end: string | null) => {
+    // An end time only makes sense with a start time
+    const nextEnd = start ? end : null;
+    setActivities(prev => prev.map(a => a.id === id ? { ...a, startTime: start, endTime: nextEnd } : a));
+    const { error } = await supabase
+      .from('project_activities')
+      .update({ start_time: start, end_time: nextEnd } as any)
+      .eq('id', id);
+    if (error) toast.error('Erro ao atualizar horário');
   };
 
   const handleUpdateDelivery = async (id: string, value: boolean) => {
@@ -901,6 +922,7 @@ export function ProjectActivitiesDialog({ open, onOpenChange, projectCardId, pro
                   onToggleAssignee={handleToggleAssignee}
                   onUpdateDue={handleUpdateDue}
                   onUpdateEnd={handleUpdateEnd}
+                  onUpdateTime={handleUpdateTime}
                   onUpdateDelivery={handleUpdateDelivery}
                   onUpdateCaptacao={handleUpdateCaptacao}
                   onUpdateFreela={handleUpdateFreela}
@@ -1161,6 +1183,7 @@ function Column({
   onToggleAssignee,
   onUpdateDue,
   onUpdateEnd,
+  onUpdateTime,
   onUpdateDelivery,
   onUpdateCaptacao,
   onUpdateFreela,
@@ -1195,6 +1218,7 @@ function Column({
   onToggleAssignee: (id: string, userId: string | null) => void;
   onUpdateDue: (id: string, due: string | null) => void;
   onUpdateEnd: (id: string, end: string | null) => void;
+  onUpdateTime: (id: string, start: string | null, end: string | null) => void;
   onUpdateDelivery: (id: string, value: boolean) => void;
   onUpdateCaptacao: (id: string, value: boolean) => void;
   onUpdateFreela: (id: string, name: string | null) => void;
@@ -1232,6 +1256,7 @@ function Column({
               onToggleAssignee={onToggleAssignee}
               onUpdateDue={onUpdateDue}
               onUpdateEnd={onUpdateEnd}
+              onUpdateTime={onUpdateTime}
               onUpdateDelivery={onUpdateDelivery}
               onUpdateCaptacao={onUpdateCaptacao}
               onUpdateFreela={onUpdateFreela}
@@ -1371,6 +1396,7 @@ function SortableCard({
   onToggleAssignee,
   onUpdateDue,
   onUpdateEnd,
+  onUpdateTime,
   onUpdateDelivery,
   onUpdateCaptacao,
   onUpdateFreela,
@@ -1387,6 +1413,7 @@ function SortableCard({
   onToggleAssignee: (id: string, userId: string | null) => void;
   onUpdateDue: (id: string, due: string | null) => void;
   onUpdateEnd: (id: string, end: string | null) => void;
+  onUpdateTime: (id: string, start: string | null, end: string | null) => void;
   onUpdateDelivery: (id: string, value: boolean) => void;
   onUpdateCaptacao: (id: string, value: boolean) => void;
   onUpdateFreela: (id: string, name: string | null) => void;
@@ -1639,6 +1666,35 @@ function SortableCard({
           </>
         )}
       </div>
+      {activity.dueDate && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          <TimeSelect
+            value={activity.startTime ?? ''}
+            onChange={(v) => onUpdateTime(
+              activity.id,
+              v || null,
+              v ? (activity.endTime && activity.endTime > v ? activity.endTime : addMinutesToTime(v, 60)) : null,
+            )}
+            placeholder="Dia inteiro"
+            clearLabel="Dia inteiro"
+            aria-label="Hora de início"
+            className="h-7 w-[112px] text-xs"
+          />
+          {activity.startTime && (
+            <>
+              <span className="opacity-60">até</span>
+              <TimeSelect
+                value={activity.endTime ?? ''}
+                onChange={(v) => onUpdateTime(activity.id, activity.startTime, v || null)}
+                placeholder="Fim"
+                aria-label="Hora de término"
+                className="h-7 w-[84px] text-xs"
+              />
+            </>
+          )}
+        </div>
+      )}
       </div>
     </div>
   );
@@ -1679,6 +1735,7 @@ function ActivityCard({ activity, members, dragging }: { activity: Activity; mem
       {activity.dueDate && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="w-3.5 h-3.5" />{formatDateBR(activity.dueDate)}
+          {activity.startTime && <span>{activity.startTime}{activity.endTime ? `–${activity.endTime}` : ''}</span>}
         </div>
       )}
     </div>

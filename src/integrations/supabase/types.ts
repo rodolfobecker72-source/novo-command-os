@@ -1313,12 +1313,14 @@ export type Database = {
           created_at: string
           due_date: string | null
           end_date: string | null
+          end_time: string | null
           freela_name: string | null
           id: string
           is_captacao: boolean
           is_delivery: boolean
           order: number
           project_card_id: string
+          start_time: string | null
           status: string
           title: string
           updated_at: string
@@ -1330,12 +1332,14 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           end_date?: string | null
+          end_time?: string | null
           freela_name?: string | null
           id?: string
           is_captacao?: boolean
           is_delivery?: boolean
           order?: number
           project_card_id: string
+          start_time?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -1347,12 +1351,14 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           end_date?: string | null
+          end_time?: string | null
           freela_name?: string | null
           id?: string
           is_captacao?: boolean
           is_delivery?: boolean
           order?: number
           project_card_id?: string
+          start_time?: string | null
           status?: string
           title?: string
           updated_at?: string

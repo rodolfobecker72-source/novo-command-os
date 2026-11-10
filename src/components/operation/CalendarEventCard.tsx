@@ -28,6 +28,8 @@ export interface CalendarActivityEvent {
   projectCardId: string;
   isDelivery?: boolean;
   isCaptacao?: boolean;
+  /** "HH:MM" when the activity has a set time */
+  startTime?: string;
   /** User id whose color should be used to render this event. */
   assignedUserId?: string;
 }
@@ -110,6 +112,7 @@ export function CalendarEventCard({
     if (!appointment.allDay) timeLabel = format(appointment.startAt, 'HH:mm');
     mainLabel = appointment.title;
   } else if (isActivity && activity) {
+    if (activity.startTime) timeLabel = activity.startTime;
     mainLabel = `${budget?.proposalId || ''} - ${budget?.projectName || ''}`.replace(/^ - /, '');
     secondaryLabel = `✓ ${activity.title}`;
   } else if (isDelivery) {
