@@ -21,6 +21,7 @@ import {
 import { useCRM } from '@/contexts/CRMContext';
 import { toast } from 'sonner';
 import { TimeSelect, addMinutesToTime, minutesBetween } from '@/components/common/TimeSelect';
+import { AppointmentGuests } from './AppointmentGuests';
 
 interface AppointmentDialogProps {
   open: boolean;
@@ -74,6 +75,8 @@ export function AppointmentDialog({
   const [description, setDescription] = useState('');
   const [budgetId, setBudgetId] = useState<string>('none');
   const [clientId, setClientId] = useState<string>('none');
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [guestEmails, setGuestEmails] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -93,6 +96,8 @@ export function AppointmentDialog({
     setDescription(initial?.description ?? '');
     setBudgetId(initial?.budgetId ?? 'none');
     setClientId(initial?.clientId ?? 'none');
+    setParticipants(initial?.assignedTo ?? []);
+    setGuestEmails(initial?.guestEmails ?? []);
   }, [open, initial, defaultDate]);
 
   const sortedBudgets = useMemo(
@@ -127,7 +132,8 @@ export function AppointmentDialog({
     if (end && end < start) { toast.error('Fim deve ser depois do início'); return; }
 
     const payload: NewAppointmentInput = {
-      assignedTo: initial?.assignedTo ?? [],
+      assignedTo: participants,
+      guestEmails,
       title: title.trim(),
       kind,
       description: description.trim(),
@@ -233,6 +239,14 @@ export function AppointmentDialog({
             <Label>Local</Label>
             <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="Onde será o compromisso" />
           </div>
+
+          <AppointmentGuests
+            participants={participants}
+            onParticipantsChange={setParticipants}
+            guestEmails={guestEmails}
+            onGuestEmailsChange={setGuestEmails}
+            organizerId={initial?.createdBy ?? null}
+          />
 
           <div>
             <Label>Descrição</Label>

@@ -36,6 +36,8 @@ export interface AppointmentRow {
   all_day: boolean;
   created_by: string;
   assigned_to: string[] | null;
+  /** People invited by e-mail; Google sends them the invitation from the organizer's calendar */
+  guest_emails?: string[] | null;
 }
 
 export interface GoogleEvent {
@@ -47,6 +49,8 @@ export interface GoogleEvent {
   source: { title: string; url: string };
   /** Marks events created by Command OS, so reading the calendar back never imports them */
   extendedProperties: { private: { command_source: string } };
+  /** Only on the organizer's copy of an appointment */
+  attendees?: { email: string }[];
 }
 
 /** Event as Google returns it when listing a calendar. */
@@ -59,6 +63,7 @@ export interface GoogleEventIn {
   start?: { date?: string; dateTime?: string };
   end?: { date?: string; dateTime?: string };
   extendedProperties?: { private?: Record<string, string> };
+  attendees?: { email?: string; self?: boolean; organizer?: boolean; resource?: boolean }[];
 }
 
 /** Appointment fields taken from a Google event. */
@@ -163,13 +168,27 @@ function kindLine(kind: string): string | null {
   return kind === "outro" ? null : (APPOINTMENT_KIND[kind] ?? kind);
 }
 
-export function appointmentEvent(a: AppointmentRow, appUrl: string): GoogleEvent {
+/** Lowercase, valid and without repeats. */
+export function normalizeEmails(emails: (string | null | undefined)[] | null | undefined): string[] {
+  const valid = (emails ?? [])
+    .map((e) => (e ?? "").trim().toLowerCase())
+    .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+  return [...new Set(valid)].sort();
+}
+
+/**
+ * `withGuests`: the copy in the organizer's calendar, which carries the
+ * e-mail guests (each participant's own copy has none, so nobody is invited twice).
+ */
+export function appointmentEvent(a: AppointmentRow, appUrl: string, withGuests = false): GoogleEvent {
+  const guests = withGuests ? normalizeEmails(a.guest_emails) : [];
   const base = {
     summary: a.title,
     description: [kindLine(a.kind), a.description?.trim() || null].filter(Boolean).join("\n\n"),
     ...(a.location?.trim() ? { location: a.location.trim() } : {}),
     source: { title: "Command OS", url: appUrl },
     extendedProperties: sourceTag("appointment", a.id),
+    ...(guests.length ? { attendees: guests.map((email) => ({ email })) } : {}),
   };
   const hasEnd = a.end_at !== null && new Date(a.end_at).getTime() > new Date(a.start_at).getTime();
 
@@ -200,9 +219,16 @@ export function commandSourceOf(e: GoogleEventIn): string | null {
 const instant = (t: { date?: string; dateTime?: string } | undefined) =>
   t?.dateTime ? `dt:${new Date(t.dateTime).getTime()}` : t?.date ? `d:${t.date}` : "";
 
+/** E-mail guests of a Google event (not the organizer, the calendar itself or rooms). */
+export function guestsFromGoogle(e: GoogleEventIn): string[] {
+  return normalizeEmails((e.attendees ?? []).filter((a) => !a.self && !a.organizer && !a.resource).map((a) => a.email));
+}
+
 /** Whether the Google event still shows exactly what Command OS last sent. */
 export function eventMatches(google: GoogleEventIn, expected: GoogleEvent): boolean {
-  return (google.summary ?? "") === expected.summary
+  const expectedGuests = normalizeEmails((expected.attendees ?? []).map((a) => a.email));
+  return guestsFromGoogle(google).join(",") === expectedGuests.join(",")
+    && (google.summary ?? "") === expected.summary
     && (google.description ?? "").trim() === expected.description.trim()
     && (google.location ?? "").trim() === (expected.location ?? "")
     && instant(google.start) === instant(expected.start)

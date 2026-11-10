@@ -48,6 +48,8 @@ export interface Appointment {
   workspaceId: string;
   createdBy: string;
   assignedTo: string[];
+  /** Invited by e-mail (Google sends the invitation from the organizer's calendar) */
+  guestEmails: string[];
   title: string;
   kind: AppointmentKind;
   description: string;
@@ -71,6 +73,7 @@ export function appointmentFromDb(row: any): Appointment {
     workspaceId: row.workspace_id,
     createdBy: row.created_by,
     assignedTo: row.assigned_to || [],
+    guestEmails: row.guest_emails || [],
     title: row.title,
     kind: row.kind,
     description: row.description || '',
@@ -90,6 +93,7 @@ export function appointmentFromDb(row: any): Appointment {
 export function appointmentToDb(a: Partial<Appointment>): any {
   const row: any = {};
   if (a.assignedTo !== undefined) row.assigned_to = a.assignedTo;
+  if (a.guestEmails !== undefined) row.guest_emails = a.guestEmails;
   if (a.title !== undefined) row.title = a.title;
   if (a.kind !== undefined) row.kind = a.kind;
   if (a.description !== undefined) row.description = a.description;

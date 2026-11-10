@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   activityEvent, activityRecipients, addDays, appointmentEvent, appointmentFromGoogle, appointmentRecipients,
-  commandSourceOf, eventMatches, plainText, type ActivityRow, type AppointmentRow, type GoogleEventIn,
+  commandSourceOf, eventMatches, guestsFromGoogle, normalizeEmails, plainText, type ActivityRow, type AppointmentRow, type GoogleEventIn,
 } from '../../supabase/functions/_shared/calendarEvents';
 
 const APP = 'https://app.example';
@@ -133,5 +133,37 @@ describe('reading Google events back', () => {
 
   it('names events without a title', () => {
     expect(appointmentFromGoogle(g({ summary: '  ' }))!.title).toBe('(sem título)');
+  });
+
+  it('puts e-mail guests only on the organizer copy', () => {
+    const ap = appointment({ guest_emails: ['Ana@Cliente.com', 'ana@cliente.com', 'bia@x.com'] });
+    expect(appointmentEvent(ap, APP, true).attendees).toEqual([{ email: 'ana@cliente.com' }, { email: 'bia@x.com' }]);
+    expect(appointmentEvent(ap, APP).attendees).toBeUndefined();
+  });
+
+  it('reads guests back without the organizer, the calendar itself or rooms', () => {
+    expect(guestsFromGoogle(g({
+      attendees: [
+        { email: 'command@group.calendar.google.com', self: true, organizer: true },
+        { email: 'Bia@X.com' }, { email: 'sala@resource.calendar.google.com', resource: true },
+      ],
+    }))).toEqual(['bia@x.com']);
+  });
+
+  it('sees a guest added or removed in Google as a change', () => {
+    const ap = appointment({ guest_emails: ['bia@x.com'] });
+    const sent = appointmentEvent(ap, APP, true);
+    const same = g({
+      summary: sent.summary, description: sent.description,
+      start: { dateTime: '2026-11-10T10:00:00-03:00' }, end: { dateTime: '2026-11-10T11:00:00-03:00' },
+      attendees: [{ email: 'bia@x.com' }],
+    });
+    expect(eventMatches(same, sent)).toBe(true);
+    expect(eventMatches({ ...same, attendees: [{ email: 'bia@x.com' }, { email: 'novo@x.com' }] }, sent)).toBe(false);
+    expect(eventMatches({ ...same, attendees: [] }, sent)).toBe(false);
+  });
+
+  it('keeps only valid e-mails', () => {
+    expect(normalizeEmails([' A@B.com ', 'invalido', null, 'a@b.com'])).toEqual(['a@b.com']);
   });
 });

@@ -14,7 +14,7 @@
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
   activityEvent, activityRecipients, appointmentEvent, appointmentFromGoogle, appointmentRecipients,
-  commandSourceOf, eventMatches, GoogleEvent, GoogleEventIn,
+  commandSourceOf, eventMatches, GoogleEvent, GoogleEventIn, guestsFromGoogle,
 } from "../_shared/calendarEvents.ts";
 import {
   adminClient, APP_URL, calendarApi, Connection, createAppCalendar, getAccessToken, jsonResponse,
@@ -44,6 +44,9 @@ interface SyncTarget {
   workspaceId: string;
   recipients: string[];
   event: GoogleEvent;
+  /** Appointments: the organizer's copy carries the e-mail guests */
+  ownerId?: string;
+  ownerEvent?: GoogleEvent;
 }
 
 interface MapRow {
@@ -105,7 +108,13 @@ class Sync {
     const { data: ap, error } = await this.admin.from("appointments").select("*").eq("id", id).maybeSingle();
     if (error) throw error;
     if (!ap) return null;
-    return { workspaceId: ap.workspace_id, recipients: appointmentRecipients(ap), event: appointmentEvent(ap, APP_URL) };
+    return {
+      workspaceId: ap.workspace_id,
+      recipients: appointmentRecipients(ap),
+      event: appointmentEvent(ap, APP_URL),
+      ownerId: ap.created_by,
+      ownerEvent: appointmentEvent(ap, APP_URL, true),
+    };
   }
 
   async syncSource(type: SourceType, id: string) {
@@ -140,9 +149,10 @@ class Sync {
     if (conn) {
       try {
         const token = await this.token(conn);
+        // Guests of the organizer's copy are told it was cancelled
         const r = await calendarApi(
           token,
-          `/calendars/${encodeURIComponent(conn.calendar_id)}/events/${encodeURIComponent(m.google_event_id)}`,
+          `/calendars/${encodeURIComponent(conn.calendar_id)}/events/${encodeURIComponent(m.google_event_id)}?sendUpdates=all`,
           { method: "DELETE" },
         );
         if (!r.ok && r.status !== 404 && r.status !== 410) throw new Error(`delete event ${r.status}`);
@@ -156,11 +166,32 @@ class Sync {
   private async putEvent(conn: Connection, existing: MapRow | undefined, type: SourceType, id: string, target: SyncTarget) {
     const token = await this.token(conn);
     const events = `/calendars/${encodeURIComponent(conn.calendar_id)}/events`;
+    const isOwner = type === "appointment" && conn.user_id === target.ownerId;
+    const event = isOwner && target.ownerEvent ? target.ownerEvent : target.event;
+    // Only the organizer's copy has guests; they hear about real changes only
+    const send = `sendUpdates=${isOwner ? "all" : "none"}`;
 
     if (existing) {
-      const r = await calendarApi(token, `${events}/${encodeURIComponent(existing.google_event_id)}`, {
+      const path = `${events}/${encodeURIComponent(existing.google_event_id)}`;
+      if (event.attendees?.length) {
+        // Rewriting an unchanged event would e-mail every guest again
+        const cur = await calendarApi(token, path);
+        if (cur.ok && eventMatches(cur.data as GoogleEventIn, event)) {
+          if (!commandSourceOf(cur.data as GoogleEventIn)) {
+            await calendarApi(token, `${path}?sendUpdates=none`, {
+              method: "PATCH",
+              body: { extendedProperties: event.extendedProperties, source: event.source },
+            });
+          }
+          await this.admin.from("google_calendar_sync_map")
+            .update({ last_synced_at: new Date().toISOString() })
+            .eq("id", existing.id);
+          return;
+        }
+      }
+      const r = await calendarApi(token, `${path}?${send}`, {
         method: "PUT",
-        body: target.event,
+        body: event,
       });
       if (r.ok) {
         await this.admin.from("google_calendar_sync_map")
@@ -172,14 +203,14 @@ class Sync {
       if (r.status !== 404 && r.status !== 410) throw new Error(`update event ${r.status}: ${JSON.stringify(r.data)}`);
     }
 
-    let r = await calendarApi(token, events, { method: "POST", body: target.event });
+    let r = await calendarApi(token, `${events}?${send}`, { method: "POST", body: event });
     if (r.status === 404) {
       // The user deleted the "Command OS" calendar: make a new one and
       // send everything of theirs again.
       await this.recreateCalendar(conn, token);
-      r = await calendarApi(token, `/calendars/${encodeURIComponent(conn.calendar_id)}/events`, {
+      r = await calendarApi(token, `/calendars/${encodeURIComponent(conn.calendar_id)}/events?${send}`, {
         method: "POST",
-        body: target.event,
+        body: event,
       });
     }
     if (!r.ok || !r.data?.id) throw new Error(`create event ${r.status}: ${JSON.stringify(r.data)}`);
@@ -307,10 +338,15 @@ class Pull {
         }
         return;
       }
-      // Our own write coming back
-      if (eventMatches(e, appointmentEvent(ap, APP_URL))) return;
+      // Our own write coming back (the organizer's copy also carries the guests)
+      const isOwner = ap.created_by === conn.user_id;
+      if (eventMatches(e, appointmentEvent(ap, APP_URL, isOwner))) return;
       const fields = appointmentFromGoogle(e, ap.kind);
-      if (fields) await this.admin.from("appointments").update(fields).eq("id", ap.id);
+      if (fields) {
+        await this.admin.from("appointments")
+          .update({ ...fields, ...(isOwner ? { guest_emails: guestsFromGoogle(e) } : {}) })
+          .eq("id", ap.id);
+      }
       return;
     }
 
@@ -339,6 +375,7 @@ class Pull {
       workspace_id: workspaceId,
       created_by: conn.user_id,
       assigned_to: [],
+      guest_emails: guestsFromGoogle(e),
       kind: "outro",
       ...fields,
     });
