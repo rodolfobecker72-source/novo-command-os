@@ -232,7 +232,13 @@ export function LayoutPage() {
         import('@/utils/pdfSample'),
         import('@/utils/pdfGenerator'),
       ]);
-      const settings = currentLayoutSettings();
+      // The validity comes from Regras Comerciais
+      const { data: rules } = await supabase
+        .from('workspace_settings')
+        .select('proposal_validity_days')
+        .eq('workspace_id', workspace?.id ?? '')
+        .maybeSingle();
+      const settings = { ...currentLayoutSettings(), validityDays: rules?.proposal_validity_days ?? undefined };
       const doc = await generateSampleProposalPDF(settings, profile?.name);
       await saveWithCustomPages(doc, settings, 'Proposta_Exemplo.pdf');
     } catch (err) {
@@ -504,10 +510,6 @@ export function LayoutPage() {
                       <Input value={data[field]} onChange={e => update(field, e.target.value)} />
                     </div>
                   ))}
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Texto de Validade</Label>
-                    <Input value={data.validityText} onChange={e => update('validityText', e.target.value)} placeholder="Validade: 30 dias" />
-                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

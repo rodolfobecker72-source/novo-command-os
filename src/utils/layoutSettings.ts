@@ -6,12 +6,12 @@ import { normalizeNextSteps } from '@/utils/proposalStyle';
 export async function fetchLayoutSettings(workspaceId: string | undefined | null): Promise<PDFLayoutSettings | null> {
   if (!workspaceId) return null;
   try {
-    const { data } = await supabase
-      .from('workspace_layout')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .maybeSingle();
-    if (!data) return null;
+    const [{ data }, { data: settings }] = await Promise.all([
+      supabase.from('workspace_layout').select('*').eq('workspace_id', workspaceId).maybeSingle(),
+      supabase.from('workspace_settings').select('proposal_validity_days').eq('workspace_id', workspaceId).maybeSingle(),
+    ]);
+    const validityDays = settings?.proposal_validity_days ?? undefined;
+    if (!data) return validityDays ? ({ logoUrl: '', companyName: '', website: '', email: '', validityDays } as PDFLayoutSettings) : null;
     const d = data as any;
     return {
       logoUrl: d.logo_url || '',
@@ -27,6 +27,7 @@ export async function fetchLayoutSettings(workspaceId: string | undefined | null
       sectionInvestmentTitle: d.section_investment_title || undefined,
       sectionTotalTitle: d.section_total_title || undefined,
       validityText: d.validity_text || undefined,
+      validityDays,
       coverPdfUrl: d.cover_pdf_url || undefined,
       backPdfUrl: d.back_pdf_url || undefined,
       brandTheme: d.brand_theme || null,

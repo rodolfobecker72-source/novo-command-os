@@ -36,6 +36,8 @@ export interface PDFLayoutSettings {
   sectionInvestmentTitle?: string;
   sectionTotalTitle?: string;
   validityText?: string;
+  /** Days the proposal is valid (Regras Comerciais); wins over validityText */
+  validityDays?: number;
   companyCnpj?: string;
   companyAddress?: string;
   companyCityLine?: string;
@@ -145,7 +147,9 @@ export async function generateProposalPDF({
     operational: layoutSettings?.sectionOperationalTitle || 'DESPESAS OPERACIONAIS',
     investment: layoutSettings?.sectionInvestmentTitle || 'COMPOSIÇÃO DO INVESTIMENTO',
     total: layoutSettings?.sectionTotalTitle || 'INVESTIMENTO TOTAL',
-    validity: layoutSettings?.validityText || 'Validade: 30 dias',
+    validity: layoutSettings?.validityDays
+      ? `Validade: ${layoutSettings.validityDays} ${layoutSettings.validityDays === 1 ? 'dia' : 'dias'}`
+      : layoutSettings?.validityText || 'Validade: 30 dias',
   };
 
   const projectIdentifier = `${budget.proposalId} - ${budget.projectName} - Versão ${version.version}`;

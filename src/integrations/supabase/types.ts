@@ -2071,6 +2071,7 @@ export type Database = {
           default_nf_percentage: number
           default_target_margin_percentage: number
           id: string
+          proposal_validity_days: number
           team_finance_enabled: boolean
           updated_at: string
           workspace_id: string
@@ -2081,6 +2082,7 @@ export type Database = {
           default_nf_percentage?: number
           default_target_margin_percentage?: number
           id?: string
+          proposal_validity_days?: number
           team_finance_enabled?: boolean
           updated_at?: string
           workspace_id: string
@@ -2091,6 +2093,7 @@ export type Database = {
           default_nf_percentage?: number
           default_target_margin_percentage?: number
           id?: string
+          proposal_validity_days?: number
           team_finance_enabled?: boolean
           updated_at?: string
           workspace_id?: string
