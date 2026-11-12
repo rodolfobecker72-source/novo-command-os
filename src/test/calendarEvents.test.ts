@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   activityEvent, activityRecipients, addDays, appointmentEvent, appointmentFromGoogle, appointmentRecipients,
-  commandSourceOf, eventMatches, guestsFromGoogle, normalizeEmails, plainText, type ActivityRow, type AppointmentRow, type GoogleEventIn,
+  activityTimesFromGoogle, commandSourceOf, eventMatches, guestsFromGoogle, sameTimes, normalizeEmails, plainText, type ActivityRow, type AppointmentRow, type GoogleEventIn,
 } from '../../supabase/functions/_shared/calendarEvents';
 
 const APP = 'https://app.example';
@@ -165,5 +165,27 @@ describe('reading Google events back', () => {
 
   it('keeps only valid e-mails', () => {
     expect(normalizeEmails([' A@B.com ', 'invalido', null, 'a@b.com'])).toEqual(['a@b.com']);
+  });
+
+  it('reads an all-day activity moved in Google', () => {
+    expect(activityTimesFromGoogle(g({ start: { date: '2026-11-20' }, end: { date: '2026-11-22' } }))).toEqual({
+      due_date: '2026-11-20', end_date: '2026-11-21', start_time: null, end_time: null,
+    });
+    // Deliveries are a single day
+    expect(activityTimesFromGoogle(g({ start: { date: '2026-11-20' }, end: { date: '2026-11-22' } }), true)!.end_date).toBeNull();
+  });
+
+  it('reads a timed activity moved in Google in São Paulo time', () => {
+    expect(activityTimesFromGoogle(g({
+      start: { dateTime: '2026-11-20T17:30:00Z' }, end: { dateTime: '2026-11-20T19:00:00Z' },
+    }))).toEqual({ due_date: '2026-11-20', end_date: null, start_time: '14:30', end_time: '16:00' });
+  });
+
+  it('recognizes an activity that was not moved, so it does not loop', () => {
+    const sent = activityEvent(activity({ start_time: '14:30', end_time: '16:00' }), null, APP)!;
+    expect(sameTimes(g({ start: { dateTime: '2026-11-10T14:30:00-03:00' }, end: { dateTime: '2026-11-10T16:00:00-03:00' } }), sent)).toBe(true);
+    expect(sameTimes(g({ start: { dateTime: '2026-11-11T14:30:00-03:00' }, end: { dateTime: '2026-11-11T16:00:00-03:00' } }), sent)).toBe(false);
+    const allDay = activityEvent(activity(), null, APP)!;
+    expect(sameTimes(g({ start: { date: '2026-11-10' }, end: { date: '2026-11-11' } }), allDay)).toBe(true);
   });
 });
