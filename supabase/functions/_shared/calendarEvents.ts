@@ -216,8 +216,59 @@ export function commandSourceOf(e: GoogleEventIn): string | null {
   return e.extendedProperties?.private?.command_source ?? null;
 }
 
+/** A dateTime without offset is São Paulo local time (how activity events are sent). */
+function withOffset(dateTime: string): string {
+  return /(Z|[+-]\d{2}:\d{2})$/.test(dateTime) ? dateTime : `${dateTime}${UTC_OFFSET}`;
+}
+
 const instant = (t: { date?: string; dateTime?: string } | undefined) =>
-  t?.dateTime ? `dt:${new Date(t.dateTime).getTime()}` : t?.date ? `d:${t.date}` : "";
+  t?.dateTime ? `dt:${new Date(withOffset(t.dateTime)).getTime()}` : t?.date ? `d:${t.date}` : "";
+
+/** Whether the event still starts and ends when Command OS last put it. */
+export function sameTimes(google: GoogleEventIn, expected: GoogleEvent): boolean {
+  return instant(google.start) === instant(expected.start) && instant(google.end) === instant(expected.end);
+}
+
+/** "HH:MM" of an instant in the app's time zone. */
+export function localTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" });
+}
+
+/** Activity dates and hours after the event was moved in Google. */
+export interface ActivityTimes {
+  due_date: string;
+  end_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+}
+
+/**
+ * Dates and hours of an activity taken from its Google event. Deliveries
+ * have a single day, so they keep no end date.
+ */
+export function activityTimesFromGoogle(e: GoogleEventIn, isDelivery = false): ActivityTimes | null {
+  if (e.start?.date) {
+    const endExclusive = e.end?.date && e.end.date > e.start.date ? e.end.date : addDays(e.start.date, 1);
+    const last = addDays(endExclusive, -1);
+    return {
+      due_date: e.start.date,
+      end_date: !isDelivery && last > e.start.date ? last : null,
+      start_time: null,
+      end_time: null,
+    };
+  }
+  if (!e.start?.dateTime) return null;
+  const start = withOffset(e.start.dateTime);
+  const end = e.end?.dateTime ? withOffset(e.end.dateTime) : null;
+  const due = localDate(start);
+  const last = end ? localDate(end) : due;
+  return {
+    due_date: due,
+    end_date: !isDelivery && last > due ? last : null,
+    start_time: localTime(start),
+    end_time: end ? localTime(end) : null,
+  };
+}
 
 /** E-mail guests of a Google event (not the organizer, the calendar itself or rooms). */
 export function guestsFromGoogle(e: GoogleEventIn): string[] {

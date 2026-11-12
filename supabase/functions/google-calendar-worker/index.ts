@@ -10,11 +10,12 @@
 //   connected): reads what changed in each "Command OS" calendar since the
 //   last pull (Google's sync token). Events people typed there become
 //   appointments; edits and deletions of appointments made in Google are
-//   applied in Command OS. Activities are only ever written from Command OS.
+//   applied in Command OS. For activities only a move (date and hours) comes
+//   back; their title, status and deletion are managed in Command OS.
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
-  activityEvent, activityRecipients, appointmentEvent, appointmentFromGoogle, appointmentRecipients,
-  commandSourceOf, eventMatches, GoogleEvent, GoogleEventIn, guestsFromGoogle,
+  activityEvent, activityRecipients, activityTimesFromGoogle, appointmentEvent, appointmentFromGoogle,
+  appointmentRecipients, commandSourceOf, eventMatches, GoogleEvent, GoogleEventIn, guestsFromGoogle, sameTimes,
 } from "../_shared/calendarEvents.ts";
 import {
   adminClient, APP_URL, calendarApi, Connection, createAppCalendar, getAccessToken, jsonResponse,
@@ -320,10 +321,30 @@ class Pull {
     }
   }
 
+  /** An activity moved in Google: take its new dates and hours. */
+  private async applyActivityMove(e: GoogleEventIn, activityId: string) {
+    if (e.status === "cancelled") return;
+    const { data: a, error } = await this.admin.from("project_activities").select("*").eq("id", activityId).maybeSingle();
+    if (error) throw error;
+    if (!a) return;
+    const { data: project } = await this.admin
+      .from("project_cards")
+      .select("project_name, client_name, proposal_id")
+      .eq("id", a.project_card_id)
+      .maybeSingle();
+    const expected = activityEvent(a, project, APP_URL);
+    // Our own write coming back, or only the title/description changed
+    if (!expected || sameTimes(e, expected)) return;
+    const times = activityTimesFromGoogle(e, a.is_delivery);
+    if (times) await this.admin.from("project_activities").update(times).eq("id", a.id);
+  }
+
   private async applyEvent(conn: PullConnection, e: GoogleEventIn, m: PulledMap | undefined) {
+    if (m && m.source_type === "activity") {
+      await this.applyActivityMove(e, m.source_id);
+      return;
+    }
     if (m) {
-      // Activities are written only from Command OS
-      if (m.source_type !== "appointment") return;
       const { data: ap, error } = await this.admin.from("appointments").select("*").eq("id", m.source_id).maybeSingle();
       if (error) throw error;
       if (!ap) return;
