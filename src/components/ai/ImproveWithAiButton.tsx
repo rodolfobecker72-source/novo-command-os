@@ -15,6 +15,10 @@ interface Props {
   kind: 'briefing' | 'service';
   /** Service name (CINE, FOTO, …) when kind is 'service' */
   serviceName?: string;
+  /** Objective label of the service ("Cobertura de Evento"), when kind is 'service' */
+  objective?: string;
+  /** Project name, gives the AI context for the opening sentence */
+  projectName?: string;
   /** Called with the text the user chose to keep */
   onAccept: (text: string) => void;
 }
@@ -25,7 +29,7 @@ const MIN_CHARS = 10;
  * "Melhorar com IA": sends the text to the backend, shows the suggestion next to
  * the original and only replaces the field when the user accepts it.
  */
-export function ImproveWithAiButton({ text, kind, serviceName, onAccept }: Props) {
+export function ImproveWithAiButton({ text, kind, serviceName, objective, projectName, onAccept }: Props) {
   const [busy, setBusy] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [original, setOriginal] = useState('');
@@ -38,7 +42,7 @@ export function ImproveWithAiButton({ text, kind, serviceName, onAccept }: Props
     }
     setBusy(true);
     const { data, error } = await invokeFunction<{ text: string }>('ai-improve-text', {
-      body: { text: current, kind, serviceName },
+      body: { text: current, kind, serviceName, objective, projectName },
     });
     setBusy(false);
     if (error || !data?.text) {

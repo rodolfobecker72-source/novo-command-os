@@ -699,6 +699,7 @@ export function NewBudget() {
                       <Label htmlFor="projectDescription">Briefing do Projeto</Label>
                       <ImproveWithAiButton
                         kind="briefing"
+                        projectName={formData.projectName}
                         text={formData.projectDescription}
                         onAccept={(t) => setFormData((prev) => ({ ...prev, projectDescription: t }))}
                       />
@@ -1019,6 +1020,8 @@ export function NewBudget() {
                             <ImproveWithAiButton
                               kind="service"
                               serviceName={service.serviceType}
+                              objective={objectives.find((o) => o.value === service.objective)?.label}
+                              projectName={formData.projectName}
                               text={service.description}
                               onAccept={(t) => updateService(service.id, { description: t })}
                             />
