@@ -1292,6 +1292,7 @@ export type Database = {
           id: string
           name: string
           photo_url: string | null
+          whatsapp: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -1299,6 +1300,7 @@ export type Database = {
           id: string
           name?: string
           photo_url?: string | null
+          whatsapp?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -1306,6 +1308,7 @@ export type Database = {
           id?: string
           name?: string
           photo_url?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
