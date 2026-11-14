@@ -109,12 +109,14 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)_auto]">
         <DialogHeader>
           <DialogTitle>Editar Perfil</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        {/* From md, two columns: photo and Google Agenda | personal data.
+            On a phone: photo, personal data, Google Agenda. */}
+        <div className="overflow-y-auto -mx-6 px-6 py-2 grid gap-6 md:grid-cols-2 md:grid-rows-[auto_1fr]">
           {/* Avatar */}
           <div className="flex flex-col items-center gap-3">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
@@ -144,64 +146,68 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
             />
           </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="profile-name">Nome</Label>
-            <Input
-              id="profile-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Seu nome"
-            />
-          </div>
+          <div className="space-y-5 md:col-start-2 md:row-start-1 md:row-span-2">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="profile-name">Nome</Label>
+              <Input
+                id="profile-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Seu nome"
+              />
+            </div>
 
-          {/* Birth date */}
-          <div className="space-y-2">
-            <Label htmlFor="profile-birthdate">Data de nascimento</Label>
-            <Input
-              id="profile-birthdate"
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-            />
-          </div>
+            {/* Birth date */}
+            <div className="space-y-2">
+              <Label htmlFor="profile-birthdate">Data de nascimento</Label>
+              <Input
+                id="profile-birthdate"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+            </div>
 
-          {/* WhatsApp */}
-          <div className="space-y-2">
-            <Label htmlFor="profile-whatsapp">WhatsApp</Label>
-            <Input
-              id="profile-whatsapp"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel-national"
-              value={whatsapp}
-              onChange={(e) => {
-                setWhatsapp(maskWhatsappInput(e.target.value));
-                setWhatsappError(null);
-              }}
-              onBlur={() => {
-                const r = normalizeWhatsapp(whatsapp);
-                if (!r.ok) setWhatsappError(r.error);
-              }}
-              placeholder="(35) 99999-8888"
-              aria-invalid={!!whatsappError}
-              className={whatsappError ? 'border-destructive' : undefined}
-            />
-            {whatsappError ? (
-              <p className="text-xs text-destructive">{whatsappError}</p>
-            ) : (
-              <p className="text-xs text-muted-foreground">Número com DDD. Será usado em integrações com o WhatsApp.</p>
-            )}
-          </div>
+            {/* WhatsApp */}
+            <div className="space-y-2">
+              <Label htmlFor="profile-whatsapp">WhatsApp</Label>
+              <Input
+                id="profile-whatsapp"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel-national"
+                value={whatsapp}
+                onChange={(e) => {
+                  setWhatsapp(maskWhatsappInput(e.target.value));
+                  setWhatsappError(null);
+                }}
+                onBlur={() => {
+                  const r = normalizeWhatsapp(whatsapp);
+                  if (!r.ok) setWhatsappError(r.error);
+                }}
+                placeholder="(35) 99999-8888"
+                aria-invalid={!!whatsappError}
+                className={whatsappError ? 'border-destructive' : undefined}
+              />
+              {whatsappError ? (
+                <p className="text-xs text-destructive">{whatsappError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Número com DDD. Será usado em integrações com o WhatsApp.</p>
+              )}
+            </div>
 
-          {/* Email (read-only) */}
-          <div className="space-y-2">
-            <Label>E-mail</Label>
-            <Input value={user?.email || ''} disabled className="bg-muted" />
+            {/* Email (read-only) */}
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input value={user?.email || ''} disabled className="bg-muted" />
+            </div>
           </div>
 
           {/* Google Calendar */}
-          <GoogleCalendarConnect />
+          <div className="md:col-start-1 md:row-start-2">
+            <GoogleCalendarConnect />
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">
