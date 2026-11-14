@@ -1306,6 +1306,7 @@ export function BudgetDetail() {
                         {isEditing && (
                           <ImproveWithAiButton
                             kind="briefing"
+                            projectName={editedProjectName}
                             text={editedProjectDescription}
                             onAccept={setEditedProjectDescription}
                           />
@@ -1740,6 +1741,8 @@ export function BudgetDetail() {
                                     <ImproveWithAiButton
                                       kind="service"
                                       serviceName={service.serviceType}
+                                      objective={objectiveLabel}
+                                      projectName={budget.projectName}
                                       text={service.description}
                                       onAccept={(t) => updateEditService(service.id, { description: t })}
                                     />
@@ -2294,6 +2297,8 @@ export function BudgetDetail() {
                                                     <ImproveWithAiButton
                                                       kind="service"
                                                       serviceName={service.serviceType}
+                                                      objective={objectives.find((o) => o.value === service.objective)?.label}
+                                                      projectName={budget.projectName}
                                                       text={service.description}
                                                       onAccept={(t) => updateNewVersionService(service.id, { description: t })}
                                                     />
