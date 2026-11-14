@@ -27,6 +27,7 @@ export interface Profile {
   name: string;
   photo_url: string | null;
   birth_date: string | null;
+  whatsapp: string | null;
   created_at: string;
 }
 

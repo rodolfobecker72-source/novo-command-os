@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleCalendarConnect } from './GoogleCalendarConnect';
+import { formatWhatsapp, maskWhatsappInput, normalizeWhatsapp } from '@/utils/whatsapp';
 
 interface ProfileEditDialogProps {
   open: boolean;
@@ -21,6 +22,8 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -29,6 +32,8 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
     if (open && profile) {
       setName(profile.name || '');
       setBirthDate(profile.birth_date || '');
+      setWhatsapp(formatWhatsapp(profile.whatsapp));
+      setWhatsappError(null);
       setPhotoPreview(profile.photo_url || null);
       setSelectedFile(null);
     }
@@ -50,6 +55,11 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
 
   const handleSave = async () => {
     if (!user || !profile) return;
+    const phone = normalizeWhatsapp(whatsapp);
+    if (!phone.ok) {
+      setWhatsappError(phone.error);
+      return;
+    }
     setSaving(true);
 
     try {
@@ -73,10 +83,16 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
       // Update profile
       const { error } = await supabase
         .from('profiles')
-        .update({ name: name.trim(), photo_url: photoUrl, birth_date: birthDate || null })
+        .update({ name: name.trim(), photo_url: photoUrl, birth_date: birthDate || null, whatsapp: phone.value })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          setWhatsappError('Este número já está cadastrado para outro usuário.');
+          return;
+        }
+        throw error;
+      }
 
       toast({ title: 'Perfil atualizado!' });
       onOpenChange(false);
@@ -148,6 +164,34 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
             />
+          </div>
+
+          {/* WhatsApp */}
+          <div className="space-y-2">
+            <Label htmlFor="profile-whatsapp">WhatsApp</Label>
+            <Input
+              id="profile-whatsapp"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel-national"
+              value={whatsapp}
+              onChange={(e) => {
+                setWhatsapp(maskWhatsappInput(e.target.value));
+                setWhatsappError(null);
+              }}
+              onBlur={() => {
+                const r = normalizeWhatsapp(whatsapp);
+                if (!r.ok) setWhatsappError(r.error);
+              }}
+              placeholder="(35) 99999-8888"
+              aria-invalid={!!whatsappError}
+              className={whatsappError ? 'border-destructive' : undefined}
+            />
+            {whatsappError ? (
+              <p className="text-xs text-destructive">{whatsappError}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Número com DDD. Será usado em integrações com o WhatsApp.</p>
+            )}
           </div>
 
           {/* Email (read-only) */}
